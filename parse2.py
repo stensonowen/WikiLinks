@@ -13,6 +13,9 @@ def get_contents(text, start, end, offset=0):
         return (text[a+len(start):b], b+len(end)+offset)
     
 
+import datetime
+start_time = datetime.datetime.now()
+    
 input = r"E:\Libraries\Downloads\WIKIPEDIA\misc_data\simplewiki-20150603-pages-articles.xml"
 output = "output.txt"
 fin = open(input, "r").read()
@@ -22,17 +25,15 @@ offset_master = 0
 total_len = len(fin)
 
 while offset_master < total_len:
-#for i in range(10):
 
-
-    #page = fin[fin.index("<page>"):fin.index("</page>")]
     (page, offset_master) = get_contents(fin, "<page>", "</page>", offset_master)
+    if page == "":
+        break
     fout.write("<page>\n")
     title = get_contents(page, "<title>", "</title>")[0]
     fout.write(title.upper() + "\n")
     timestamp = get_contents(page, "<timestamp>", "</timestamp>")[0]
     fout.write("<timestamp>" + timestamp + "</timestamp>\n")
-
 
     link = " "
     offset = 0
@@ -50,8 +51,11 @@ while offset_master < total_len:
         #append capitals: case may vary, but will probably affect hash function
 
     for link in links:
-        #if link.isspace() == False:
-        #fout.write(link.strip("\n") + "\n")
         fout.write(link + "\n")
 
     fout.write("</page>\n")
+
+    
+elapsed_time = datetime.datetime.now() - start_time
+print elapsed_time
+print elapsed_time.hours, "hours\t", elapsed_time.minutes, "mins\t", elapsed_time.seconds, "secs"
