@@ -1,5 +1,8 @@
-#parser5:
-#   designed to take a folder as input rather than a single file
+'''parser5:
+    designed to take a folder as input rather than a single file
+    takes <15 minutes on sample wiki dump
+    uses very reasonable memory, so multithreading might just involve opening 4 files at a time
+'''   
 
 import datetime, os
 def get_contents(text, start, end, offset=0):

@@ -12,8 +12,6 @@ now = datetime.datetime.now()
 out_path = r"E:\Libraries\Programs\C++_RPI\WikiLinkr\misc_data\out5"
 chunks = 25
 
-
-
 in_path = r"E:\Libraries\Programs\C++_RPI\WikiLinkr"
 in_file = "simplewiki-20150603-pages-articles.xml"
 out_prefix = "output_"
@@ -37,7 +35,5 @@ for i in range(chunks):
     fout.write(chunk)
     fout.close()
     
-    
 
-    
 print "elapsed time: ", datetime.datetime.now() - now
