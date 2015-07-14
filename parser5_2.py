@@ -2,6 +2,15 @@
     designed to take a folder as input rather than a single file
     takes <15 minutes on sample wiki dump
     uses very reasonable memory, so multithreading might just involve opening 4 files at a time
+parser5.2:
+    PROBLEM:
+        splitting up the dump seems like the way to go, but this currently drops pages spread across files
+    SOLUTION:
+        maybe after I sleep I'll realize my trivial mistake. but for now it's all blending together
+        ALT: I don't know how python cleans up its memory; it might make the most sense to restart the script 
+            between files, which would complicate the carry_over problem. Instead, it would make much more 
+            sense to just revise the segmentr script to only break between pages.
+            
 '''   
 
 import datetime, os
@@ -21,13 +30,8 @@ def get_contents(text, start, end, offset=0):
     
 
 start_time = datetime.datetime.now()
-#input_folder = "E:\Libraries\Programs\C++_RPI\WikiLinkr\misc_data\out5"
 input_folder = "E:\Libraries\Programs\C++_RPI\WikiLinkr\misc_data\out6"
-output = "output_7.txt"
-#fout = open(output, "w")
-#input = r"E:\Libraries\Downloads\WIKIPEDIA\misc_data\simplewiki-20150603-pages-articles.xml"
-#input = r"E:\Libraries\Downloads\WIKIPEDIA\misc_data\simple_sample.txt"
-#input = r"E:\Libraries\Programs\C++_RPI\WikiLinkr\misc_data\disk1.gsd"
+output = "output_7_2.txt"
 
 files = os.listdir(input_folder)
 fout = open(output, "w")    #TODO#
@@ -39,14 +43,14 @@ for filename in files:
     total_len = len(fin)
     offset_master = 0
     print "file: ", filename
-    carry_over = ""    
+    #carry_over = ""    
 
     while offset_master < total_len:
         #cycle through each page in input file 
         (page, offset_master) = get_contents(fin, "<page>", "</page>", offset_master)
         if page == "":  #stop when no page is found (not after; should not add blank entry)
             break
-        page = carry_over + page
+        #page = carry_over + page
         fout.write("<page>\n")
         title = get_contents(page, "<title>", "</title>")[0]
         fout.write(title.upper() + "\n")
@@ -67,15 +71,17 @@ for filename in files:
                 break
             links.add(link.upper())            #append capitals: case may vary, but will probably affect hash function
 
-        carry_over = page[offset:]
-        #for link in links:
-            #fout.write(link + "\n")
+        #carry_over = page[offset:]
+        
+        
         fout.write("\n".join(links) + "\n")
 
         fout.write("</page>\n")
-        #fout.close()
 
+fout.close()
     
 elapsed_time = datetime.datetime.now() - start_time
+print "just read from:\t\t", input_folder
+print " and wrote to:\t\t", output
 print elapsed_time
 print elapsed_time.seconds, "seconds"
