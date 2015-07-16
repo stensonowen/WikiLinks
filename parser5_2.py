@@ -10,10 +10,10 @@ parser5.2:
         ALT: I don't know how python cleans up its memory; it might make the most sense to restart the script 
             between files, which would complicate the carry_over problem. Instead, it would make much more 
             sense to just revise the segmentr script to only break between pages.
-            
+        command-line args for in/out files
 '''   
 
-import datetime, os
+import datetime, os, sys
 def get_contents(text, start, end, offset=0):
     #poor man's regex: retrieve text from a certain context
     #returns empty string if context absent or start == end
@@ -27,11 +27,17 @@ def get_contents(text, start, end, offset=0):
         return ("", offset)
     else:
         return (text[a+len(start):b], b+len(end)+offset)
-    
 
-start_time = datetime.datetime.now()
-input_folder = "E:\Libraries\Programs\C++_RPI\WikiLinkr\misc_data\out6"
-output = "output_7_2.txt"
+start_time = datetime.datetime.now()        
+
+if len(sys.argv) == 1:
+    #args: input folder, outputt file
+    input_folder = "E:\Libraries\Programs\C++_RPI\WikiLinkr\misc_data\out13"
+    output = "output_7_5.txt"
+else:
+    input_folder = sys.argv[1]
+    output = sys.argv[2]
+
 
 files = os.listdir(input_folder)
 fout = open(output, "w")    #TODO#
@@ -43,7 +49,6 @@ for filename in files:
     total_len = len(fin)
     offset_master = 0
     print "file: ", filename
-    #carry_over = ""    
 
     while offset_master < total_len:
         #cycle through each page in input file 
@@ -71,8 +76,6 @@ for filename in files:
                 break
             links.add(link.upper())            #append capitals: case may vary, but will probably affect hash function
 
-        #carry_over = page[offset:]
-        
         
         fout.write("\n".join(links) + "\n")
 
@@ -81,7 +84,7 @@ for filename in files:
 fout.close()
     
 elapsed_time = datetime.datetime.now() - start_time
-print "just read from:\t\t", input_folder
-print " and wrote to:\t\t", output
+print "just read from:\t\...", input_folder[len(input_folder)/3:]
+print " and wrote to:\t...", output[len(output)/3:]
 print elapsed_time
 print elapsed_time.seconds, "seconds"
