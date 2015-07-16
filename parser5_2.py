@@ -38,7 +38,6 @@ else:
     input_folder = sys.argv[1]
     output = sys.argv[2]
 
-
 files = os.listdir(input_folder)
 fout = open(output, "w")    #TODO#
 
@@ -75,7 +74,6 @@ for filename in files:
             if link == "":
                 break
             links.add(link.upper())            #append capitals: case may vary, but will probably affect hash function
-
         
         fout.write("\n".join(links) + "\n")
 

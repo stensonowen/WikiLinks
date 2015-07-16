@@ -19,12 +19,9 @@ segmentr2.py:
 
 import os, datetime, math, sys
 now = datetime.datetime.now()
-
 #sample dump:
 #in_path = r"E:\Libraries\Programs\C++_RPI\WikiLinkr"
 #in_file = "simplewiki-20150603-pages-articles.xml"
-#
-
 
 if len(sys.argv) == 1:
     in_path = "E:\Libraries\Programs\C++_RPI\WikiLinkr\misc_data\out12"
@@ -40,12 +37,9 @@ else:
     in_file = sys.argv[1]
     out_file = sys.argv[2]
     out_path = out_file[:-out_file[::-1].index("\\")]
-    
-
 
 separator = "<page>"
 fin = open(in_file, "r").read()
-
 
 if not os.path.exists(out_path):
     os.makedirs(out_path)
@@ -74,10 +68,8 @@ for i in range(chunks):
         chunk_end = len(fin)
     
     fout.write(fin[chunk_start:chunk_end])
-    
 
     fout.close()
-
 
 print "just broke up \t...", in_file[len(in_file)/3:]
 print "into " + str(chunks) + " pieces from \t...", out_file[len(out_file)*2/3:], "0.txt"
