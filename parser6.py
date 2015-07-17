@@ -1,16 +1,11 @@
-'''parser5:
+'''parser6:
     designed to take a folder as input rather than a single file
-    takes <15 minutes on sample wiki dump
+    takes <15 minutes on sample wiki dump in 12 chunks
+    takes a little over 5 hours on consolidated sample wiki
     uses very reasonable memory, so multithreading might just involve opening 4 files at a time
-parser5.2:
-    PROBLEM:
-        splitting up the dump seems like the way to go, but this currently drops pages spread across files
-    SOLUTION:
-        maybe after I sleep I'll realize my trivial mistake. but for now it's all blending together
-        ALT: I don't know how python cleans up its memory; it might make the most sense to restart the script 
-            between files, which would complicate the carry_over problem. Instead, it would make much more 
-            sense to just revise the segmentr script to only break between pages.
-        command-line args for in/out files
+    functional-ish meh cli
+    might port to C/C++ for performance increase (?) or continuity's sake (??)
+        useful at least to test hash table with parsed sample data
 '''   
 
 import datetime, os, sys
@@ -44,7 +39,6 @@ fout = open(output, "w")    #TODO#
 for filename in files:
     #cycle through each input file (must be in order unless broken up by pages)
     fin = open(os.path.join(input_folder, filename), "r").read()                    #read in file
-    #fout = open(os.path.join(input_folder, filename[:-4]+"_out.txt"), "w")     #prep out file
     total_len = len(fin)
     offset_master = 0
     print "file: ", filename
@@ -54,7 +48,6 @@ for filename in files:
         (page, offset_master) = get_contents(fin, "<page>", "</page>", offset_master)
         if page == "":  #stop when no page is found (not after; should not add blank entry)
             break
-        #page = carry_over + page
         fout.write("<page>\n")
         title = get_contents(page, "<title>", "</title>")[0]
         fout.write(title.upper() + "\n")
@@ -65,8 +58,7 @@ for filename in files:
         offset = 0
         links = set()
 
-        page_len = len(page)    #does this have any performance benefit?
-        while offset <= page_len:
+        while offset <= len(page):
             #find all links; do not append blank link
             (link, offset) = get_contents(page, "[[", "]]", offset)
             if '|' in link:
