@@ -41,39 +41,35 @@ else:
     exit()
 
 output = open(output_file, "w")
+links = []
 with open(input_file) as input:
     for line in input:
-        page = ""
-        links = []
+        page = "<page>\n"
         #tags/metadata should be on their own line, so conditionals should be mutually exclusive
         if "<title>" in line:
-            try:
-                m = re.search("<title>.+</title>", line)
-                title = m.group(0)[7:-8]
-            except:
-                print "Failed to regex <", line, ">"
-                exit()
+            #look for title
+            m = re.search("<title>.+</title>", line)
+            title = m.group(0)[7:-8]
         elif "<sha1>" in line:
+            #look for SHA1 hash (or maybe timestamp?)
             m = re.search("<sha1>[\w]+</sha1>", line)
             hash = m.group(0)[6:-7]
         elif "</page>" in line:
-            #done scanning page:
+            #found end of page; write and reset
             page += title.upper() + "\n"
             page += hash + "\n"
-            #print len(links), "found for article ", title, "(" + str(len(set(links))) + " unique)"
-            s = set(links)
-            if len(links) != 0:
-                print len(links)
-            for link in s:
+            for link in set(links):
+                #write link without brackets or repetitions
+                #capitalize: caps may vary in context, but should be uniform for hash function later
                 page += link[2:-2].upper() + "\n"
-                print link[2:-2].upper() + "\t (", title
+            output.write(page)
+            #reset info for next page
+            page = "<page>\n"
             title = hash = ""
             links = []
-            output.write(page)
-            page = ""
         else:
+            #line is just regular text; look for links
             links += re.findall("\[\[[^]]+\]\]", line)
-            #print "\t", len(links)
             
 output.close()
 
