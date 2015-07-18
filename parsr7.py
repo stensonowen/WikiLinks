@@ -1,18 +1,23 @@
 '''parser7
     read line-by-line because I realized I'm an idiot
-        alt is opening entire filee
+        alt is opening entire files
         old version stored entire dump in 1 string (lol)
         I managed to do it with a ~100GB pagefile, but it became unbearably slow (of course)
-    ideal arguments:
+    uses SHA1 hash instead of timestamp for updating?
+        hash more elegant
+        if time is used, then script can calculate most recent article used
+            when parsing new article, timestamp can be compared to this to determine if changed (valid?)
+            otherwise, every hash would need to be compared with every other hash
+                unless you could view edit log? that might be better
+    maybe use a real argument parsing library
         --help  
         [1]     input file
         --output
         --update
         --chunks
         --chunk_size
-        
-    should use SHA hash instead of time-stamp
-    maybe use a real argument parsing library
+    eventually add multi-threading
+        master thread extracts page, delegates finding links to children
 ''' 
 
 '''import argparse
@@ -58,10 +63,14 @@ with open(input_file) as input:
             #found end of page; write and reset
             page += title.upper() + "\n"
             page += hash + "\n"
-            for link in set(links):
+            for match in set(links):
                 #write link without brackets or repetitions
                 #capitalize: caps may vary in context, but should be uniform for hash function later
-                page += link[2:-2].upper() + "\n"
+                link = match[2:-2]
+                if '|' in link:
+                    #pipe means article_title|link_text_in_page; the latter varies by article
+                    link = link[:link.index("|")]
+                page += link.upper() + "\n"
             output.write(page)
             #reset info for next page
             page = "<page>\n"
@@ -75,7 +84,7 @@ output.close()
 
 elapsed_time = datetime.datetime.now() - start_time
 print "just read from: \t", input_file
-print " and wrote to:\t ", output_file
+print " and wrote to: \t ", output_file
 print elapsed_time
 print elapsed_time.seconds, "seconds"
         
