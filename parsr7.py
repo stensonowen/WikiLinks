@@ -40,10 +40,49 @@ else:
     print "Usage: \""+sys.argv[0]+" input [output]\""
     exit()
 
-lines = 0
+output = open(output_file, "w")
 with open(input_file) as input:
     for line in input:
-        lines += 1
+        page = ""
+        links = []
+        #tags/metadata should be on their own line, so conditionals should be mutually exclusive
+        if "<title>" in line:
+            try:
+                m = re.search("<title>.+</title>", line)
+                title = m.group(0)[7:-8]
+            except:
+                print "Failed to regex <", line, ">"
+                exit()
+        elif "<sha1>" in line:
+            m = re.search("<sha1>[\w]+</sha1>", line)
+            hash = m.group(0)[6:-7]
+        elif "</page>" in line:
+            #done scanning page:
+            page += title.upper() + "\n"
+            page += hash + "\n"
+            #print len(links), "found for article ", title, "(" + str(len(set(links))) + " unique)"
+            s = set(links)
+            if len(links) != 0:
+                print len(links)
+            for link in s:
+                page += link[2:-2].upper() + "\n"
+                print link[2:-2].upper() + "\t (", title
+            title = hash = ""
+            links = []
+            output.write(page)
+            page = ""
+        else:
+            links += re.findall("\[\[[^]]+\]\]", line)
+            #print "\t", len(links)
+            
+output.close()
 
-print "lines: ", lines
+elapsed_time = datetime.datetime.now() - start_time
+print "just read from: \t", input_file
+print " and wrote to:\t ", output_file
+print elapsed_time
+print elapsed_time.seconds, "seconds"
+        
+        
+
         
