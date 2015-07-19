@@ -17,8 +17,6 @@ parser8
         --update
         --chunks
         --chunk_size
-    Reworking structure to lend itself to multithreading
-        master thread extracts page, delegates finding links to children
 
     takes ~15 seconds for sample wiki
     Known Issues: Sometimes omits post metadata (ex: comment history) (???)
