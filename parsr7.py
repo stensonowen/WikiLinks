@@ -18,6 +18,9 @@
         --chunk_size
     eventually add multi-threading
         master thread extracts page, delegates finding links to children
+    takes ~30 seconds for sample wiki
+    takes ~40 minutes for complete english wiki (!)
+    
 ''' 
 
 '''import argparse
@@ -47,6 +50,7 @@ else:
 
 output = open(output_file, "w")
 links = []
+parsed = 0
 with open(input_file) as input:
     for line in input:
         page = "<page>\n"
@@ -72,6 +76,10 @@ with open(input_file) as input:
                     link = link[:link.index("|")]
                 page += link.upper() + "\n"
             output.write(page)
+            parsed += 1
+            if parsed % 1000000 == 0:
+                time = datetime.datetime.time(datetime.datetime.now())
+                print "[" + str(time) +"] \t", parsed/1000000, "x 1M"
             #reset info for next page
             page = "<page>\n"
             title = hash = ""
@@ -87,7 +95,3 @@ print "just read from: \t", input_file
 print " and wrote to: \t ", output_file
 print elapsed_time
 print elapsed_time.seconds, "seconds"
-        
-        
-
-        
