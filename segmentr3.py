@@ -92,6 +92,14 @@ else:
     print "Optionally divide by size (-b <bytes>) or number of chunks (-c <chunks>)."
     exit()
 
+    
+print "input: \t", in_file
+print "output: \t", out_file
+print "outpath: \t", out_path
+print "chunks: \t", chunks
+print "chunk_size: \t", chunk_size
+    
+    
 separator = "<page>"
 fin = open(in_file, "r").read()
 if chunks == -1:
