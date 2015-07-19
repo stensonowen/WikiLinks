@@ -37,9 +37,6 @@ def parse_page(page_text, queue):
         if "|" in link:
             link = link[:link.index("|")]
         result += link + "\n"
-    #queue.put(result)   #?
-    #return result
-    #out_file.write(result)
 
 def listener(queue, out_name):
     out_file = open(out_name, "w")
@@ -83,25 +80,13 @@ def main():
             if "</page>" in line:
                 job = pool.apply_async(parse_page, (page, queue))
                 jobs.append(job)
-                #output.write(parse_page(page))
-                #parse_page(page, queue, out_file, out_lock)
-                #add a process for parsing that page:
-                #if len(processes) >= num_cores:
-                #    #handle in main thread if enough threads are spawned
-                #    parse_page(page, queue, out_file, out_lock)
-                #else:
-                #process = mp.Process(target=parse_page, args=(page, queue, out_file))
-                    #run them; is this bottlenecking?
-                #process.start()
-                #processjoin()
+                
                 page = ""
     for job in jobs:
         job.get()
     
     queue.put('kill')
     pool.close()
-            
-    #out_file.close()
 
     elapsed_time = datetime.datetime.now() - start_time
     print "just read from: \t", input_file
