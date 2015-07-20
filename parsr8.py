@@ -19,6 +19,7 @@ parser8
         --chunk_size
 
     takes ~15 seconds for sample wiki
+    takes ~24 minutes for entire english wiki
     Known Issues: Sometimes omits post metadata (ex: comment history) (???)
     Faster than the in-line version (speedup = ~2) and the newbie multithreading (speedup = ~8)
 ''' 
