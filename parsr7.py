@@ -20,7 +20,7 @@ parser7
     eventually add multi-threading
         master thread extracts page, delegates finding links to children
     takes ~30 seconds for sample wiki
-    takes ~40 minutes for complete english wiki (!)
+    takes ~40 minutes for complete english wiki (24 with parsr8)
     
 ''' 
 
