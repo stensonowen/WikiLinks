@@ -2,6 +2,8 @@
 Run in 64-bit to use >2GB of memory
 Tested using >8GB (system RAM) of contiguous memory in x64 without issue
 Only with pagefile (windows 8.1); useability with swap instead (ubuntu)??
+
+Takes ~2.5 minutes to enter simple wiki, using ~1 GB, 0 collisions (?), 1,000,000 entries
 */
 
 #include <iostream>
@@ -12,8 +14,10 @@ Only with pagefile (windows 8.1); useability with swap instead (ubuntu)??
 #include <list>
 #include <time.h>
 #include <math.h>
+#include <string>
 #define KILOBYTE 1024
 #define MEGABYTE 1024*1024
+#define CLOCKS_PER_SECOND 1000
 
 using namespace std;
 
@@ -75,7 +79,7 @@ void read_entry(const string &url, entry ** table, size_t table_entries, hash<st
 		cout << "Entry " << &url << " is not present." << endl;
 	}
 	else {
-		cout << "Entry " << url << " is present at 0x" << table[hash] << " and links to the following articles: " << endl;
+		cout << "Entry " << url << " is present at 0x" << table[hash] << " and links to: " << endl;
 		list<string> l = *(table[hash]->links);
 		for (list<string>::iterator itr = l.begin(); itr != l.end(); itr++) {
 			cout << "\t" << *itr << endl;
@@ -93,14 +97,10 @@ void create_entry(size_t hash, string &url, entry ** table, list<string> *links 
 
 int main() {
 	clock_t t = clock();	//time program
-	string path = string("E:\\Libraries\\Downloads\\WIKIPEDIA\\SIMPLE_FILES\\") + string("wiki_");	//gets rid of weird type errors (RIP strcat())
-	ifstream fin;
-	string filename, ln_buf;
-	string id, url, title;
-	size_t counter = 0, subcounter = 0;
-	size_t hash;
-
+	//string path = string("E:\\Libraries\\Downloads\\WIKIPEDIA\\SIMPLE_FILES\\") + string("wiki_");	//gets rid of weird type errors (RIP strcat())
+	string path = string("E:\\Libraries\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("out_sample_v11.txt");
 	std::hash<string> str_hash;
+	size_t hash;
 
 	/*	Initialize hash table:
 	*		Simple wiki: ~130,000 entries
@@ -115,7 +115,7 @@ int main() {
 	*/
 	std::cout << sizeof(entry) << " bytes per entry" << std::endl;
 	cout << "Initializing structure..." << endl;
-	size_t table_entries = 1 * KILOBYTE;
+	size_t table_entries = 1 * MEGABYTE;
 	entry ** table = new entry*[table_entries];
 	for (int i = 0; i < table_entries; i++) {
 		//this is way faster than it should be, but still seems to work
@@ -124,43 +124,63 @@ int main() {
 	}
 	size_t table_bytes = table_entries * sizeof(entry);
 
-	unsigned int collisions = 0;	//for analytics
+	unsigned int collisions = 0;	//for analytics (?)
 
-	//used to cycle through embedded links:
-	vector<string> links;
-	vector<string>::iterator itr;
+	//start cycling through file:
+	ifstream in_file(path);
+	string line;
+	string title(""), sha1;
+	list<string> links;
+	if (in_file) {
+		while (getline(in_file, line)) {
+			//process line-by-line
+			if (line == "<path>\n") {
+				//just finished reading in links; insert data into table
+				if (title != "") {
+					hash = resolve_collisions2(title, table, table_entries, str_hash, &collisions);
+					create_entry(hash, title, table, &links);
+				}
+				//about to show article metadata
+				getline(in_file, title);
+				getline(in_file, sha1);
+				links.clear();
+			}
+			else {
+				//line is a link
+				links.push_back(line);
+			}
+		}
+		//insert last article data into table
+		hash = resolve_collisions2(title, table, table_entries, str_hash, &collisions);
+		create_entry(hash, title, table, &links);
+		in_file.close();
+	}
 
+
+
+
+	/*
 	//test stuff:
 	string a1 = "TEST_STRING_1";
 	string a2 = "TEST_LINK_2";
 	read_entry(a1, table, table_entries, str_hash);
 	read_entry(a2, table, table_entries, str_hash);
+
 	//try to insert a1, a2 into a1, then read a2 from a1:
 	hash = resolve_collisions2(a1, table, table_entries, str_hash, &collisions);
-	cout << hash << endl;
-	//list<string> *links_ = new list<string>;
-	//links_->push_back(a2);
-	//create_entry(hash, url, table, links_);
-	table[hash] = new entry;
-	table[hash]->url = &a1;
-	table[hash]->links = new list<string>;
-	table[hash]->links->push_back(a2);
-
-	size_t hash2 = resolve_collisions2(a1, table, table_entries, str_hash, &collisions);
 	list<string> *x = new list<string>;
+	x->push_back(a2);
+	create_entry(hash, a1, table, x);
+
+	size_t hash2 = resolve_collisions2(a2, table, table_entries, str_hash, &collisions);
+	x = new list<string>;
 	x->push_back(a1);
-	//create_entry(hash2, a2, table, x);
-	cout << hash2 << endl;
-	if (table[hash2]) {
-		cout << *(table[hash2]->url) << endl;
-		list<string>::iterator itr;
-		for (itr = table[hash2]->links->begin(); itr != table[hash2]->links->end(); itr++) {
-			cout << "\t" << *itr << endl;
-		}
-	}
-	cout << "x" << endl;
+	create_entry(hash2, a2, table, x);
+
 	read_entry(a1, table, table_entries, str_hash);
 	read_entry(a2, table, table_entries, str_hash);
+	*/
+
 
 
 	/*
@@ -219,11 +239,11 @@ int main() {
 
 	string u1 = "Capitalization";
 	read_entry(&u1, table, table_entries, &str_hash);
-
+*/
 	std::cout << collisions << " total collisions" << std::endl;
 	delete[] table;
 	t = clock() - t;
-	std::cout << "Total time: " << t << " clicks, " << ((float)t) / CLOCKS_PER_SEC << " seconds." << std::endl;*/
+	std::cout << "Total time: " << t << " clicks, " << ((float)t) / CLOCKS_PER_SEC << " seconds." << std::endl;
 	getchar();
 
 	return 0;
