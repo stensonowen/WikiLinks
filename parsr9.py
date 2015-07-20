@@ -3,7 +3,7 @@ parser9
     reworked version of parsr8 for multithreading
     the way it's currently set  up (spawn a thread per page) doesn't work
         way too much overhead (speedup of .25)
-    lacking multithreading really isn't a big deal; runs once every time a dump is released, takes 40 minutes max
+    lacking multithreading really isn't a big deal; runs once every time a dump is released, takes 25 minutes max
 ''' 
 
 import datetime, sys, os, re
