@@ -46,7 +46,8 @@ def parse_page(page_text):
     hash = get_contents(page_text, "<sha1>", "</sha1>")
     output = "<page>\n" + title.upper() + "\n"
     output += hash + "\n"
-    links = set(re.findall("\[\[[^]^\n]+\]\]", page_text))
+    #links = set(re.findall("\[\[[^]^\n]+\]\]", page_text))
+    links = set(re.findall("\[\[[^]\n]+]]", page_text))
     for link in links:
         link = link[2:-2].upper()
         if "|" in link:
