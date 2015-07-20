@@ -1,4 +1,5 @@
-'''parser7
+'''
+parser7
     read line-by-line because I realized I'm an idiot
         alt is opening entire files
         old version stored entire dump in 1 string (lol)

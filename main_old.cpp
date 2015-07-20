@@ -7,6 +7,7 @@ Only with pagefile (windows 8.1); useability with swap instead (ubuntu)??
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <regex>
 #include <vector>
 #include <cassert>
 #include <list>
@@ -16,6 +17,37 @@ Only with pagefile (windows 8.1); useability with swap instead (ubuntu)??
 #define MEGABYTE 1024*1024
 
 using namespace std;
+
+string extract_title_metadata(const string &block, const string &start, const string &end) {
+	size_t i = block.find(start) + start.size();
+	size_t j = block.find(end);
+	return block.substr(i, j - i);
+}
+
+vector<string> extract_title_metadata(const string &block) {
+	vector<string> metadata;
+	smatch m;
+	regex re("<doc id=\"([\\d]+)\" url=\"([^ ]+)\" title=\"(.+)\">");
+	regex_search(block, m, re);		//no need for loop; should only find once
+	smatch::iterator itr = m.begin();
+	metadata.push_back(*++itr);		//append id
+	metadata.push_back(*++itr);		//append url
+	metadata.push_back(*++itr);		//append title
+	return metadata;
+}
+
+vector<string> extract_link_urls(string block) {
+	vector<string> links;
+	smatch m;
+	regex re("<a href=\"([^ ]+)\"></a>");
+	string url;
+	while (regex_search(block, m, re)) {
+		url = *++m.begin();		//retrieve second result of regex search
+		links.push_back(url);
+		block = m.suffix().str();
+	}
+	return links;
+}
 
 struct entry {
 	//sizeof(entry) = 8  bytes in 32-bit
@@ -42,66 +74,82 @@ int bj_hash(unsigned char *str)
 }
 
 
+size_t resolve_collisions(const string *str, const entry ** table, unsigned int table_entries, hash<string> *str_hash) {
+	//employ hash function and then use collision-checking algorithm
+	size_t hash = (*str_hash)(*str);
+	size_t modified_hash = hash;
+	unsigned int offset = 0;
+	unsigned int multiplier = 2;	//multiplier=1 already checked via while() statement
+	hash %= table_entries;
+	while (table[modified_hash] != NULL) {
+		/* Deal with collisions by retrying with an offset of n!+1;
+		Should be slightly more successful than an offset of n^2
+		because it generates primes very frequently.
+		Evades the performance hit of factorials because it only finds
+		one product per attempt, which it stores in memory.
+		Thus, rather than O(n!) additional cycles, it only requires
+		one int and two addition operations (4 bytes, <=2 cycles)
+		*/
+		//This version will continue indefinitely until it enters an infinite loop
+		static unsigned int collisions;
+		collisions++;
+		offset = (offset - 1)*multiplier + 1;
+		modified_hash += offset;
+		multiplier += 1;
+		modified_hash %= table_entries;	//bad practice? already used 
+		assert(modified_hash != hash);	//if this is ever true, then collision detector has entered an infinite loop; may God have mercy on us all.
+	}
+	return modified_hash;
+}
 
-//size_t resolve_collisions2(const string *str, entry ** table, size_t table_entries, hash<string> *str_hash, unsigned int *collisions) {
-size_t resolve_collisions2(const string &str, entry ** table, size_t table_entries, hash<string> &str_hash, unsigned int *collisions) {
+size_t resolve_collisions2(const string *str, entry ** table, size_t table_entries, hash<string> *str_hash, unsigned int *collisions) {
 	//employ hash function and then use collision-checking algorithm
 	/* Deal with collisions by retrying with an offset of n!+1;
 	Should be slightly more successful than an offset of n^2 because it generates primes very frequently (prime for 0<=n<=4, and then ~50% for n>4).
 	Evades the performance hit of factorials because it only finds one product per attempt, which it stores in memory.
 	Thus, rather than O(n!) additional cycles, it only requires one int and two addition operations (4 bytes, <=2 cycles)
 	*/
-	//	This version caps the number of collision checks at {some constant}.
-	size_t hash = (str_hash)(str);
+	//	This version caps the number of collision checks at k.
+	size_t hash = (*str_hash)(*str);
 	unsigned int offset = 0;
 	unsigned int multiplier = 1;	//multiplier=1 already checked via while() statement
 									//static unsigned int collisions;
 	for (int i = 0; i < 100; i++) {
-		//Only keep track of collisions if it's necessary (if a var is passed)
-		if (collisions != NULL) { collisions++; }
+		if (&collisions != NULL) collisions++;
 		offset = (offset - 1)*multiplier + 1;
-		multiplier += 1;
 		hash += offset;
+		multiplier += 1;
 		hash %= table_entries;
-		if (table[hash] == NULL || *(table[hash]->url) == str) { return hash; }
-		//return if that value in the table is blank or a match
+		if (table[hash] == NULL || *(table[hash]->url) == *str) { return hash; }
 	}
 	return 0;
 }
 
-void read_entry(const string &url, entry ** table, size_t table_entries, hash<string> &str_hash) {
+void read_entry(const string *url, entry ** table, size_t table_entries, hash<string> *str_hash) {
 	size_t hash = resolve_collisions2(url, table, table_entries, str_hash, NULL);
 	if (table[hash] == NULL) {
 		cout << "Entry " << &url << " is not present." << endl;
 	}
 	else {
-		cout << "Entry " << url << " is present at 0x" << table[hash] << " and links to the following articles: " << endl;
+		cout << "Entry " << &url << " is present at 0x" << table[hash] << " and links to the following articles: " << endl;
 		list<string> l = *(table[hash]->links);
 		for (list<string>::iterator itr = l.begin(); itr != l.end(); itr++) {
 			cout << "\t" << *itr << endl;
 		}
 	}
-}
 
-void create_entry(size_t hash, string &url, entry ** table, list<string> *links = NULL) {
-	//make a new entry from the given details
-	table[hash] = new entry;
-	table[hash]->url = &url;
-	if (!links) { table[hash]->links = new list<string>; }
-	else { table[hash]->links = links; }
 }
 
 int main() {
 	clock_t t = clock();	//time program
 	string path = string("E:\\Libraries\\Downloads\\WIKIPEDIA\\SIMPLE_FILES\\") + string("wiki_");	//gets rid of weird type errors (RIP strcat())
 	ifstream fin;
-	string filename, ln_buf;
-	string id, url, title;
+	string pattern = "<doc id=\"[\\d]+\" url=.+\" title=\".+\">";	//regex of article title
+	string filename, ln_buf, id, url, title;
 	size_t counter = 0, subcounter = 0;
 	size_t hash;
 
 	std::hash<string> str_hash;
-
 	/*	Initialize hash table:
 	*		Simple wiki: ~130,000 entries
 	*		Whole wiki: ~5,000,000 entries
@@ -111,10 +159,8 @@ int main() {
 	*			address should be a hash of the url
 	*			starting address should be ~100x expected size?
 	*			should use list to hold links (vectors must be contiguous?)
-	*			64-bit programs mean 16-bit addresses; so a pointer to 
 	*/
 	std::cout << sizeof(entry) << " bytes per entry" << std::endl;
-	cout << "Initializing structure..." << endl;
 	size_t table_entries = 1 * KILOBYTE;
 	entry ** table = new entry*[table_entries];
 	for (int i = 0; i < table_entries; i++) {
@@ -123,33 +169,25 @@ int main() {
 		table[i] = NULL;
 	}
 	size_t table_bytes = table_entries * sizeof(entry);
-
-	unsigned int collisions = 0;	//for analytics
+	//	10*1024*1024 = 160 Mb 
+	unsigned int collisions = 0;
 
 	//used to cycle through embedded links:
 	vector<string> links;
 	vector<string>::iterator itr;
 
-	//test stuff:
+
 	string a1 = "TEST_STRING_1";
 	string a2 = "TEST_LINK_2";
-	read_entry(a1, table, table_entries, str_hash);
-	read_entry(a2, table, table_entries, str_hash);
 	//try to insert a1, a2 into a1, then read a2 from a1:
-	hash = resolve_collisions2(a1, table, table_entries, str_hash, &collisions);
+	hash = resolve_collisions2(&a1, table, table_entries, &str_hash, &collisions);
 	cout << hash << endl;
-	//list<string> *links_ = new list<string>;
-	//links_->push_back(a2);
-	//create_entry(hash, url, table, links_);
 	table[hash] = new entry;
 	table[hash]->url = &a1;
 	table[hash]->links = new list<string>;
 	table[hash]->links->push_back(a2);
 
-	size_t hash2 = resolve_collisions2(a1, table, table_entries, str_hash, &collisions);
-	list<string> *x = new list<string>;
-	x->push_back(a1);
-	//create_entry(hash2, a2, table, x);
+	size_t hash2 = resolve_collisions2(&a1, table, table_entries, &str_hash, &collisions);
 	cout << hash2 << endl;
 	if (table[hash2]) {
 		cout << *(table[hash2]->url) << endl;
@@ -158,9 +196,7 @@ int main() {
 			cout << "\t" << *itr << endl;
 		}
 	}
-	cout << "x" << endl;
-	read_entry(a1, table, table_entries, str_hash);
-	read_entry(a2, table, table_entries, str_hash);
+
 
 
 	/*

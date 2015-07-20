@@ -32,6 +32,10 @@ def parse_page(page_text, queue):
     result = "<page>\n" + title.upper() + "\n"
     result += hash + "\n"
     links = set(re.findall("\[\[[^]^\n]+\]\]", page_text))
+    #links = set(re.findall("\[\[[^]\n]+]]", page_text))
+    
+    #don't match links with newlines (only excludes comment anomalies and stuff)
+    #a little wonky; 
     for link in links:
         link = link[2:-2].upper()
         if "|" in link:
