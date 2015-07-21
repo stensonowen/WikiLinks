@@ -3,7 +3,7 @@ Run in 64-bit to use >2GB of memory
 Tested using >8GB (system RAM) of contiguous memory in x64 without issue
 Only with pagefile (windows 8.1); useability with swap instead (ubuntu)??
 
-Takes ~2.5 minutes to enter simple wiki, using ~1 GB, 0 collisions (?), 1,000,000 entries
+Takes ~2 minutes to enter simple wiki
 */
 
 #include <iostream>
@@ -17,7 +17,6 @@ Takes ~2.5 minutes to enter simple wiki, using ~1 GB, 0 collisions (?), 1,000,00
 #include <string>
 #define KILOBYTE 1024
 #define MEGABYTE 1024*1024
-#define CLOCKS_PER_SECOND 1000
 
 using namespace std;
 
@@ -127,14 +126,16 @@ int main() {
 	unsigned int collisions = 0;	//for analytics (?)
 
 	//start cycling through file:
+	cout << "Start reading..." << endl;
 	ifstream in_file(path);
 	string line;
 	string title(""), sha1;
 	list<string> links;
+	unsigned int counter = 0;
 	if (in_file) {
 		while (getline(in_file, line)) {
 			//process line-by-line
-			if (line == "<path>\n") {
+			if (line == "<page>") {
 				//just finished reading in links; insert data into table
 				if (title != "") {
 					hash = resolve_collisions2(title, table, table_entries, str_hash, &collisions);
@@ -144,6 +145,7 @@ int main() {
 				getline(in_file, title);
 				getline(in_file, sha1);
 				links.clear();
+				counter++;
 			}
 			else {
 				//line is a link
@@ -157,121 +159,51 @@ int main() {
 	}
 
 
+	cout << "Done indexing; " << collisions << " collisions \n\n" << endl;
+	collisions = 0;
+	unsigned int entries = 0;
+	unsigned int blanks = 0;
+	for (unsigned int i = 0; i < table_entries; i++) {
+		if (table[i] == NULL) {
+			blanks++;
+		}
+		else {
+			entries++;
+		}
+	}
+
+	cout << "Found " << entries << " populated slots, " << blanks << " unpopulated." << endl;
+	cout << "With " << table_entries << " slots, that is " << float(entries) / table_entries * 100 << "%\n" << endl;
+	//Should find 208,153 pages; finds ~180k (17% population rate)
 
 
-	/*
-	//test stuff:
-	string a1 = "TEST_STRING_1";
-	string a2 = "TEST_LINK_2";
-	read_entry(a1, table, table_entries, str_hash);
-	read_entry(a2, table, table_entries, str_hash);
 
-	//try to insert a1, a2 into a1, then read a2 from a1:
-	hash = resolve_collisions2(a1, table, table_entries, str_hash, &collisions);
+	/* misc use ex
+	read_entry("avocados", table, table_entries, str_hash);
+	hash = resolve_collisions2("avocados", table, table_entries, str_hash, &collisions);
 	list<string> *x = new list<string>;
-	x->push_back(a2);
-	create_entry(hash, a1, table, x);
-
-	size_t hash2 = resolve_collisions2(a2, table, table_entries, str_hash, &collisions);
-	x = new list<string>;
-	x->push_back(a1);
-	create_entry(hash2, a2, table, x);
-
-	read_entry(a1, table, table_entries, str_hash);
-	read_entry(a2, table, table_entries, str_hash);
+	x->push_back("apricots");
+	create_entry(hash, "avocados", table, x);
 	*/
 
-
-
-	/*
-	//start reading files:
-	for (int i = 0; i < 1; i++){	//132
-	//fix name generator
-	if (i < 10){
-	filename = path + "0" + to_string(i);
-	} else {
-	filename = path + to_string(i);
-	}
-
-	//open file
-	fin.open(filename);
-	if (fin.is_open()){
-	std::cout << "Opened " << filename << std::endl;
-	} else {
-	std::cout << "Failed to open '" << filename << "'" << std::endl;
-	}
-
-	//start reading data:
-	while (getline(fin, ln_buf)){
-	//if (regex_match(ln_buf, regex(pattern))){	//TODO: fix: searching twice
-	if ("<doc id=" == ln_buf.substr(0,8)){	//placeholder: guess at whether it'll fit the regex
-	//Start of new article
-	counter++;
-	std::cout << "Article <" << title << "> has " << subcounter << " links.\n";
-	subcounter = 0;
-
-	vector<string> md = extract_title_metadata(ln_buf);
-	id = md[0];
-	url = md[1];
-	title = md[2];
-
-	//Hash article url:
-	hash = resolve_collisions2(&url, table, table_entries, &str_hash, &collisions);
-	table[hash] = new entry;
-	table[hash]->url = &url;
-	table[hash]->links = new list < string > ;
-
-	}
-	links = extract_link_urls(ln_buf);
-	subcounter += links.size();		//pass ptr to first char (string -> char*)
-	for (itr = links.begin(); itr != links.end(); itr++){
-	//cast iterator's value to an unsigned char ptr, and hash it
-	//bj_hash((unsigned char*)(*itr).c_str());
-	table[hash]->links->push_back(*itr);
-	}
-	}
-	std::cout << "Article <" << url << "> has " << subcounter << " links.\n";
-
-
-	fin.close();
-	}
-	std::cout << "\n\nTotal Articles: " << counter << std::endl;
-
-	string u1 = "Capitalization";
-	read_entry(&u1, table, table_entries, &str_hash);
-*/
 	std::cout << collisions << " total collisions" << std::endl;
 	delete[] table;
 	t = clock() - t;
-	std::cout << "Total time: " << t << " clicks, " << ((float)t) / CLOCKS_PER_SEC << " seconds." << std::endl;
+	std::cout << "Total time: " << t << " clicks, " << ((float)t) / 1000 << " seconds." << std::endl;
+
+
 	getchar();
 
 	return 0;
 }
 
-/*
-Change filenames: could use a 26-base to determine extra number
-cd E:\Libraries\Downloads\WIKIPEDIA\ex_smp_2\AB
-for filename in os.listdir("."):
-os.rename(filename, filename[:5] + "1" + filename[-2:])
-
-Article Name Regex:		<doc id="[\d]+" url=.+" title=".+">
-Article Link Regex:		<a href="[^ ]+"></a>
-*/
 
 /*TODO
-Fix wonky passes by ref (late at night)
-Fix parsing issues (python-side)
-No tested version of WikiExtractor (2.32, 2.34) handles links properly.
-A hackey fix of 2.32 does, but only 2.34 utilizes multithreading properly.
-Need to amend code anyway; need to use urllib to generate page url from title
-Write my own???
-Create file format for storing processed post-parser data (?)
-Once program fills out hash table once, it should save data in easily recreatable way
-Should be easy; most expensive part by far is regexes, which don't need to be used every time.
-Write automated updater???
-Faster way to update info than by re-downloading wiki dump, re-parsing, and re-re-ing?
-
-
+Implement update of links file in Python from log/newer dump
+~~Create file format for storing processed post-parser data (?)~~
+Find where links are getting lost
+	implement debugging interface, so that the table can be populated once 
+	and then queried at will (until it's changed)
+Profiling to find expensive parts
 
 */
