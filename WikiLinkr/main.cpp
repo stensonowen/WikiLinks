@@ -3,7 +3,7 @@ Run in 64-bit to use >2GB of memory
 Tested using >8GB (system RAM) of contiguous memory in x64 without issue
 Only with pagefile (windows 8.1); useability with swap instead (ubuntu)??
 
-Takes ~2 minutes to enter simple wiki
+Takes ~2 minutes to enter simple wiki; no profiling done yet
 */
 
 #include <iostream>
@@ -47,7 +47,7 @@ int bj_hash(unsigned char *str)
 
 
 //size_t resolve_collisions2(const string *str, entry ** table, size_t table_entries, hash<string> *str_hash, unsigned int *collisions) {
-size_t resolve_collisions2(const string &str, entry ** table, size_t table_entries, hash<string> &str_hash, unsigned int *collisions) {
+size_t resolve_collisions2(const string &str, entry ** table, size_t table_entries, hash<string> &str_hash, unsigned int *collisions, bool verbose=false) {
 	//employ hash function and then use collision-checking algorithm
 	/* Deal with collisions by retrying with an offset of n!+1;
 	Should be slightly more successful than an offset of n^2 because it generates primes very frequently (prime for 0<=n<=4, and then ~50% for n>4).
@@ -59,6 +59,7 @@ size_t resolve_collisions2(const string &str, entry ** table, size_t table_entri
 	unsigned int offset = 0;
 	unsigned int multiplier = 1;	//multiplier=1 already checked via while() statement
 									//static unsigned int collisions;
+	collisions--;	//to offset incrementer
 	for (int i = 0; i < 100; i++) {
 		//Only keep track of collisions if it's necessary (if a var is passed)
 		if (collisions != NULL) { collisions++; }
@@ -66,10 +67,16 @@ size_t resolve_collisions2(const string &str, entry ** table, size_t table_entri
 		multiplier += 1;
 		hash += offset;
 		hash %= table_entries;
+		if (verbose) cout << "  Trying hash " << hash << "..." << endl;
+		if (verbose) {
+			if (table[hash] == NULL) cout << "  No entry found at hash " << hash << ";" << endl;
+			else cout << "  Entry '" << *(table[hash]->url) << "' found at hash " << hash << ";" << endl;
+		}
 		if (table[hash] == NULL || *(table[hash]->url) == str) { return hash; }
 		//return if that value in the table is blank or a match
+		if (verbose) cout << "   Didn't find any blank entries in k iterations;" << endl;
 	}
-	return 0;
+	return -1;	//should break something if 
 }
 
 void read_entry(const string &url, entry ** table, size_t table_entries, hash<string> &str_hash) {
@@ -193,6 +200,34 @@ int main() {
 
 
 	getchar();
+
+
+	//allow user to test input:
+	int input = -1;
+	string tmp_title = "";
+	size_t tmp_hash = -1;
+	list<string> tmp_list;
+	int tmp_count = 0;
+	while (input != 0) {
+		cout << "\n\nEnter one of the following: \n\t0:\t\tExit \n\t1:\t\tFind article in table \n\t2:\t\tPrint links of last article (" << tmp_title << ")" << endl;
+		cin >> input;
+		if (input == 1) {
+			cout << "  Please enter article name: ";
+			cin >> tmp_title;
+			cout << endl;
+			tmp_hash = resolve_collisions2(tmp_title, table, table_entries, str_hash, NULL, true);
+			cout << "  Found article '" << tmp_title << "' at hash " << tmp_hash << ";" << endl;
+		}
+		else if (input == 2) {
+			cout << "  Links under article '" << tmp_title << "';" << endl;
+			tmp_hash = resolve_collisions2(tmp_title, table, table_entries, str_hash, NULL);
+			tmp_list = *table[tmp_hash]->links;
+			for (list<string>::iterator tmp_itr = tmp_list.begin(); tmp_itr != tmp_list.end(); tmp_itr++) {
+				tmp_count++;
+				cout << "\t" << tmp_count << ": \t" << *tmp_itr << endl;
+			}
+		}
+	}
 
 	return 0;
 }
