@@ -61,8 +61,6 @@ size_t resolve_collisions2(const string &str, entry ** table, size_t table_entri
 									//static unsigned int collisions;
 	collisions--;	//to offset incrementer
 	for (int i = 0; i < 100; i++) {
-		//Only keep track of collisions if it's necessary (if a var is passed)
-		if (collisions != NULL) { collisions++; }
 		offset = (offset - 1)*multiplier + 1;
 		multiplier += 1;
 		hash += offset;
@@ -73,9 +71,13 @@ size_t resolve_collisions2(const string &str, entry ** table, size_t table_entri
 			else cout << "  Entry '" << *(table[hash]->url) << "' found at hash " << hash << ";" << endl;
 		}
 		if (table[hash] == NULL || *(table[hash]->url) == str) { return hash; }
-		//return if that value in the table is blank or a match
-		if (verbose) cout << "   Didn't find any blank entries in k iterations;" << endl;
+		else {
+			//Only keep track of collisions if it's necessary (if a var is passed)
+			if (collisions != NULL) collisions++;
+		}
 	}
+	//return if that value in the table is blank or a match
+	if (verbose) cout << "   Didn't find any blank entries in k iterations;" << endl;
 	return -1;	//should break something if 
 }
 
@@ -131,7 +133,19 @@ int main() {
 	size_t table_bytes = table_entries * sizeof(entry);
 
 	unsigned int collisions = 0;	//for analytics (?)
-
+	/*
+	vector<string> examples = { "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta" };
+	for (int i = 0; i < examples.size(); i++){
+		hash = resolve_collisions2(examples[i], table, table_entries, str_hash, &collisions);
+		read_entry(examples[i], table, table_entries, str_hash);
+		create_entry(hash, examples[i], table);
+	}
+	for (int i = 0; i < examples.size(); i++) {
+		hash = resolve_collisions2(examples[i], table, table_entries, str_hash, &collisions);
+		read_entry(examples[i], table, table_entries, str_hash);
+		//create_entry(hash, examples[i], table);
+	} */
+	
 	//start cycling through file:
 	cout << "Start reading..." << endl;
 	ifstream in_file(path);
@@ -165,7 +179,6 @@ int main() {
 		in_file.close();
 	}
 
-
 	cout << "Done indexing; " << collisions << " collisions \n\n" << endl;
 	collisions = 0;
 	unsigned int entries = 0;
@@ -178,13 +191,26 @@ int main() {
 			entries++;
 		}
 	}
-
 	cout << "Found " << entries << " populated slots, " << blanks << " unpopulated." << endl;
 	cout << "With " << table_entries << " slots, that is " << float(entries) / table_entries * 100 << "%\n" << endl;
-	//Should find 208,153 pages; finds ~180k (17% population rate)
+	//Should find 208,153 pages; finds ~180k (17% population rate) 
+	/*
+	string test1 = "APRIL";
+	hash = resolve_collisions2(test1, table, table_entries, str_hash, &collisions);
+	create_entry(hash, test1, table, NULL);
+	test1 = "ART";
+	hash = resolve_collisions2(test1, table, table_entries, str_hash, &collisions);
+	create_entry(hash, test1, table, NULL);
+
+	read_entry("APRIL", table, table_entries, str_hash);
+	read_entry("ART", table, table_entries, str_hash);
+	*/
 
 
 
+	//manually add text exes
+
+	
 	/* misc use ex
 	read_entry("avocados", table, table_entries, str_hash);
 	hash = resolve_collisions2("avocados", table, table_entries, str_hash, &collisions);
@@ -194,12 +220,14 @@ int main() {
 	*/
 
 	std::cout << collisions << " total collisions" << std::endl;
-	delete[] table;
+	//delete[] table;
 	t = clock() - t;
 	std::cout << "Total time: " << t << " clicks, " << ((float)t) / 1000 << " seconds." << std::endl;
 
 
 	getchar();
+
+
 
 
 	//allow user to test input:
@@ -216,12 +244,13 @@ int main() {
 			cin >> tmp_title;
 			cout << endl;
 			tmp_hash = resolve_collisions2(tmp_title, table, table_entries, str_hash, NULL, true);
-			cout << "  Found article '" << tmp_title << "' at hash " << tmp_hash << ";" << endl;
+			cout << "  Found ~~article~~ slot for '" << tmp_title << "' at hash " << tmp_hash << ";" << endl;
 		}
 		else if (input == 2) {
 			cout << "  Links under article '" << tmp_title << "';" << endl;
 			tmp_hash = resolve_collisions2(tmp_title, table, table_entries, str_hash, NULL);
-			tmp_list = *table[tmp_hash]->links;
+			//tmp_list = *table[tmp_hash]->links;
+			tmp_list = *(table[tmp_hash]->links);
 			for (list<string>::iterator tmp_itr = tmp_list.begin(); tmp_itr != tmp_list.end(); tmp_itr++) {
 				tmp_count++;
 				cout << "\t" << tmp_count << ": \t" << *tmp_itr << endl;
