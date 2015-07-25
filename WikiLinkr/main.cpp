@@ -273,10 +273,16 @@ int main() {
 
 /*TODO
 Implement update of links file in Python from log/newer dump
-~~Create file format for storing processed post-parser data (?)~~
-Find where links are getting lost
-	implement debugging interface, so that the table can be populated once 
-	and then queried at will (until it's changed)
+Find where links are getting lost (2%, down from 15%)
 Profiling to find expensive parts
+sizeof(string) > sizeof(char[]) ???
+
+
+STATUS
+	Occupying ~20% of the table requires 1GB for simple wiki (~105GB for total)
+	Missing ~2.3% of article entries (?)
+	Links are not populating the table (shouldn't anyway)
+		Should an entry's link storage include strings (yes) AND hashes? 
+			Would sacrifice memory for speed
 
 */
