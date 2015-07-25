@@ -95,12 +95,13 @@ void read_entry(const string &url, entry ** table, size_t table_entries, hash<st
 	}
 }
 
-void create_entry(size_t hash, string &url, entry ** table, list<string> *links = NULL) {
+void create_entry(size_t hash, string *url, entry ** table, list<string> *links = NULL) {
 	//make a new entry from the given details
 	table[hash] = new entry;
-	table[hash]->url = &url;
-	if (!links) { table[hash]->links = new list<string>; }
-	else { table[hash]->links = links; }
+	table[hash]->url = url;
+	//if (!links) { table[hash]->links = new list<string>; }
+	//else { table[hash]->links = links; }
+	table[hash]->links = links;
 }
 
 int main() {
@@ -149,33 +150,40 @@ int main() {
 	//start cycling through file:
 	cout << "Start reading..." << endl;
 	ifstream in_file(path);
+	//string line;
+	//string title(""), sha1;
+	string *title = NULL;
+	string *sha1 = NULL;
 	string line;
-	string title(""), sha1;
-	list<string> links;
+	list<string> *links = NULL;
 	unsigned int counter = 0;
 	if (in_file) {
 		while (getline(in_file, line)) {
 			//process line-by-line
 			if (line == "<page>") {
 				//just finished reading in links; insert data into table
-				if (title != "") {
-					hash = resolve_collisions2(title, table, table_entries, str_hash, &collisions);
-					create_entry(hash, title, table, &links);
+				//if (title != "") {
+				if(title != NULL){
+					//title should start as NULL; not sure why it isn't
+					hash = resolve_collisions2(*title, table, table_entries, str_hash, &collisions);
+					create_entry(hash, title, table, links);
 				}
+				title = new string;
+				sha1 = new string;
+				links = new list<string>;
 				//about to show article metadata
-				getline(in_file, title);
-				getline(in_file, sha1);
-				links.clear();
+				getline(in_file, *title);
+				getline(in_file, *sha1);
 				counter++;
 			}
 			else {
 				//line is a link
-				links.push_back(line);
+				links->push_back(line);
 			}
 		}
 		//insert last article data into table
-		hash = resolve_collisions2(title, table, table_entries, str_hash, &collisions);
-		create_entry(hash, title, table, &links);
+		hash = resolve_collisions2(*title, table, table_entries, str_hash, &collisions);
+		create_entry(hash, title, table, links);
 		in_file.close();
 	}
 
@@ -194,6 +202,7 @@ int main() {
 	cout << "Found " << entries << " populated slots, " << blanks << " unpopulated." << endl;
 	cout << "With " << table_entries << " slots, that is " << float(entries) / table_entries * 100 << "%\n" << endl;
 	//Should find 208,153 pages; finds ~180k (17% population rate) 
+	//update: finds 203,435 (97.7%)
 	/*
 	string test1 = "APRIL";
 	hash = resolve_collisions2(test1, table, table_entries, str_hash, &collisions);
