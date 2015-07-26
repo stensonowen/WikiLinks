@@ -47,7 +47,7 @@ int bj_hash(unsigned char *str)
 
 
 //size_t resolve_collisions2(const string *str, entry ** table, size_t table_entries, hash<string> *str_hash, unsigned int *collisions) {
-size_t resolve_collisions2(const string &str, entry ** table, size_t table_entries, hash<string> &str_hash, unsigned int *collisions, bool verbose=false) {
+size_t resolve_collisions2(const string &str, entry ** table, size_t table_entries, hash<string> &str_hash, int &collisions, bool verbose=false) {
 	//employ hash function and then use collision-checking algorithm
 	/* Deal with collisions by retrying with an offset of n!+1;
 	Should be slightly more successful than an offset of n^2 because it generates primes very frequently (prime for 0<=n<=4, and then ~50% for n>4).
@@ -59,7 +59,7 @@ size_t resolve_collisions2(const string &str, entry ** table, size_t table_entri
 	unsigned int offset = 0;
 	unsigned int multiplier = 1;	//multiplier=1 already checked via while() statement
 									//static unsigned int collisions;
-	collisions--;	//to offset incrementer
+	//collisions--;	//to offset incrementer
 	for (int i = 0; i < 100; i++) {
 		offset = (offset - 1)*multiplier + 1;
 		multiplier += 1;
@@ -72,8 +72,7 @@ size_t resolve_collisions2(const string &str, entry ** table, size_t table_entri
 		}
 		if (table[hash] == NULL || *(table[hash]->url) == str) { return hash; }
 		else {
-			//Only keep track of collisions if it's necessary (if a var is passed)
-			if (collisions != NULL) collisions++;
+			collisions++;
 		}
 	}
 	//return if that value in the table is blank or a match
@@ -82,7 +81,9 @@ size_t resolve_collisions2(const string &str, entry ** table, size_t table_entri
 }
 
 void read_entry(const string &url, entry ** table, size_t table_entries, hash<string> &str_hash) {
-	size_t hash = resolve_collisions2(url, table, table_entries, str_hash, NULL);
+	int collisions = 0;
+	size_t hash = resolve_collisions2(url, table, table_entries, str_hash, collisions);
+	cout << "After " << collisions << " collisions:  ";
 	if (table[hash] == NULL) {
 		cout << "Entry " << &url << " is not present." << endl;
 	}
@@ -133,7 +134,7 @@ int main() {
 	}
 	size_t table_bytes = table_entries * sizeof(entry);
 
-	unsigned int collisions = 0;	//for analytics (?)
+	int collisions = 0;	//for analytics (?)
 	/*
 	vector<string> examples = { "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta" };
 	for (int i = 0; i < examples.size(); i++){
@@ -165,7 +166,7 @@ int main() {
 				//if (title != "") {
 				if(title != NULL){
 					//title should start as NULL; not sure why it isn't
-					hash = resolve_collisions2(*title, table, table_entries, str_hash, &collisions);
+					hash = resolve_collisions2(*title, table, table_entries, str_hash, collisions);
 					create_entry(hash, title, table, links);
 				}
 				title = new string;
@@ -182,7 +183,7 @@ int main() {
 			}
 		}
 		//insert last article data into table
-		hash = resolve_collisions2(*title, table, table_entries, str_hash, &collisions);
+		hash = resolve_collisions2(*title, table, table_entries, str_hash, collisions);
 		create_entry(hash, title, table, links);
 		in_file.close();
 	}
@@ -238,7 +239,7 @@ int main() {
 
 
 
-
+	/*
 	//allow user to test input:
 	int input = -1;
 	string tmp_title = "";
@@ -266,6 +267,7 @@ int main() {
 			}
 		}
 	}
+	*/
 
 	return 0;
 }
