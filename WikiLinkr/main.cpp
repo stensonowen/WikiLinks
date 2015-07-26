@@ -202,37 +202,28 @@ int main() {
 	}
 	cout << "Found " << entries << " populated slots, " << blanks << " unpopulated." << endl;
 	cout << "With " << table_entries << " slots, that is " << float(entries) / table_entries * 100 << "%\n" << endl;
-	//Should find 208,153 pages; finds ~180k (17% population rate) 
-	//update: finds 203,435 (97.7%)
-	/*
-	string test1 = "APRIL";
-	hash = resolve_collisions2(test1, table, table_entries, str_hash, &collisions);
-	create_entry(hash, test1, table, NULL);
-	test1 = "ART";
-	hash = resolve_collisions2(test1, table, table_entries, str_hash, &collisions);
-	create_entry(hash, test1, table, NULL);
+	//Logs 203,435 pages; parser finds 208,153
+	//	Table not missing any entries, but the dump contains duplicates; might have to revisit the parser
 
-	read_entry("APRIL", table, table_entries, str_hash);
-	read_entry("ART", table, table_entries, str_hash);
-	*/
-
-
-
-	//manually add text exes
-
-	
-	/* misc use ex
-	read_entry("avocados", table, table_entries, str_hash);
-	hash = resolve_collisions2("avocados", table, table_entries, str_hash, &collisions);
-	list<string> *x = new list<string>;
-	x->push_back("apricots");
-	create_entry(hash, "avocados", table, x);
-	*/
 
 	std::cout << collisions << " total collisions" << std::endl;
 	//delete[] table;
 	t = clock() - t;
-	std::cout << "Total time: " << t << " clicks, " << ((float)t) / 1000 << " seconds." << std::endl;
+	std::cout << "Total time: " << t << " clicks, " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
+
+	/* // Write article titles to file to test against parsed dump file:
+	cout << "Retrieving output: " << endl;
+	ofstream f_out;
+	f_out.open("article_names.txt");
+	string tmp_name;
+	int num_articles = 0;
+	for (int i = 0; i < table_entries; i++) {
+		if (table[i] != NULL) {
+			f_out << *(table[i]->url) << endl;
+		}
+	}
+	f_out.close();
+	*/
 
 
 	getchar();
@@ -274,15 +265,15 @@ int main() {
 
 
 /*TODO
-Implement update of links file in Python from log/newer dump
-Find where links are getting lost (2%, down from 15%)
-Profiling to find expensive parts
-sizeof(string) > sizeof(char[]) ???
-
+	Implement update of links file in Python from log/newer dump
+	Find where links are getting lost (2%, down from 15%)
+	Profiling to find expensive parts
+	sizeof(string) > sizeof(char[]) ???
+	Remove duplicate entries (on parser side?) (dumps contain multiple entries w/ different links?)
+	Clean up memory (first each entry, then table)
 
 STATUS
 	Occupying ~20% of the table requires 1GB for simple wiki (~105GB for total)
-	Missing ~2.3% of article entries (?)
 	Links are not populating the table (shouldn't anyway)
 		Should an entry's link storage include strings (yes) AND hashes? 
 			Would sacrifice memory for speed
