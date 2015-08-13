@@ -3,7 +3,8 @@ Run in 64-bit to use >2GB of memory
 Tested using >8GB (system RAM) of contiguous memory in x64 without issue
 Only with pagefile (windows 8.1); useability with swap instead (ubuntu)??
 
-Takes ~2 minutes to enter simple wiki; no profiling done yet
+W/ link structure of hashes instead of strings, still takes ~2.5 minutes, but uses <1k MB (>10% decrease)
+	Switch to vectors/arrays? Could use Parsr to pre-count elements
 */
 
 #include <iostream>
@@ -24,7 +25,8 @@ struct entry {
 	//sizeof(entry) = 8  bytes in 32-bit
 	//sizeof(entry) = 16 bytes in 64-bit
 	string *url;				//holds url: check for collisions
-	list<string>* links;	//pointer to linked list holding links
+	//list<string>* links;	//pointer to linked list holding links
+	list<int> links;
 };
 
 unsigned long djb2_hash(unsigned char *str) {
@@ -89,26 +91,28 @@ void read_entry(const string &url, entry ** table, size_t table_entries, hash<st
 	}
 	else {
 		cout << "Entry " << url << " is present at 0x" << table[hash] << " and links to: " << endl;
-		list<string> l = *(table[hash]->links);
-		for (list<string>::iterator itr = l.begin(); itr != l.end(); itr++) {
-			cout << "\t" << *itr << endl;
+		//switched from 
+		list<int> l = table[hash]->links;
+		for (list<int>::iterator itr = l.begin(); itr != l.end(); itr++) {
+			cout << "\t" << table[*itr]->url << endl;
 		}
 	}
 }
 
-void create_entry(size_t hash, string *url, entry ** table, list<string> *links = NULL) {
+void create_entry(size_t hash, string *url, entry ** table, list<int> *links = NULL) {
 	//make a new entry from the given details
 	table[hash] = new entry;
 	table[hash]->url = url;
 	//if (!links) { table[hash]->links = new list<string>; }
 	//else { table[hash]->links = links; }
-	table[hash]->links = links;
+	table[hash]->links = *links;
 }
 
 int main() {
 	clock_t t = clock();	//time program
 	//string path = string("E:\\Libraries\\Downloads\\WIKIPEDIA\\SIMPLE_FILES\\") + string("wiki_");	//gets rid of weird type errors (RIP strcat())
-	string path = string("E:\\Libraries\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("out_sample_v11.txt");
+	//string path = string("E:\\Libraries\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("out_sample_v11.txt");
+	string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("simple_parsed.txt");
 	std::hash<string> str_hash;
 	size_t hash;
 
@@ -124,6 +128,8 @@ int main() {
 	*			64-bit programs mean 16-bit addresses; so a pointer to 
 	*/
 	std::cout << sizeof(entry) << " bytes per entry" << std::endl;
+	cout << sizeof(hash) << " bytes per size_t" << endl;
+	cout << sizeof(int) << " bytes per int" << endl;
 	cout << "Initializing structure..." << endl;
 	size_t table_entries = 1 * MEGABYTE;
 	entry ** table = new entry*[table_entries];
@@ -156,7 +162,8 @@ int main() {
 	string *title = NULL;
 	string *sha1 = NULL;
 	string line;
-	list<string> *links = NULL;
+	int link_hash;
+	list<int> *links = NULL;
 	unsigned int counter = 0;
 	if (in_file) {
 		while (getline(in_file, line)) {
@@ -171,7 +178,7 @@ int main() {
 				}
 				title = new string;
 				sha1 = new string;
-				links = new list<string>;
+				links = new list<int>;
 				//about to show article metadata
 				getline(in_file, *title);
 				getline(in_file, *sha1);
@@ -179,7 +186,8 @@ int main() {
 			}
 			else {
 				//line is a link
-				links->push_back(line);
+				link_hash = resolve_collisions2(line, table, table_entries, str_hash, collisions);
+				links->push_back(link_hash);
 			}
 		}
 		//insert last article data into table
