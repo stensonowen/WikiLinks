@@ -3,7 +3,8 @@ Run in 64-bit to use >2GB of memory
 Tested using >8GB (system RAM) of contiguous memory in x64 without issue
 Only with pagefile (windows 8.1); useability with swap instead (ubuntu)??
 
-W/ link structure of hashes instead of strings, still takes ~2.5 minutes, but uses <1k MB (>10% decrease)
+W/ link structure of hashes instead of strings, still takes ~2.5 minutes
+	Uses more memory (~1.3GB), which is 967420 entries, or ~92 capacity%
 	Switch to vectors/arrays? Could use Parsr to pre-count elements
 */
 
@@ -105,7 +106,7 @@ void create_entry(size_t hash, string *url, entry ** table, list<int> *links = N
 	table[hash]->url = url;
 	//if (!links) { table[hash]->links = new list<string>; }
 	//else { table[hash]->links = links; }
-	table[hash]->links = *links;
+	if(links) table[hash]->links = *links;
 }
 
 int main() {
@@ -185,8 +186,12 @@ int main() {
 				counter++;
 			}
 			else {
-				//line is a link
+				//line is a link: get the hash, create if necessary, and store it
 				link_hash = resolve_collisions2(line, table, table_entries, str_hash, collisions);
+				if (table[link_hash] == NULL) {
+					//if link didn't exist, create it 
+					create_entry(link_hash, new string(line), table);
+				}
 				links->push_back(link_hash);
 			}
 		}
