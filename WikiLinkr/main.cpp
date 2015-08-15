@@ -1,10 +1,16 @@
 /*
-Run in 64-bit to use >2GB of memory
-Tested using >8GB (system RAM) of contiguous memory in x64 without issue
-Only with pagefile (windows 8.1); useability with swap instead (ubuntu)??
+Load link structure of Wikipedia into custom hash table
+Easily find shortest path between any two articles
+Requires parsed Wiki dump as input (parsr8.py)
+Written by Owen Stenson, Summer 2015
+*/
+
+/*
+Run in 64-bit to use >2GB of memory; Tested using ~10GB (w/ 8GB system RAM) of contiguous memory in x64 without issue
+Only tested with pagefile (windows); unknown useability with swap instead (linux)
 
 W/ link structure of hashes instead of strings, still takes ~2.5 minutes
-	Uses more memory (~1.3GB), which is 967420 entries, or ~92 capacity%
+	Uses more memory: ~1.3GB, which is 967420 entries, or ~92 capacity%, and 2M collisions
 	Switch to vectors/arrays? Could use Parsr to pre-count elements
 */
 
@@ -17,6 +23,7 @@ W/ link structure of hashes instead of strings, still takes ~2.5 minutes
 #include <time.h>
 #include <math.h>
 #include <string>
+#include <algorithm>	//capitalize
 #define KILOBYTE 1024
 #define MEGABYTE 1024*1024
 
@@ -25,9 +32,8 @@ using namespace std;
 struct entry {
 	//sizeof(entry) = 8  bytes in 32-bit
 	//sizeof(entry) = 16 bytes in 64-bit
-	string *url;				//holds url: check for collisions
-	//list<string>* links;	//pointer to linked list holding links
-	list<int> links;
+	string *url;			//holds url: (to check for collisions)
+	list<int> links;		//list of hashes
 };
 
 unsigned long djb2_hash(unsigned char *str) {
@@ -48,32 +54,27 @@ int bj_hash(unsigned char *str)
 }
 
 
-
-//size_t resolve_collisions2(const string *str, entry ** table, size_t table_entries, hash<string> *str_hash, unsigned int *collisions) {
-size_t resolve_collisions2(const string &str, entry ** table, size_t table_entries, hash<string> &str_hash, int &collisions, bool verbose=false) {
-	//employ hash function and then use collision-checking algorithm
+unsigned int resolve_collisions2(const string &str, entry ** table, size_t table_entries, hash<string> &str_hash, int &collisions, bool verbose=false) {
+	//Employ hash function and then use custom collision-resolving algorithm
 	/* Deal with collisions by retrying with an offset of n!+1;
 	Should be slightly more successful than an offset of n^2 because it generates primes very frequently (prime for 0<=n<=4, and then ~50% for n>4).
 	Evades the performance hit of factorials because it only finds one product per attempt, which it stores in memory.
-	Thus, rather than O(n!) additional cycles, it only requires one int and two addition operations (4 bytes, <=2 cycles)
-	*/
+	Thus, rather than O(n!) additional cycles, it only requires one int and two addition operations (4 bytes, <=2 cycles)	*/
 	//	This version caps the number of collision checks at {some constant}.
 	size_t hash = (str_hash)(str);
 	unsigned int offset = 0;
-	unsigned int multiplier = 1;	//multiplier=1 already checked via while() statement
-									//static unsigned int collisions;
-	//collisions--;	//to offset incrementer
+	unsigned int multiplier = 1;
 	for (int i = 0; i < 100; i++) {
 		offset = (offset - 1)*multiplier + 1;
 		multiplier += 1;
 		hash += offset;
 		hash %= table_entries;
-		if (verbose) cout << "  Trying hash " << hash << "..." << endl;
 		if (verbose) {
+			cout << "  Trying hash " << hash << "..." << endl;
 			if (table[hash] == NULL) cout << "  No entry found at hash " << hash << ";" << endl;
 			else cout << "  Entry '" << *(table[hash]->url) << "' found at hash " << hash << ";" << endl;
 		}
-		if (table[hash] == NULL || *(table[hash]->url) == str) { return hash; }
+		if (table[hash] == NULL || *(table[hash]->url) == str) { return (unsigned int)hash; }
 		else {
 			collisions++;
 		}
@@ -84,6 +85,7 @@ size_t resolve_collisions2(const string &str, entry ** table, size_t table_entri
 }
 
 void read_entry(const string &url, entry ** table, size_t table_entries, hash<string> &str_hash) {
+	//Read entry info given from url
 	int collisions = 0;
 	size_t hash = resolve_collisions2(url, table, table_entries, str_hash, collisions);
 	cout << "After " << collisions << " collisions:  ";
@@ -92,7 +94,6 @@ void read_entry(const string &url, entry ** table, size_t table_entries, hash<st
 	}
 	else {
 		cout << "Entry " << url << " is present at 0x" << table[hash] << " and links to: " << endl;
-		//switched from 
 		list<int> l = table[hash]->links;
 		for (list<int>::iterator itr = l.begin(); itr != l.end(); itr++) {
 			cout << "\t" << table[*itr]->url << endl;
@@ -101,20 +102,18 @@ void read_entry(const string &url, entry ** table, size_t table_entries, hash<st
 }
 
 void create_entry(size_t hash, string *url, entry ** table, list<int> *links = NULL) {
-	//make a new entry from the given details
+	//make a new entry from the given details; 
 	table[hash] = new entry;
 	table[hash]->url = url;
-	//if (!links) { table[hash]->links = new list<string>; }
-	//else { table[hash]->links = links; }
 	if(links) table[hash]->links = *links;
 }
 
 int main() {
-	clock_t t = clock();	//time program
-	//string path = string("E:\\Libraries\\Downloads\\WIKIPEDIA\\SIMPLE_FILES\\") + string("wiki_");	//gets rid of weird type errors (RIP strcat())
-	//string path = string("E:\\Libraries\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("out_sample_v11.txt");
-	string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("simple_parsed.txt");
-	std::hash<string> str_hash;
+	clock_t t = clock();	//start timer
+	//string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("simple_parsed.txt");
+	string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("test_input.txt");
+	
+	std::hash<string> str_hash;	//initialize string hash function (better tailored to strings than bj or djb2 are)
 	size_t hash;
 
 	/*	Initialize hash table:
@@ -126,11 +125,9 @@ int main() {
 	*			address should be a hash of the url
 	*			starting address should be ~100x expected size?
 	*			should use list to hold links (vectors must be contiguous?)
-	*			64-bit programs mean 16-bit addresses; so a pointer to 
+	*			64-bit programs mean 16-bit addresses
 	*/
 	std::cout << sizeof(entry) << " bytes per entry" << std::endl;
-	cout << sizeof(hash) << " bytes per size_t" << endl;
-	cout << sizeof(int) << " bytes per int" << endl;
 	cout << "Initializing structure..." << endl;
 	size_t table_entries = 1 * MEGABYTE;
 	entry ** table = new entry*[table_entries];
@@ -141,19 +138,7 @@ int main() {
 	}
 	size_t table_bytes = table_entries * sizeof(entry);
 
-	int collisions = 0;	//for analytics (?)
-	/*
-	vector<string> examples = { "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta" };
-	for (int i = 0; i < examples.size(); i++){
-		hash = resolve_collisions2(examples[i], table, table_entries, str_hash, &collisions);
-		read_entry(examples[i], table, table_entries, str_hash);
-		create_entry(hash, examples[i], table);
-	}
-	for (int i = 0; i < examples.size(); i++) {
-		hash = resolve_collisions2(examples[i], table, table_entries, str_hash, &collisions);
-		read_entry(examples[i], table, table_entries, str_hash);
-		//create_entry(hash, examples[i], table);
-	} */
+	int collisions = 0;
 	
 	//start cycling through file:
 	cout << "Start reading..." << endl;
@@ -202,7 +187,6 @@ int main() {
 	}
 
 	cout << "Done indexing; " << collisions << " collisions \n\n" << endl;
-	collisions = 0;
 	unsigned int entries = 0;
 	unsigned int blanks = 0;
 	for (unsigned int i = 0; i < table_entries; i++) {
@@ -243,35 +227,47 @@ int main() {
 
 
 
-	/*
+	
 	//allow user to test input:
 	int input = -1;
 	string tmp_title = "";
 	size_t tmp_hash = -1;
-	list<string> tmp_list;
+	list<int> tmp_list;
 	int tmp_count = 0;
 	while (input != 0) {
-		cout << "\n\nEnter one of the following: \n\t0:\t\tExit \n\t1:\t\tFind article in table \n\t2:\t\tPrint links of last article (" << tmp_title << ")" << endl;
+		cout << "\n\nEnter one of the following: \n\t0:\t\tExit \n\t1:\t\tFind article in table \n\t2:\t\tFind hash in table \n\t3:\t\tPrint links of last article (" << tmp_title << ")" << endl;
 		cin >> input;
 		if (input == 1) {
 			cout << "  Please enter article name: ";
 			cin >> tmp_title;
+			transform(tmp_title.begin(), tmp_title.end(), tmp_title.begin(), ::toupper);	//capitalize
 			cout << endl;
-			tmp_hash = resolve_collisions2(tmp_title, table, table_entries, str_hash, NULL, true);
+			tmp_hash = resolve_collisions2(tmp_title, table, table_entries, str_hash, collisions, true);
 			cout << "  Found ~~article~~ slot for '" << tmp_title << "' at hash " << tmp_hash << ";" << endl;
 		}
 		else if (input == 2) {
+			cout << " Please enter hash: ";
+			cin >> tmp_hash;
+			cout << endl;
+			if (table[tmp_hash] == NULL) {
+				cout << " hash " << tmp_hash << " not found" << endl;
+			}
+			else {
+				cout << " table[" << tmp_hash << "] = " << *(table[tmp_hash]->url) << endl;
+			}
+		}
+		else if (input == 3) {
 			cout << "  Links under article '" << tmp_title << "';" << endl;
-			tmp_hash = resolve_collisions2(tmp_title, table, table_entries, str_hash, NULL);
+			tmp_hash = resolve_collisions2(tmp_title, table, table_entries, str_hash, collisions);
 			//tmp_list = *table[tmp_hash]->links;
-			tmp_list = *(table[tmp_hash]->links);
-			for (list<string>::iterator tmp_itr = tmp_list.begin(); tmp_itr != tmp_list.end(); tmp_itr++) {
+			tmp_list = table[tmp_hash]->links;
+			for (list<int>::iterator tmp_itr = tmp_list.begin(); tmp_itr != tmp_list.end(); tmp_itr++) {
 				tmp_count++;
-				cout << "\t" << tmp_count << ": \t" << *tmp_itr << endl;
+				cout << "\t" << tmp_count << ": \t" << *tmp_itr << "= \t" << *(table[*tmp_itr]->url) << endl;
 			}
 		}
 	}
-	*/
+	
 
 	return 0;
 }
@@ -279,11 +275,12 @@ int main() {
 
 /*TODO
 	Implement update of links file in Python from log/newer dump
-	Find where links are getting lost (2%, down from 15%)
+		Find where links are getting lost (2%, down from 15%)
 	Profiling to find expensive parts
 	sizeof(string) > sizeof(char[]) ???
 	Remove duplicate entries (on parser side?) (dumps contain multiple entries w/ different links?)
 	Clean up memory (first each entry, then table)
+	Verify data integrity following links on links
 
 STATUS
 	Occupying ~20% of the table requires 1GB for simple wiki (~105GB for total)
