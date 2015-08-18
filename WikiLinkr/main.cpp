@@ -56,14 +56,17 @@ int bj_hash(unsigned char *str)
 }
 
 
-unsigned int resolve_collisions2(const string &str, entry ** table, size_t table_entries, hash<string> &str_hash, int &collisions, bool verbose=false) {
+unsigned int resolve_collisions2(const string &str, entry ** table, unsigned int table_entries, hash<string> &str_hash, int &collisions, bool verbose=false) {
 	//Employ hash function and then use custom collision-resolving algorithm
 	/* Deal with collisions by retrying with an offset of n!+1;
 	Should be slightly more successful than an offset of n^2 because it generates primes very frequently (prime for 0<=n<=4, and then ~50% for n>4).
 	Evades the performance hit of factorials because it only finds one product per attempt, which it stores in memory.
 	Thus, rather than O(n!) additional cycles, it only requires one int and two addition operations (4 bytes, <=2 cycles)	*/
 	//	This version caps the number of collision checks at {some constant}.
-	size_t hash = (str_hash)(str);
+	if (str == "TORSHAVN") {
+		cout << "hurrs whar it brakes" << endl;
+	}
+	unsigned int hash = (str_hash)(str) % table_entries;	//size_t instead?
 	unsigned int offset = 0;
 	unsigned int multiplier = 1;
 	for (int i = 0; i < 100; i++) {
@@ -76,7 +79,7 @@ unsigned int resolve_collisions2(const string &str, entry ** table, size_t table
 			if (table[hash] == NULL) cout << "  No entry found at hash " << hash << ";" << endl;
 			else cout << "  Entry '" << *(table[hash]->url) << "' found at hash " << hash << ";" << endl;
 		}
-		if (table[hash] == NULL || *(table[hash]->url) == str) { return (unsigned int)hash; }
+		if (table[hash] == NULL || *(table[hash]->url) == str) { return hash; }
 		else {
 			collisions++;
 		}
@@ -86,10 +89,10 @@ unsigned int resolve_collisions2(const string &str, entry ** table, size_t table
 	return -1;	//should break something if 
 }
 
-void read_entry(const string &url, entry ** table, size_t table_entries, hash<string> &str_hash) {
+void read_entry(const string &url, entry ** table, unsigned int table_entries, hash<string> &str_hash) {
 	//Read entry info given from url
 	int collisions = 0;
-	size_t hash = resolve_collisions2(url, table, table_entries, str_hash, collisions);
+	unsigned int hash = resolve_collisions2(url, table, table_entries, str_hash, collisions);
 	cout << "After " << collisions << " collisions:  ";
 	if (table[hash] == NULL) {
 		cout << "Entry " << &url << " is not present." << endl;
@@ -103,7 +106,7 @@ void read_entry(const string &url, entry ** table, size_t table_entries, hash<st
 	}
 }
 
-void create_entry(size_t hash, string *url, entry ** table, list<unsigned int> *links = NULL) {
+void create_entry(unsigned int hash, string *url, entry ** table, list<unsigned int> *links = NULL) {
 	//make a new entry from the given details; 
 	table[hash] = new entry;
 	table[hash]->url = url;
@@ -227,11 +230,11 @@ list<unsigned int> *seek_links(unsigned int source, unsigned int destination, en
 
 int main() {
 	clock_t t = clock();	//start timer
-	//string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("simple_parsed.txt");
-	string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("test_input3.txt");
+	string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("simple_parsed.txt");
+	//string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("test_input3.txt");
 	
 	std::hash<string> str_hash;	//initialize string hash function (better tailored to strings than bj or djb2 are)
-	size_t hash;
+	unsigned int hash;
 
 	/*	Initialize hash table:
 	*		Simple wiki: ~130,000 entries
@@ -246,14 +249,14 @@ int main() {
 	*/
 	std::cout << sizeof(entry) << " bytes per entry" << std::endl;
 	cout << "Initializing structure..." << endl;
-	size_t table_entries = 1 * MEGABYTE;
+	unsigned int table_entries = 1 * MEGABYTE;
 	entry ** table = new entry*[table_entries];
-	for (int i = 0; i < table_entries; i++) {
+	for (unsigned int i = 0; i < table_entries; i++) {
 		//this is way faster than it should be, but still seems to work
 		//thank you based compiler?
 		table[i] = NULL;
 	}
-	size_t table_bytes = table_entries * sizeof(entry);
+	unsigned int table_bytes = table_entries * sizeof(entry);
 
 	int collisions = 0;
 	
@@ -277,6 +280,7 @@ int main() {
 				if(title != NULL){
 					//title should start as NULL; not sure why it isn't
 					hash = resolve_collisions2(*title, table, table_entries, str_hash, collisions);
+					hash %= table_entries;		//does this fix things?
 					create_entry(hash, title, table, links);
 				}
 				title = new string;
@@ -342,66 +346,101 @@ int main() {
 
 	//getchar();
 
-	string source = "BRAVO";
-	string dest = "YANKEES5";
+	bool debug = true;
 
-	unsigned int source_hash = resolve_collisions2(source, table, table_entries, str_hash, collisions);
-	unsigned int dest_hash = resolve_collisions2(dest, table, table_entries, str_hash, collisions);
-	list<unsigned int> *link_path = seek_links(source_hash, dest_hash, table);
-	
-	if (link_path) {
-		cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-		cout << "\t" << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
-		for (list<unsigned int>::iterator tmp_itr = link_path->begin(); tmp_itr != link_path->end(); tmp_itr++) {
-			cout << "\t" << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
+	if (debug == false) {
+		t = clock();	//start timer
+
+		string source = "ABACUS";
+		string dest = "PHILOSOPHY";
+
+		unsigned int source_hash = resolve_collisions2(source, table, table_entries, str_hash, collisions);
+		unsigned int dest_hash = resolve_collisions2(dest, table, table_entries, str_hash, collisions);
+		list<unsigned int> *link_path = seek_links(source_hash, dest_hash, table);
+
+		if (link_path) {
+			cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+			cout << "\t" << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
+			for (list<unsigned int>::iterator tmp_itr = link_path->begin(); tmp_itr != link_path->end(); tmp_itr++) {
+				cout << "\t" << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
+			}
+			cout << "\t" << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
 		}
-		cout << "\t" << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
+		else {
+			cout << "\n\nCouldn't find path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+		}
+		t = clock() - t;
+		std::cout << "Total time: " << t << " clicks, " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
 	}
 	else {
-		cout << "\n\nCouldn't find path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+
+		//allow user to test input:
+		int input = -1;
+		string tmp_title = "";
+		unsigned int tmp_hash = -1;
+		list<unsigned int> tmp_list;
+		int tmp_count = 0;
+		while (input != 0) {
+			cout << "\n\nEnter one of the following: \n\t0:\t\tExit \n\t1:\t\tFind article in table \n\t2:\t\tFind hash in table \n\t3:\t\tPrint links of last article (" << tmp_title << ")" << endl;
+			cout << "\t4:\t\tFind link path between articles" << endl;
+			cin >> input;
+			if (input == 1) {
+				cout << "  Please enter article name: ";
+				cin >> tmp_title;
+				transform(tmp_title.begin(), tmp_title.end(), tmp_title.begin(), ::toupper);	//capitalize
+				cout << endl;
+				tmp_hash = resolve_collisions2(tmp_title, table, table_entries, str_hash, collisions, true);
+				cout << "  Found ~~article~~ slot for '" << tmp_title << "' at hash " << tmp_hash << ";" << endl;
+			}
+			else if (input == 2) {
+				cout << " Please enter hash: ";
+				cin >> tmp_hash;
+				cout << endl;
+				if (table[tmp_hash] == NULL) {
+					cout << " hash " << tmp_hash << " not found" << endl;
+				}
+				else {
+					cout << " table[" << tmp_hash << "] = " << *(table[tmp_hash]->url) << endl;
+				}
+			}
+			else if (input == 3) {
+				cout << "  Links under article '" << tmp_title << "';" << endl;
+				tmp_hash = resolve_collisions2(tmp_title, table, table_entries, str_hash, collisions);
+				//tmp_list = *table[tmp_hash]->links;
+				tmp_list = table[tmp_hash]->links;
+				for (list<unsigned int>::iterator tmp_itr = tmp_list.begin(); tmp_itr != tmp_list.end(); tmp_itr++) {
+					tmp_count++;
+					cout << "\t" << tmp_count << ": \t" << *tmp_itr << " = \t" << *(table[*tmp_itr]->url) << endl;
+				}
+			}
+			else if (input == 4) {
+				string source;
+				string dest;
+				cout << " Enter source: ";
+				cin >> source;
+				transform(source.begin(), source.end(), source.begin(), ::toupper);	//capitalize
+				cout << " Enter destination: ";
+				cin >> dest;
+				transform(dest.begin(), dest.end(), dest.begin(), ::toupper);	//capitalize
+
+				unsigned int source_hash = resolve_collisions2(source, table, table_entries, str_hash, collisions);
+				unsigned int dest_hash = resolve_collisions2(dest, table, table_entries, str_hash, collisions);
+				list<unsigned int> *link_path = seek_links(source_hash, dest_hash, table);
+
+				if (link_path) {
+					cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+					cout << "\t" << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
+					for (list<unsigned int>::iterator tmp_itr = link_path->begin(); tmp_itr != link_path->end(); tmp_itr++) {
+						cout << "\t" << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
+					}
+					cout << "\t" << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
+				}
+				else {
+					cout << "\n\nCouldn't find path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+				}
+			}
+		}
 	}
-	
-	/*
-	//allow user to test input:
-	int input = -1;
-	string tmp_title = "";
-	size_t tmp_hash = -1;
-	list<unsigned int> tmp_list;
-	int tmp_count = 0;
-	while (input != 0) {
-		cout << "\n\nEnter one of the following: \n\t0:\t\tExit \n\t1:\t\tFind article in table \n\t2:\t\tFind hash in table \n\t3:\t\tPrint links of last article (" << tmp_title << ")" << endl;
-		cin >> input;
-		if (input == 1) {
-			cout << "  Please enter article name: ";
-			cin >> tmp_title;
-			transform(tmp_title.begin(), tmp_title.end(), tmp_title.begin(), ::toupper);	//capitalize
-			cout << endl;
-			tmp_hash = resolve_collisions2(tmp_title, table, table_entries, str_hash, collisions, true);
-			cout << "  Found ~~article~~ slot for '" << tmp_title << "' at hash " << tmp_hash << ";" << endl;
-		}
-		else if (input == 2) {
-			cout << " Please enter hash: ";
-			cin >> tmp_hash;
-			cout << endl;
-			if (table[tmp_hash] == NULL) {
-				cout << " hash " << tmp_hash << " not found" << endl;
-			}
-			else {
-				cout << " table[" << tmp_hash << "] = " << *(table[tmp_hash]->url) << endl;
-			}
-		}
-		else if (input == 3) {
-			cout << "  Links under article '" << tmp_title << "';" << endl;
-			tmp_hash = resolve_collisions2(tmp_title, table, table_entries, str_hash, collisions);
-			//tmp_list = *table[tmp_hash]->links;
-			tmp_list = table[tmp_hash]->links;
-			for (list<unsigned int>::iterator tmp_itr = tmp_list.begin(); tmp_itr != tmp_list.end(); tmp_itr++) {
-				tmp_count++;
-				cout << "\t" << tmp_count << ": \t" << *tmp_itr << " = \t" << *(table[*tmp_itr]->url) << endl;
-			}
-		}
-	}
-	*/
 	getchar();
 
 	return 0;
