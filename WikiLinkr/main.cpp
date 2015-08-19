@@ -62,30 +62,28 @@ unsigned int resolve_collisions2(const string &str, entry ** table, unsigned int
 	Should be slightly more successful than an offset of n^2 because it generates primes very frequently (prime for 0<=n<=4, and then ~50% for n>4).
 	Evades the performance hit of factorials because it only finds one product per attempt, which it stores in memory.
 	Thus, rather than O(n!) additional cycles, it only requires one int and two addition operations (4 bytes, <=2 cycles)	*/
-	//	This version caps the number of collision checks at {some constant}.
-	if (str == "TORSHAVN") {
-		cout << "hurrs whar it brakes" << endl;
-	}
 	unsigned int hash = (str_hash)(str) % table_entries;	//size_t instead?
-	unsigned int offset = 0;
+	int offset = 2;
 	unsigned int multiplier = 1;
 	for (int i = 0; i < 100; i++) {
-		offset = (offset - 1)*multiplier + 1;
-		multiplier += 1;
-		hash += offset;
 		hash %= table_entries;
+		if (table[hash] == NULL || *(table[hash]->url) == str) { return hash; }
+		else { collisions++; }
+		offset = (offset - 1)*multiplier + 1;
+		if (offset == 1) {
+			cout << "!" << endl;
+		}
+		multiplier++;
+		hash += offset;
 		if (verbose) {
 			cout << "  Trying hash " << hash << "..." << endl;
 			if (table[hash] == NULL) cout << "  No entry found at hash " << hash << ";" << endl;
 			else cout << "  Entry '" << *(table[hash]->url) << "' found at hash " << hash << ";" << endl;
-		}
-		if (table[hash] == NULL || *(table[hash]->url) == str) { return hash; }
-		else {
-			collisions++;
-		}
+		}		
 	}
-	//return if that value in the table is blank or a match
 	if (verbose) cout << "   Didn't find any blank entries in k iterations;" << endl;
+	assert(false);
+	//if this assertion is hit, then something is wrong: table size should be increased (or for() loop limit)
 	return -1;	//should break something if 
 }
 
@@ -249,7 +247,7 @@ int main() {
 	*/
 	std::cout << sizeof(entry) << " bytes per entry" << std::endl;
 	cout << "Initializing structure..." << endl;
-	unsigned int table_entries = 1 * MEGABYTE;
+	unsigned int table_entries = 5 * MEGABYTE;
 	entry ** table = new entry*[table_entries];
 	for (unsigned int i = 0; i < table_entries; i++) {
 		//this is way faster than it should be, but still seems to work
@@ -263,10 +261,9 @@ int main() {
 	//start cycling through file:
 	cout << "Start reading..." << endl;
 	ifstream in_file(path);
-	//string line;
-	//string title(""), sha1;
 	string *title = NULL;
-	string *sha1 = NULL;
+	//string *sha1 = NULL;
+	string sha1;
 	string line;
 	int link_hash;
 	list<unsigned int> *links = NULL;
@@ -280,15 +277,15 @@ int main() {
 				if(title != NULL){
 					//title should start as NULL; not sure why it isn't
 					hash = resolve_collisions2(*title, table, table_entries, str_hash, collisions);
-					hash %= table_entries;		//does this fix things?
 					create_entry(hash, title, table, links);
 				}
 				title = new string;
-				sha1 = new string;
+				//sha1 = new string;
 				links = new list<unsigned int>;
 				//about to show article metadata
 				getline(in_file, *title);
-				getline(in_file, *sha1);
+				//getline(in_file, *sha1);
+				getline(in_file, sha1);
 				counter++;
 			}
 			else {
@@ -348,32 +345,7 @@ int main() {
 
 	bool debug = true;
 
-	if (debug == false) {
-		t = clock();	//start timer
-
-		string source = "ABACUS";
-		string dest = "PHILOSOPHY";
-
-		unsigned int source_hash = resolve_collisions2(source, table, table_entries, str_hash, collisions);
-		unsigned int dest_hash = resolve_collisions2(dest, table, table_entries, str_hash, collisions);
-		list<unsigned int> *link_path = seek_links(source_hash, dest_hash, table);
-
-		if (link_path) {
-			cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-			cout << "\t" << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
-			for (list<unsigned int>::iterator tmp_itr = link_path->begin(); tmp_itr != link_path->end(); tmp_itr++) {
-				cout << "\t" << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
-			}
-			cout << "\t" << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
-		}
-		else {
-			cout << "\n\nCouldn't find path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-		}
-		t = clock() - t;
-		std::cout << "Total time: " << t << " clicks, " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
-	}
-	else {
-
+	if(debug) {
 		//allow user to test input:
 		int input = -1;
 		string tmp_title = "";
@@ -422,25 +394,62 @@ int main() {
 				cout << " Enter destination: ";
 				cin >> dest;
 				transform(dest.begin(), dest.end(), dest.begin(), ::toupper);	//capitalize
+				t = clock();	//start timer
 
 				unsigned int source_hash = resolve_collisions2(source, table, table_entries, str_hash, collisions);
 				unsigned int dest_hash = resolve_collisions2(dest, table, table_entries, str_hash, collisions);
-				list<unsigned int> *link_path = seek_links(source_hash, dest_hash, table);
-
-				if (link_path) {
-					cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-					cout << "\t" << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
-					for (list<unsigned int>::iterator tmp_itr = link_path->begin(); tmp_itr != link_path->end(); tmp_itr++) {
-						cout << "\t" << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
-					}
-					cout << "\t" << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
+				if (table[source_hash] == NULL) {
+					cout << "Error: " << source << " wasn't found in the table (it would be at " << source_hash << ");" << endl;
+					continue;
+				}
+				else if (table[dest_hash] == NULL) {
+					cout << "Error: " << dest << " wasn't found in the table (it would be at " << dest_hash << ");" << endl;
+					continue;
 				}
 				else {
-					cout << "\n\nCouldn't find path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+					list<unsigned int> *link_path = seek_links(source_hash, dest_hash, table);
+					if (link_path) {
+						cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+						cout << "\t" << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
+						for (list<unsigned int>::iterator tmp_itr = link_path->begin(); tmp_itr != link_path->end(); tmp_itr++) {
+							cout << "\t" << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
+						}
+						cout << "\t" << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
+						t = clock() - t;
+						cout << "\t\t(" << t / 1000.0 << " seconds)" << endl;
+					}
+					else {
+						cout << "\n\nCouldn't find path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+					}
 				}
 			}
 		}
 	}
+	else{
+		t = clock();	//start timer
+
+		string source = "ABACUS";
+		string dest = "PHILOSOPHY";
+
+		unsigned int source_hash = resolve_collisions2(source, table, table_entries, str_hash, collisions);
+		unsigned int dest_hash = resolve_collisions2(dest, table, table_entries, str_hash, collisions);
+		list<unsigned int> *link_path = seek_links(source_hash, dest_hash, table);
+
+		if (link_path) {
+			cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+			cout << "\t" << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
+			for (list<unsigned int>::iterator tmp_itr = link_path->begin(); tmp_itr != link_path->end(); tmp_itr++) {
+				cout << "\t" << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
+			}
+			cout << "\t" << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
+		}
+		else {
+			cout << "\n\nCouldn't find path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+		}
+		t = clock() - t;
+		std::cout << "Total time: " << t << " clicks, " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
+	}
+	
 	getchar();
 
 	return 0;
@@ -448,6 +457,10 @@ int main() {
 
 
 /*TODO
+	Clean up memory after a search
+	Clean up memory at the end of the program
+	Fix bug where space bars aren't interpreted correctly in searches
+	Re-device UI
 	Implement update of links file in Python from log/newer dump
 		Find where links are getting lost (2%, down from 15%)
 	Profiling to find expensive parts
