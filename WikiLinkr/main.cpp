@@ -133,64 +133,73 @@ void print_dbg_info(entry ** table, set<unsigned int> *link_tree_rest, map<unsig
 	cout << "\n" << endl;
 }
 
+void clean_up_search_mem(set<unsigned int> *link_tree_rest, map<unsigned int, list<unsigned int>*> *link_tree_row, map<unsigned int, list<unsigned int>*> *link_tree_new_row) {
+	//clean up set
+	if (link_tree_rest) {
+		delete[] link_tree_rest;
+		delete link_tree_rest;
+	}
+	//clean up first map
+	if (link_tree_row) {
+		for (map<unsigned int, list<unsigned int>*>::iterator tmp_itr = link_tree_row->begin(); tmp_itr != link_tree_row->end(); tmp_itr++) {
+			delete[] tmp_itr->second;
+		}
+		delete[] link_tree_row;
+		delete link_tree_row;
+	}
+	//clean up second map
+	if (link_tree_new_row) {
+		for (map<unsigned int, list<unsigned int>*>::iterator tmp_itr = link_tree_new_row->begin(); tmp_itr != link_tree_new_row->end(); tmp_itr++) {
+			delete[] tmp_itr->second;
+		}
+		delete[] link_tree_new_row;
+		delete link_tree_new_row;
+	}
+}
 
 list<unsigned int> *seek_links(unsigned int source, unsigned int destination, entry ** table) {
 	//from table[source], find shortest path to destination by traversing links
 	//essentially a breadth-first search of tree
 	//returns a list of the hashes to click in order
 	
-	//option 1: use map to track already checked options
+	//use map to track already checked options
 		//key = hash
-		//value =
-			//~~whether or not the hash's links have been added to the map~~	//should just delete original
-				//~~map should retain initial entries to stop them from reappearing 2+ iterations later: can't just .clear()~~
-					//should be 2 maps: bottom row in link tree and everything else (because cycling through bottom row creates new bottom row, which insert()s while iterating through
-			//link structure of history of retrieval (pointer, because it will be a duplicate
-		//map is helpful because duplicates are bad, so searching must be fast
+		//value = link structure of history of retrieval (does it have to be a pointer?)
+		//should be 2 maps: bottom row in link tree and everything else (because cycling through bottom row creates new bottom row, which insert()s while iterating through
+		//map is helpful because duplicates are bad and searching must be fast
 	
-	//TODO: remove source from paths
-
 	//map contains every item in bottom row of link tree; must be 2 because cycling through link_tree_row inserts new entries into itself
 	map<unsigned int, list<unsigned int>*> *link_tree_row = new map<unsigned int, list<unsigned int>*>;
 	map<unsigned int, list<unsigned int>*> *link_tree_new_row = new map<unsigned int, list<unsigned int>*>;
 	//contains every other item in tree: must have record of what links have been traversed to avoid redundancy
 	set<unsigned int> *link_tree_rest = new set<unsigned int>;
 
-	map<unsigned int, list<unsigned int>*>::iterator entry_itr;	//cycle through row
-	list<unsigned int> node_links;	//store a hash's link linked list
+	map<unsigned int, list<unsigned int>*>::iterator entry_itr;	//to cycle through row
+	list<unsigned int> node_links;				//store a hash's link linked list
 	list<unsigned int> *parent_path = NULL;		//store link's parent's path, to branch out and add onto
 	list<unsigned int> *child_path = NULL;		//tmp var for creating link paths from their parents (parent + new link = child)
-
-	list<unsigned int> *path = new list<unsigned int>;					//to alter link history in future 
 	pair<unsigned int, list<unsigned int>*> *link_entry;	//to reference entry without relocating it in table
 	
-	//link_tree_row->insert(*link_entry);									//insert first hash to get started
+	//to start, insert all of the source's links into the structure (bottom row)
+	//this prevents the source from being stored in all of the path lists, which is redundant (because it's stored elsewhere) and expensive
 	node_links = table[source]->links;
 	for (list<unsigned int>::iterator link_itr = node_links.begin(); link_itr != node_links.end(); link_itr++) {
 		if (*link_itr != source) {
+			//insert link if it's different from the source, to prevent a few remotely possible redundancies
 			link_entry = new pair<unsigned int, list<unsigned int>*>(*link_itr, new list<unsigned int>);
 			link_tree_row->insert(*link_entry);
 		}
-	}
-
-	
+	}	
 		
-	//start loop between rows within tree
+	//start loop between rows within tree (10 layers deep is probably enough)
+	//increasing the max depth is possible, but not recommended because this thing scales horribly 
 	for (int i = 0; i < 10; i++){
-		//start w/ max depth = 10
-
-		//print_dbg_info(table, link_tree_rest, link_tree_row, link_tree_new_row);
-
 		//start loop between items in row
 		for (entry_itr = link_tree_row->begin(); entry_itr != link_tree_row->end(); entry_itr++) {
-			//print_dbg_info(table, link_tree_rest, link_tree_row, link_tree_new_row);
-
 			parent_path = entry_itr->second;
 			node_links = table[entry_itr->first]->links;	//copy this entry's links to a var to insert them into the map
 			//start loop between links on a page
 			for (list<unsigned int>::iterator link_itr = node_links.begin(); link_itr != node_links.end(); link_itr++) {
-				//cout << "\t\t\tadding " << *link_itr << " = " << *table[*link_itr]->url << endl;
-
 				//add this link to new row of tree iff it isn't present already
 				if (link_tree_rest->find(*link_itr) == link_tree_rest->end()) {
 					//to add entry to the tree, a new path must be generated by appending the parent's value to the parent's path
@@ -198,8 +207,8 @@ list<unsigned int> *seek_links(unsigned int source, unsigned int destination, en
 					child_path->push_back(entry_itr->first);
 					//if this link is to the desired page, then return it
 					if (*link_itr == destination) {
+						//clean_up_search_mem(link_tree_rest, link_tree_row, link_tree_new_row);
 						return child_path;
-						//TODO: clear up memory first
 					}
 					link_tree_new_row->insert(pair<unsigned int, list<unsigned int>*>(*link_itr, child_path));
 				}
@@ -208,23 +217,25 @@ list<unsigned int> *seek_links(unsigned int source, unsigned int destination, en
 			delete parent_path;
 		}
 		if (link_tree_new_row->empty()) {
-			//result is not present at all
+			cout << "There is no way to get to the destination from the source" << endl;
+			clean_up_search_mem(link_tree_rest, link_tree_row, link_tree_new_row);
 			return NULL;
 		}
-
 		//move every key from bottom row into top half (so a new bottom row can be started)		//performance versus iterating through?
 		//set_intersection(link_tree_rest->begin(), link_tree_rest->end(), link_tree_row->begin(), link_tree_row->end(), link_tree_rest);
 		for (entry_itr = link_tree_row->begin(); entry_itr != link_tree_row->end(); entry_itr++) {
 			link_tree_rest->insert(entry_itr->first);
+			//delete[] entry_itr->second;
 		}
-
 		//link_tree_row now holds contents of link_tree_new_row, and link_tree_new_row gets reset to make room
 		swap(link_tree_row, link_tree_new_row);
 		link_tree_new_row->clear();
 	}
-	//result is not present at all
+	cout << "The search exceeded its maximum depth; this can be increased, but it is expensive" << endl;
+	clean_up_search_mem(link_tree_rest, link_tree_row, link_tree_new_row);
 	return NULL;
 }
+
 
 int main() {
 	clock_t t = clock();	//start timer
@@ -362,7 +373,7 @@ int main() {
 				transform(tmp_title.begin(), tmp_title.end(), tmp_title.begin(), ::toupper);	//capitalize
 				cout << endl;
 				tmp_hash = resolve_collisions2(tmp_title, table, table_entries, str_hash, collisions, true);
-				cout << "  Found ~~article~~ slot for '" << tmp_title << "' at hash " << tmp_hash << ";" << endl;
+				cout << "  Found article slot for '" << tmp_title << "' at hash " << tmp_hash << ";" << endl;
 			}
 			else if (input == 2) {
 				cout << " Please enter hash: ";
@@ -452,6 +463,17 @@ int main() {
 	
 	getchar();
 
+	//clean up (most) memory
+	for (unsigned int i = 0; i < table_entries; i++) {
+		if (table[i]) {
+			delete[] table[i]->url;
+			delete[] table[i];	//?
+			delete table[i];	//?
+		}
+	}
+	delete[] table;
+	delete table;
+
 	return 0;
 }
 
@@ -460,7 +482,9 @@ int main() {
 	Clean up memory after a search
 	Clean up memory at the end of the program
 	Fix bug where space bars aren't interpreted correctly in searches
+	Parsr sometimes includes duplicate entries: should combine rather than replace
 	Re-device UI
+
 	Implement update of links file in Python from log/newer dump
 		Find where links are getting lost (2%, down from 15%)
 	Profiling to find expensive parts
