@@ -12,6 +12,13 @@ Only tested with pagefile (windows); unknown useability with swap instead (linux
 W/ link structure of hashes instead of strings, still takes ~2.5 minutes
 	Uses more memory: ~1.3GB, which is 967420 entries, or ~92 capacity%, and 2M collisions
 	Switch to vectors/arrays? Could use Parsr to pre-count elements
+
+Benchmarks:
+	Complete Wiki (52GB originally, 6GB parsed): table populates in ~13 hours
+		Requires ~77GB additional swap space to store ~15.5 million new articles (excluding unmatched links)
+		Finds articles seemingly instantly, populates correctly (as far as I can tell)
+	Sample Wiki (74MB parsed): table populates in 2-2.5 minutes, requires ~1GB RAM
+		Requires ~1GB RAM to store ~200k new articles (excluding unmatched links)		
 */
 
 #include <iostream>
@@ -28,6 +35,7 @@ W/ link structure of hashes instead of strings, still takes ~2.5 minutes
 #include <set>
 #define KILOBYTE 1024
 #define MEGABYTE 1024*1024
+#define GIGABYTE 1024*1024*1024
 
 using namespace std;
 
@@ -70,9 +78,9 @@ unsigned int resolve_collisions2(const string &str, entry ** table, unsigned int
 		if (table[hash] == NULL || *(table[hash]->url) == str) { return hash; }
 		else { collisions++; }
 		offset = (offset - 1)*multiplier + 1;
-		if (offset == 1) {
-			cout << "!" << endl;
-		}
+		//if (offset == 1) {
+		//	cout << "!" << endl;
+		//}
 		multiplier++;
 		hash += offset;
 		if (verbose) {
@@ -240,6 +248,7 @@ list<unsigned int> *seek_links(unsigned int source, unsigned int destination, en
 int main() {
 	clock_t t = clock();	//start timer
 	string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("simple_parsed.txt");
+	//string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("english_wiki.txt");
 	//string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("test_input3.txt");
 	
 	std::hash<string> str_hash;	//initialize string hash function (better tailored to strings than bj or djb2 are)
@@ -258,7 +267,9 @@ int main() {
 	*/
 	std::cout << sizeof(entry) << " bytes per entry" << std::endl;
 	cout << "Initializing structure..." << endl;
-	unsigned int table_entries = 5 * MEGABYTE;
+	unsigned int table_entries = 5 * MEGABYTE;	//good size for sample english wiki (>200k new articles, >2 minutes)
+	//unsigned int table_entries = 100 * MEGABYTE;	//good size for complete english wikipedia (>15M new articles, >12 hours)
+
 	entry ** table = new entry*[table_entries];
 	for (unsigned int i = 0; i < table_entries; i++) {
 		//this is way faster than it should be, but still seems to work
@@ -269,6 +280,7 @@ int main() {
 
 	int collisions = 0;
 	
+	unsigned int article_counter = 0;
 	//start cycling through file:
 	cout << "Start reading..." << endl;
 	ifstream in_file(path);
@@ -289,6 +301,16 @@ int main() {
 					//title should start as NULL; not sure why it isn't
 					hash = resolve_collisions2(*title, table, table_entries, str_hash, collisions);
 					create_entry(hash, title, table, links);
+					article_counter++;
+					if (article_counter % 100000 == 0) {
+						//cout << "\t" << article_counter / 1000000 << "M" << endl;
+						if (article_counter % 1000000 == 0) {
+							cout << "\t" << article_counter / 1000000 << "M" << endl;
+						}
+						else {
+							cout << "\t" << article_counter / 100000 << " * 100K" << endl;
+						}
+					}
 				}
 				title = new string;
 				//sha1 = new string;
@@ -464,6 +486,7 @@ int main() {
 	getchar();
 
 	//clean up (most) memory
+	/*
 	for (unsigned int i = 0; i < table_entries; i++) {
 		if (table[i]) {
 			delete[] table[i]->url;
@@ -473,7 +496,7 @@ int main() {
 	}
 	delete[] table;
 	delete table;
-
+	*/
 	return 0;
 }
 
