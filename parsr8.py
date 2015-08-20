@@ -44,9 +44,9 @@ def parse_page(page_text):
     #title = match.group(0)[7:-8]
     title = get_contents(page_text, "<title>", "</title>")
     #write to error log if title == ""?
-    hash = get_contents(page_text, "<sha1>", "</sha1>")
+    #hash = get_contents(page_text, "<sha1>", "</sha1>")
     output = "<page>\n" + title.upper() + "\n"
-    output += hash + "\n"
+    #output += hash + "\n"
     #links = set(re.findall("\[\[[^]^\n]+\]\]", page_text))
     links = set(re.findall("\[\[[^]\n]+]]", page_text))
     for link in links:
@@ -74,6 +74,7 @@ else:
     exit()
 
 output = open(output_file, "w")
+output.write(' '*10 + '\n')	#to be replaced by page count
 links = []
 parsed = 0
 page = ""
@@ -84,10 +85,16 @@ with open(input_file) as input:
         if "</page>" in line:
             output.write(parse_page(page))
             page = ""
-            
+            parsed += 1
+
+#prepend page count (overwrite blank line)
+output.seek(0)
+output.write(str(parsed))
 output.close()
 
+
 elapsed_time = datetime.datetime.now() - start_time
+print parsed, "articles"
 print "just read from: \t", input_file
 print " and wrote to: \t ", output_file
 print elapsed_time
