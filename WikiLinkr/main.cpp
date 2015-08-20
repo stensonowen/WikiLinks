@@ -15,7 +15,7 @@ W/ link structure of hashes instead of strings, still takes ~2.5 minutes
 
 Benchmarks:
 	Complete Wiki (52GB originally, 6GB parsed): table populates in ~13 hours
-		Requires ~77GB additional swap space to store ~15.5 million new articles (excluding unmatched links)
+		Requires ~77GB additional swap space to store ~15.5 million new articles (excluding unmatched links) (on an SSD)
 		Finds articles seemingly instantly, populates correctly (as far as I can tell)
 	Sample Wiki (74MB parsed): table populates in 2-2.5 minutes, requires ~1GB RAM
 		Requires ~1GB RAM to store ~200k new articles (excluding unmatched links)		
@@ -165,10 +165,14 @@ void clean_up_search_mem(set<unsigned int> *link_tree_rest, map<unsigned int, li
 	}
 }
 
-list<unsigned int> *seek_links(unsigned int source, unsigned int destination, entry ** table) {
+//list<unsigned int> *seek_links(unsigned int source, unsigned int destination, entry ** table) {
+pair<list<unsigned int>*, int> seek_links(unsigned int source, unsigned int destination, entry ** table) {
 	//from table[source], find shortest path to destination by traversing links
 	//essentially a breadth-first search of tree
-	//returns a list of the hashes to click in order
+	//returns a list of the hashes to click in order and an error code
+		//code = 0	:	success
+		//code = -1	:	no way to reach destination from source
+		//code > 0	:	search expired after n iterations
 	
 	//use map to track already checked options
 		//key = hash
@@ -194,14 +198,18 @@ list<unsigned int> *seek_links(unsigned int source, unsigned int destination, en
 	for (list<unsigned int>::iterator link_itr = node_links.begin(); link_itr != node_links.end(); link_itr++) {
 		if (*link_itr != source) {
 			//insert link if it's different from the source, to prevent a few remotely possible redundancies
+			if (*link_itr == destination) {
+				return pair<list<unsigned int>*, int>(NULL, 0);
+			}
 			link_entry = new pair<unsigned int, list<unsigned int>*>(*link_itr, new list<unsigned int>);
 			link_tree_row->insert(*link_entry);
 		}
-	}	
-		
+	}
+
+	unsigned int max_depth = 10;
 	//start loop between rows within tree (10 layers deep is probably enough)
 	//increasing the max depth is possible, but not recommended because this thing scales horribly 
-	for (int i = 0; i < 10; i++){
+	for (unsigned int i = 0; i < max_depth; i++){
 		//start loop between items in row
 		for (entry_itr = link_tree_row->begin(); entry_itr != link_tree_row->end(); entry_itr++) {
 			parent_path = entry_itr->second;
@@ -216,7 +224,7 @@ list<unsigned int> *seek_links(unsigned int source, unsigned int destination, en
 					//if this link is to the desired page, then return it
 					if (*link_itr == destination) {
 						//clean_up_search_mem(link_tree_rest, link_tree_row, link_tree_new_row);
-						return child_path;
+						return pair<list<unsigned int>*, int>(child_path, 0);
 					}
 					link_tree_new_row->insert(pair<unsigned int, list<unsigned int>*>(*link_itr, child_path));
 				}
@@ -227,7 +235,7 @@ list<unsigned int> *seek_links(unsigned int source, unsigned int destination, en
 		if (link_tree_new_row->empty()) {
 			cout << "There is no way to get to the destination from the source" << endl;
 			clean_up_search_mem(link_tree_rest, link_tree_row, link_tree_new_row);
-			return NULL;
+			return pair<list<unsigned int>*, int>(NULL, -1);
 		}
 		//move every key from bottom row into top half (so a new bottom row can be started)		//performance versus iterating through?
 		//set_intersection(link_tree_rest->begin(), link_tree_rest->end(), link_tree_row->begin(), link_tree_row->end(), link_tree_rest);
@@ -241,7 +249,7 @@ list<unsigned int> *seek_links(unsigned int source, unsigned int destination, en
 	}
 	cout << "The search exceeded its maximum depth; this can be increased, but it is expensive" << endl;
 	clean_up_search_mem(link_tree_rest, link_tree_row, link_tree_new_row);
-	return NULL;
+	return pair<list<unsigned int>*, int>(NULL, max_depth);
 }
 
 
@@ -422,39 +430,39 @@ int main() {
 				string source;
 				string dest;
 				cout << " Enter source: ";
-				cin >> source;
+				//in >> source;
+				cin.ignore(10, '\n');	//clear cin
+				getline(cin, source);
 				transform(source.begin(), source.end(), source.begin(), ::toupper);	//capitalize
 				cout << " Enter destination: ";
-				cin >> dest;
+				//cin >> dest;
+				getline(cin, dest);
 				transform(dest.begin(), dest.end(), dest.begin(), ::toupper);	//capitalize
 				t = clock();	//start timer
 
 				unsigned int source_hash = resolve_collisions2(source, table, table_entries, str_hash, collisions);
 				unsigned int dest_hash = resolve_collisions2(dest, table, table_entries, str_hash, collisions);
-				if (table[source_hash] == NULL) {
-					cout << "Error: " << source << " wasn't found in the table (it would be at " << source_hash << ");" << endl;
-					continue;
-				}
-				else if (table[dest_hash] == NULL) {
-					cout << "Error: " << dest << " wasn't found in the table (it would be at " << dest_hash << ");" << endl;
-					continue;
-				}
-				else {
-					list<unsigned int> *link_path = seek_links(source_hash, dest_hash, table);
-					if (link_path) {
-						cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-						cout << "\t" << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
+				pair<list<unsigned int>*, int> search_results = seek_links(source_hash, dest_hash, table);
+				list<unsigned int> *link_path = search_results.first;
+
+				if (search_results.second == 0) {
+					cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+					cout << "\t" << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
+					if(link_path){
 						for (list<unsigned int>::iterator tmp_itr = link_path->begin(); tmp_itr != link_path->end(); tmp_itr++) {
 							cout << "\t" << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
 						}
-						cout << "\t" << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
-						t = clock() - t;
-						cout << "\t\t(" << t / 1000.0 << " seconds)" << endl;
 					}
-					else {
-						cout << "\n\nCouldn't find path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-					}
+					cout << "\t" << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
 				}
+				else if (search_results.second == -1) {
+					cout << "Confirmed that no path exists between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+				}
+				else {
+					cout << "Search between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << " failed after " << search_results.second << " iterations." << endl;
+				}
+				t = clock() - t;
+				std::cout << "Total time: " << t << " clicks, " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
 			}
 		}
 	}
@@ -466,9 +474,10 @@ int main() {
 
 		unsigned int source_hash = resolve_collisions2(source, table, table_entries, str_hash, collisions);
 		unsigned int dest_hash = resolve_collisions2(dest, table, table_entries, str_hash, collisions);
-		list<unsigned int> *link_path = seek_links(source_hash, dest_hash, table);
+		pair<list<unsigned int>*, int> search_results = seek_links(source_hash, dest_hash, table);
+		list<unsigned int> *link_path = search_results.first;
 
-		if (link_path) {
+		if (search_results.second == 0) {
 			cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
 			cout << "\t" << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
 			for (list<unsigned int>::iterator tmp_itr = link_path->begin(); tmp_itr != link_path->end(); tmp_itr++) {
@@ -476,9 +485,13 @@ int main() {
 			}
 			cout << "\t" << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
 		}
-		else {
-			cout << "\n\nCouldn't find path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+		else if (search_results.second == -1) {
+			cout << "Confirmed that no path exists between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
 		}
+		else {
+			cout << "Search between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << " failed after " << search_results.second << " iterations." << endl;
+		}
+
 		t = clock() - t;
 		std::cout << "Total time: " << t << " clicks, " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
 	}
