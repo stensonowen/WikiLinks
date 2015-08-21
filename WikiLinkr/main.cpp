@@ -215,9 +215,18 @@ pair<list<unsigned int>*, int> seek_links(unsigned int source, unsigned int dest
 }
 
 
-int main() {
-	clock_t t = clock();	//start timer
-	string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("simple_parsed2.txt");
+int main(int argc, char* argv[]) {
+	//parse command line arg
+	if (argc != 2) {
+		cout << "Usage: \"" << "WikiLinkr.exe" << " path_to_parsed_file.txt\"" << endl;
+		cout << "(You must first run \"python parsr8.py path_to_wikipedia_dump.xml path_to_parsed_file.txt\")" << endl;
+		exit(1);
+	}
+	string path = argv[1];
+	
+	//start timer:
+	clock_t t = clock();
+	//string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("simple_parsed2.txt");
 	//string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("english_wiki.txt");
 	//string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("test_input3.txt");
 	
