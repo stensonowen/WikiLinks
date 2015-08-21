@@ -9,10 +9,6 @@ Written by Owen Stenson, Summer 2015
 Run in 64-bit to use >2GB of memory; Tested using ~10GB (w/ 8GB system RAM) of contiguous memory in x64 without issue
 Only tested with pagefile (windows); unknown useability with swap instead (linux)
 
-W/ link structure of hashes instead of strings, still takes ~2.5 minutes
-	Uses more memory: ~1.3GB, which is 967420 entries, or ~92 capacity%, and 2M collisions
-	Switch to vectors/arrays? Could use Parsr to pre-count elements
-
 Benchmarks:
 	Complete Wiki (52GB originally, 6GB parsed): table populates in ~13 hours
 		Requires ~77GB additional swap space to store ~15.5 million new articles (excluding unmatched links) (on an SSD)
@@ -21,19 +17,22 @@ Benchmarks:
 		Requires ~1GB RAM to store ~200k new articles (excluding unmatched links)		
 */
 
+//IO
 #include <iostream>
 #include <fstream>
+//Structures
 #include <string>
 #include <vector>
-#include <cassert>
 #include <list>
-#include <time.h>
-#include <math.h>
-#include <string>
-#include <algorithm>	//capitalize
 #include <map>
 #include <set>
+//Tools
+#include <cassert>
+#include <time.h>
+#include <math.h>
+#include <algorithm>
 #include <iomanip>
+
 #define KILOBYTE 1024
 #define MEGABYTE 1024*1024
 #define GIGABYTE 1024*1024*1024
@@ -224,12 +223,7 @@ int main() {
 	
 	std::hash<string> str_hash;	//initialize string hash function (better tailored to strings than bj or djb2 are)
 	unsigned int hash;
-
-	/*	Initialize hash table:
-	*		Simple wiki: ~130,000 entries
-	*		Whole wiki: ~5,000,000 entries
-	*
-	*		Structure should be a contiguous array of pointers to structs
+	/*	Initialize hash table: Structure should be a contiguous array of pointers to structs
 	*			structs should hold url to compare (collision checking) as well as link structure
 	*			address should be a hash of the url
 	*			starting address should be ~100x expected size?
@@ -304,7 +298,6 @@ int main() {
 		create_entry(hash, title, table, links);
 		in_file.close();
 	}
-
 	cout << '\r' << flush << "100% \t[==================================================]" << endl;
 	std::cout << endl << endl;
 	std::cout << "Done indexing; " << collisions << " collisions" << endl;
@@ -325,7 +318,6 @@ int main() {
 	t = clock() - t;
 	std::cout << "Total time: " <<  ((float)t) / 1000 << " seconds." << endl << endl << endl;
 
-
 	
 	int input = -1;
 	std::cout << "To exit, leave either field blank.\n" << endl;
@@ -342,14 +334,15 @@ int main() {
 		if(source.empty() || dest.empty()){
 			break;
 		}
-		transform(source.begin(), source.end(), source.begin(), ::toupper);	//capitalize input
-		transform(dest.begin(), dest.end(), dest.begin(), ::toupper);	//capitalize input
+		//capitalize inputs:
+		transform(source.begin(), source.end(), source.begin(), ::toupper);
+		transform(dest.begin(), dest.end(), dest.begin(), ::toupper);
 
 
-		t = clock();	//start timer
+		t = clock();
 		source_hash = resolve_collisions(source, table, table_entries, str_hash, collisions);
 		dest_hash = resolve_collisions(dest, table, table_entries, str_hash, collisions);
-		if (table[source_hash] == NULL || *table[source_hash]->url != source) {
+		if (table[source_hash] == NULL || *table[source_hash]->url != source || table[source_hash]->links.empty()) {
 			cout << "\nCouldn't find source article \"" << source << "\"; it seems it didn't exist in the Wiki dump this is using.\n" << endl;
 			continue;
 		}
@@ -380,114 +373,6 @@ int main() {
 		}
 	}
 
-	////allow user to test input:
-	//int input = -1;
-	//string tmp_title = "";
-	//unsigned int tmp_hash = -1;
-	//list<unsigned int> tmp_list;
-	//int tmp_count = 0;
-	//while (input != 0) {
-	//	std::cout << "\n\nEnter one of the following: \n\t0:\t\tExit \n\t1:\t\tFind article in table \n\t2:\t\tFind hash in table \n\t3:\t\tPrint links of last article (" << tmp_title << ")" << endl;
-	//	std::cout << "\t4:\t\tFind link path between articles" << endl;
-	//	cin >> input;
-	//	if (input == 1) {
-	//		std::cout << "  Please enter article name: ";
-	//		cin >> tmp_title;
-	//		transform(tmp_title.begin(), tmp_title.end(), tmp_title.begin(), ::toupper);	//capitalize
-	//		std::cout << endl;
-	//		tmp_hash = resolve_collisions(tmp_title, table, table_entries, str_hash, collisions, true);
-	//		std::cout << "  Found article slot for '" << tmp_title << "' at hash " << tmp_hash << ";" << endl;
-	//	}
-	//	else if (input == 2) {
-	//		std::cout << " Please enter hash: ";
-	//		cin >> tmp_hash;
-	//		std::cout << endl;
-	//		if (table[tmp_hash] == NULL) {
-	//			std::cout << " hash " << tmp_hash << " not found" << endl;
-	//		}
-	//		else {
-	//			std::cout << " table[" << tmp_hash << "] = " << *(table[tmp_hash]->url) << endl;
-	//		}
-	//	}
-	//	else if (input == 3) {
-	//		std::cout << "  Links under article '" << tmp_title << "';" << endl;
-	//		tmp_hash = resolve_collisions(tmp_title, table, table_entries, str_hash, collisions);
-	//		//tmp_list = *table[tmp_hash]->links;
-	//		tmp_list = table[tmp_hash]->links;
-	//		for (list<unsigned int>::iterator tmp_itr = tmp_list.begin(); tmp_itr != tmp_list.end(); tmp_itr++) {
-	//			tmp_count++;
-	//			std::cout << "\t" << tmp_count << ": \t" << *tmp_itr << " = \t" << *(table[*tmp_itr]->url) << endl;
-	//		}
-	//	}
-	//	else if (input == 4) {
-	//		string source;
-	//		string dest;
-	//		std::cout << " Enter source: ";
-	//		cin.ignore(10, '\n');	//clear cin for getline()
-	//		getline(cin, source);
-	//		transform(source.begin(), source.end(), source.begin(), ::toupper);	//capitalize input
-	//		std::cout << " Enter destination: ";
-	//		getline(cin, dest);
-	//		transform(dest.begin(), dest.end(), dest.begin(), ::toupper);	//capitalize input
-
-	//		t = clock();	//start timer
-	//		unsigned int source_hash = resolve_collisions(source, table, table_entries, str_hash, collisions);
-	//		unsigned int dest_hash = resolve_collisions(dest, table, table_entries, str_hash, collisions);
-	//		pair<list<unsigned int>*, int> search_results = seek_links(source_hash, dest_hash, table);
-	//		list<unsigned int> *link_path = search_results.first;
-
-	//		if (search_results.second == 0) {
-	//			std::cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-	//			std::cout << "\t" << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
-	//			if(link_path){
-	//				for (list<unsigned int>::iterator tmp_itr = link_path->begin(); tmp_itr != link_path->end(); tmp_itr++) {
-	//					std::cout << "\t" << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
-	//				}
-	//			}
-	//			std::cout << "\t" << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
-	//		}
-	//		else if (search_results.second == -1) {
-	//			std::cout << "Confirmed that no path exists between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-	//		}
-	//		else {
-	//			std::cout << "Search between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << " failed after " << search_results.second << " iterations." << endl;
-	//		}
-	//		t = clock() - t;
-	//		std::cout << "Total time: " << t << " clicks, " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
-	//	}
-	//}
-	//}
-	//else{
-	//	t = clock();	//start timer
-
-	//	string source = "ABACUS";
-	//	string dest = "PHILOSOPHY";
-
-	//	unsigned int source_hash = resolve_collisions(source, table, table_entries, str_hash, collisions);
-	//	unsigned int dest_hash = resolve_collisions(dest, table, table_entries, str_hash, collisions);
-	//	pair<list<unsigned int>*, int> search_results = seek_links(source_hash, dest_hash, table);
-	//	list<unsigned int> *link_path = search_results.first;
-
-	//	if (search_results.second == 0) {
-	//		std::cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-	//		std::cout << "\t" << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
-	//		for (list<unsigned int>::iterator tmp_itr = link_path->begin(); tmp_itr != link_path->end(); tmp_itr++) {
-	//			std::cout << "\t" << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
-	//		}
-	//		std::cout << "\t" << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
-	//	}
-	//	else if (search_results.second == -1) {
-	//		std::cout << "Confirmed that no path exists between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-	//	}
-	//	else {
-	//		std::cout << "Search between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << " failed after " << search_results.second << " iterations." << endl;
-	//	}
-
-	//	t = clock() - t;
-	//	std::cout << "Total time: " << t << " clicks, " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
-	//}
-	
-	getchar();
 
 	//clean up (most) memory
 	/*
@@ -508,22 +393,11 @@ int main() {
 /*TODO
 	Clean up memory after a search
 	Clean up memory at the end of the program
-	Fix bug where space bars aren't interpreted correctly in searches
 	Parsr sometimes includes duplicate entries: should combine rather than replace
-	Re-device UI
+	Re-devise UI
 
-	Implement update of links file in Python from log/newer dump
-		Find where links are getting lost (2%, down from 15%)
-	Profiling to find expensive parts
-	sizeof(string) > sizeof(char[]) ???
-	Remove duplicate entries (on parser side?) (dumps contain multiple entries w/ different links?)
-	Clean up memory (first each entry, then table)
-	Verify data integrity following links on links
-
-STATUS
-	Occupying ~20% of the table requires 1GB for simple wiki (~105GB for total)
-	Links are not populating the table (shouldn't anyway)
-		Should an entry's link storage include strings (yes) AND hashes? 
-			Would sacrifice memory for speed
+	Implement update of links file in Python from log/newer dump (no)
+	Profiling to find expensive parts (not much I can fix)
+	swap out heavily used structures? string vs char[]? list vs vector?
 
 */
