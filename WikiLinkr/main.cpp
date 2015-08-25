@@ -155,19 +155,25 @@ pair<list<unsigned int>*, int> seek_links(unsigned int source, unsigned int dest
 	list<unsigned int> *child_path = NULL;		//tmp var for creating link paths from their parents (parent + new link = child)
 	pair<unsigned int, list<unsigned int>*> *link_entry;	//to reference entry without relocating it in table
 	
-	//to start, insert all of the source's links into the structure (bottom row)
-	//this prevents the source from being stored in all of the path lists, which is redundant (because it's already stored elsewhere) and expensive
-	node_links = table[source]->links;
-	for (list<unsigned int>::iterator link_itr = node_links.begin(); link_itr != node_links.end(); link_itr++) {
-		if (*link_itr != source) {
-			//insert link if it's different from the source, to prevent a few remotely possible redundancies
-			if (*link_itr == destination) {
-				return pair<list<unsigned int>*, int>(NULL, 0);
+	if (table[source]->links.empty() == false) {
+		//to start, insert all of the source's links into the structure (bottom row)
+		//this prevents the source from being stored in all of the path lists, which is redundant (because it's already stored elsewhere) and expensive
+		node_links = table[source]->links;
+		for (list<unsigned int>::iterator link_itr = node_links.begin(); link_itr != node_links.end(); link_itr++) {
+			if (*link_itr != source) {
+				//insert link if it's different from the source, to prevent a few remotely possible redundancies
+				if (*link_itr == destination) {
+					return pair<list<unsigned int>*, int>(NULL, 0);
+				}
+				link_entry = new pair<unsigned int, list<unsigned int>*>(*link_itr, new list<unsigned int>);
+				link_tree_row->insert(*link_entry);
 			}
-			link_entry = new pair<unsigned int, list<unsigned int>*>(*link_itr, new list<unsigned int>);
-			link_tree_row->insert(*link_entry);
 		}
 	}
+	else {
+		std::cout << "table[source]->links was empty; skipping..." << endl;
+	}
+
 
 	unsigned int max_depth = 10;
 	//start loop between rows within tree (10 layers deep is probably enough)
@@ -197,7 +203,7 @@ pair<list<unsigned int>*, int> seek_links(unsigned int source, unsigned int dest
 		}
 		if (link_tree_new_row->empty()) {
 			std::cout << "There is no way to get to the destination from the source" << endl;
-			clean_up_search_mem(link_tree_rest, link_tree_row, link_tree_new_row);
+			//clean_up_search_mem(link_tree_rest, link_tree_row, link_tree_new_row);
 			return pair<list<unsigned int>*, int>(NULL, -1);
 		}
 		//move every key from bottom row into top half (so a new bottom row can be started)
@@ -214,7 +220,7 @@ pair<list<unsigned int>*, int> seek_links(unsigned int source, unsigned int dest
 	return pair<list<unsigned int>*, int>(NULL, max_depth);
 }
 
-
+ 
 int main(int argc, char* argv[]) {
 	//parse command line arg
 	if (argc != 2) {
@@ -222,7 +228,9 @@ int main(int argc, char* argv[]) {
 		cout << "(You must first run \"python parsr8.py path_to_wikipedia_dump.xml path_to_parsed_file.txt\")" << endl;
 		exit(1);
 	}
-	string path = argv[1];
+	//string path = argv[1];
+	//ifstream in_file(path);		//open file
+	ifstream in_file(argv[1]);
 	
 	//start timer:
 	clock_t t = clock();
@@ -239,74 +247,89 @@ int main(int argc, char* argv[]) {
 	*			should use list to hold links (vectors must be contiguous?)
 	*			64-bit programs mean 16-bit addresses
 	*/
-	std::cout << "Initializing structure..." << endl;
-	unsigned int table_entries = 5 * MEGABYTE;	//good size for sample english wiki (>200k new articles, >2 minutes)
-	//unsigned int table_entries = 100 * MEGABYTE;	//good size for complete english wikipedia (>15M new articles, >12 hours)
-
-	entry ** table = new entry*[table_entries];
-	for (unsigned int i = 0; i < table_entries; i++) {
-		//NULL out all entries
-		table[i] = NULL;
-	}
-	unsigned int table_bytes = table_entries * sizeof(entry);
-
+	
 	//for analytics:
 	int collisions = 0;
 	unsigned int total_articles;
 	string total;
 	int progress;
 	unsigned int article_counter = 0;
+
+	//table info:
+	unsigned int table_entries = -1;
+	unsigned int table_bytes = -1;
+
+	//open file for reading
+	if (!in_file) {
+		std::cout << "Failed to open input; exiting" << endl;
+		exit(1);
+	}
+
+	//retrieve new article cound from beginning of input:
+	getline(in_file, total);
+	total_articles = stoi(total);
+
+	std::cout << "Initializing structure..." << endl;
+	//unsigned int table_entries = 5 * MEGABYTE;	//good size for sample english wiki (210,083 new articles, >2 minutes)
+	//unsigned int table_entries = 100 * MEGABYTE;	//good size for complete english wikipedia (15,819,375 new articles, >12 hours)
+	table_entries = 20 * total_articles + 1000;	//tentative equation
+
+	entry ** table = new entry*[table_entries];
+	for (unsigned int i = 0; i < table_entries; i++) {
+		//NULL out all entries
+		table[i] = NULL;
+	}
+	table_bytes = table_entries * sizeof(entry);
+			
 	
 	//start cycling through file:
 	std::cout << "Started reading..." << endl;
 	cout << " 0% \t[                                                  ]";
-	ifstream in_file(path);		//open file
+	
+	//reading vars
 	string *title = NULL;		//pointer to 
 	string line;
 	int link_hash;
 	list<unsigned int> *links = NULL;
-	unsigned int counter = 0;
-	if (in_file) {
-		getline(in_file, total);
-		total_articles = stoi(total);
-		while (getline(in_file, line)) {
-			//process line-by-line
-			if (line == "<page>") {
-				//just finished reading in links; insert data into table
-				if(title != NULL){
-					hash = resolve_collisions(*title, table, table_entries, str_hash, collisions);
-					create_entry(hash, title, table, links);
-					article_counter++;
-					if (article_counter % (total_articles / 100) == 0) {
-						//print progress:
-						progress = article_counter / (total_articles / 100);
-						cout << '\r' << flush << "~" << progress << "% \t[";
-						for (int i = 0; i< progress / 2; i++) cout << "=";
-						for (int i = 0; i< 50 - progress / 2; i++) cout << " ";
-						cout << "]";
-					}
+	
+	
+	while (getline(in_file, line)) {
+		//process line-by-line
+		if (line == "<page>") {
+			//just finished reading in links; insert data into table
+			if(title != NULL){
+				hash = resolve_collisions(*title, table, table_entries, str_hash, collisions);
+				create_entry(hash, title, table, links);
+				article_counter++;
+				if (article_counter % (total_articles / 100) == 0) {
+					//print progress:
+					progress = article_counter / (total_articles / 100);
+					cout << '\r' << flush << "~" << progress << "% \t[";
+					for (int i = 0; i< progress / 2; i++) cout << "=";
+					for (int i = 0; i< 50 - progress / 2; i++) cout << " ";
+					cout << "]";
 				}
-				title = new string;
-				links = new list<unsigned int>;
-				//about to show article metadata
-				getline(in_file, *title);
-				counter++;
 			}
-			else {
-				//line is a link: create if necessary and store it
-				link_hash = resolve_collisions(line, table, table_entries, str_hash, collisions);
-				if (table[link_hash] == NULL) {
-					//if link didn't exist, create it 
-					create_entry(link_hash, new string(line), table);
-				}
-				links->push_back(link_hash);
-			}
+			title = new string;
+			links = new list<unsigned int>;
+			//about to show article metadata
+			getline(in_file, *title);
 		}
-		//insert last article data into table
-		hash = resolve_collisions(*title, table, table_entries, str_hash, collisions);
-		create_entry(hash, title, table, links);
-		in_file.close();
+		else {
+			//line is a link: create if necessary and store it
+			link_hash = resolve_collisions(line, table, table_entries, str_hash, collisions);
+			if (table[link_hash] == NULL) {
+				//if link didn't exist, create it 
+				create_entry(link_hash, new string(line), table);
+			}
+			links->push_back(link_hash);
+		}
 	}
+	//insert last article data into table
+	hash = resolve_collisions(*title, table, table_entries, str_hash, collisions);
+	create_entry(hash, title, table, links);
+	in_file.close();
+	
 	cout << '\r' << flush << "100% \t[==================================================]" << endl;
 	std::cout << endl << endl;
 	std::cout << "Done indexing; " << collisions << " collisions" << endl;
@@ -334,55 +357,69 @@ int main(int argc, char* argv[]) {
 	unsigned int source_hash, dest_hash;
 	pair<list<unsigned int>*, int> search_results;
 	int pad_length = log10(table_entries) + 1;
-	while (true) {
-		std::cout << " Enter source: \t\t";
+	
+	///*
+	ofstream out_file;
+	out_file.open("schools_output2.txt");
+	string schools[5] = { "Arizona State University", "Lafayette College", "Rensselaer Polytechnic Institute", "United States Air Force Academy", "University of Notre Dame" };
+	for (int i = 0; i < 5; i++) {
+		for (int j = 0; j < 5; j++) {
+			if (i == j) continue;
+			source = schools[i];
+			dest = schools[j];//*/
+	//while (true) {
+		/*
+		out_file << " Enter source: \t\t";
 		getline(cin, source);
-		std::cout << " Enter destination: \t";
+		out_file << " Enter destination: \t";
 		getline(cin, dest);
-		
-		if(source.empty() || dest.empty()){
-			break;
-		}
-		//capitalize inputs:
-		transform(source.begin(), source.end(), source.begin(), ::toupper);
-		transform(dest.begin(), dest.end(), dest.begin(), ::toupper);
-
-
-		t = clock();
-		source_hash = resolve_collisions(source, table, table_entries, str_hash, collisions);
-		dest_hash = resolve_collisions(dest, table, table_entries, str_hash, collisions);
-		if (table[source_hash] == NULL || *table[source_hash]->url != source || table[source_hash]->links.empty()) {
-			cout << "\nCouldn't find source article \"" << source << "\"; it seems it didn't exist in the Wiki dump this is using.\n" << endl;
-			continue;
-		}
-		else if (table[dest_hash] == NULL || *table[dest_hash]->url != dest) {
-			cout << "\nCouldn't find destination article \"" << dest << "\"; it seems it didn't exist in the Wiki dump this is using.\n" << endl;
-			continue;
-		}
-		else {
-			search_results = seek_links(source_hash, dest_hash, table);
-			if (search_results.second == 0) {
-				std::cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-				std::cout << "\t" << setw(pad_length) << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
-				if (search_results.first) {
-					for (list<unsigned int>::iterator tmp_itr = search_results.first->begin(); tmp_itr != search_results.first->end(); tmp_itr++) {
-						std::cout << "\t" << setw(pad_length) << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
-					}
-				}
-				std::cout << "\t" << setw(pad_length) << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
+		*/
+			
+			if (source.empty() || dest.empty()) {
+				break;
 			}
-			else if (search_results.second == -1) {
-				std::cout << "Confirmed that no path exists between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+			//capitalize inputs:
+			transform(source.begin(), source.end(), source.begin(), ::toupper);
+			transform(dest.begin(), dest.end(), dest.begin(), ::toupper);
+
+
+			t = clock();
+			source_hash = resolve_collisions(source, table, table_entries, str_hash, collisions);
+			dest_hash = resolve_collisions(dest, table, table_entries, str_hash, collisions);
+			if (table[source_hash] == NULL || *table[source_hash]->url != source || table[source_hash]->links.empty()) {
+				cout << "\nCouldn't find source article \"" << source << "\"; it seems it didn't exist in the Wiki dump this is using.\n" << endl;
+				continue;
+			}
+			else if (table[dest_hash] == NULL || *table[dest_hash]->url != dest) {
+				cout << "\nCouldn't find destination article \"" << dest << "\"; it seems it didn't exist in the Wiki dump this is using.\n" << endl;
+				continue;
 			}
 			else {
-				std::cout << "Search between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << " failed after " << search_results.second << " iterations." << endl;
+				search_results = seek_links(source_hash, dest_hash, table);
+				if (search_results.second == 0) {
+					out_file << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+					out_file << "\t" << setw(pad_length) << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
+					if (search_results.first) {
+						for (list<unsigned int>::iterator tmp_itr = search_results.first->begin(); tmp_itr != search_results.first->end(); tmp_itr++) {
+							out_file << "\t" << setw(pad_length) << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
+						}
+					}
+					out_file << "\t" << setw(pad_length) << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
+				}
+				else if (search_results.second == -1) {
+					out_file << "Confirmed that no path exists between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+				}
+				else {
+					out_file << "Search between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << " failed after " << search_results.second << " iterations." << endl;
+				}
+				t = clock() - t;
+				out_file << "Total time: " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
 			}
-			t = clock() - t;
-			std::cout << "Total time: " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
 		}
 	}
 
-
+	out_file.close();
+	//getchar();
 	//clean up (most) memory
 	/*
 	for (unsigned int i = 0; i < table_entries; i++) {
