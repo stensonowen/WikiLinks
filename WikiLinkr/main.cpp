@@ -32,6 +32,9 @@ Benchmarks:
 #include <math.h>
 #include <algorithm>
 #include <iomanip>
+//Bug fixes / compatibility
+#include <tr1/functional>   //fixes g++ issue in which std::hash not found
+#include <stdlib.h>         //atoi
 
 #define KILOBYTE 1024
 #define MEGABYTE 1024*1024
@@ -45,7 +48,7 @@ struct entry {
 	list<unsigned int> links;		//list of hashes
 };
 
-unsigned int resolve_collisions(const string &str, entry ** table, unsigned int table_entries, hash<string> &str_hash, int &collisions, bool verbose=false) {
+unsigned int resolve_collisions(const string &str, entry ** table, unsigned int table_entries, tr1::hash<string> &str_hash, int &collisions, bool verbose=false) {
 	//Employ hash function and then use custom collision-resolving algorithm
 	/* Deal with collisions by retrying with an offset of n!+1;
 	Should be slightly more successful than an offset of n^2 because it generates primes very frequently (prime for 0<=n<=4, and then ~50% for n>4).
@@ -226,7 +229,7 @@ int main(int argc, char* argv[]) {
 	if (argc != 2) {
 		cout << "Usage: \"" << "WikiLinkr.exe" << " path_to_parsed_file.txt\"" << endl;
 		cout << "(You must first run \"python parsr8.py path_to_wikipedia_dump.xml path_to_parsed_file.txt\")" << endl;
-		getchar();
+		//getchar();
 		exit(1);
 	}
 	//string path = argv[1];
@@ -239,7 +242,7 @@ int main(int argc, char* argv[]) {
 	//string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("english_wiki.txt");
 	//string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("test_input3.txt");
 	
-	std::hash<string> str_hash;	//initialize string hash function (better tailored to strings than bj or djb2 are)
+	tr1::hash<string> str_hash;	//initialize string hash function (better tailored to strings than bj or djb2 are)
 	unsigned int hash;
 	/*	Initialize hash table: Structure should be a contiguous array of pointers to structs
 	*			structs should hold url to compare (collision checking) as well as link structure
@@ -268,7 +271,9 @@ int main(int argc, char* argv[]) {
 
 	//retrieve new article cound from beginning of input:
 	getline(in_file, total);
-	total_articles = stoi(total);
+	//total_articles = stoi(total);
+    //stoi requires -std=c++11 flag
+    total_articles = atoi(total.c_str());
 
 	std::cout << "Initializing structure..." << endl;
 	//unsigned int table_entries = 5 * MEGABYTE;	//good size for sample english wiki (210,083 new articles, >2 minutes)
@@ -377,51 +382,50 @@ int main(int argc, char* argv[]) {
 		getline(cin, dest);
 		
 			
-			if (source.empty() || dest.empty()) {
-				break;
-			}
-			//capitalize inputs:
-			transform(source.begin(), source.end(), source.begin(), ::toupper);
-			transform(dest.begin(), dest.end(), dest.begin(), ::toupper);
+        if (source.empty() || dest.empty()) {
+            break;
+        }
+        //capitalize inputs:
+        transform(source.begin(), source.end(), source.begin(), ::toupper);
+        transform(dest.begin(), dest.end(), dest.begin(), ::toupper);
 
 
-			t = clock();
-			source_hash = resolve_collisions(source, table, table_entries, str_hash, collisions);
-			dest_hash = resolve_collisions(dest, table, table_entries, str_hash, collisions);
-			if (table[source_hash] == NULL || *table[source_hash]->url != source || table[source_hash]->links.empty()) {
-				cout << "\nCouldn't find source article \"" << source << "\"; it seems it didn't exist in the Wiki dump this is using.\n" << endl;
-				continue;
-			}
-			else if (table[dest_hash] == NULL || *table[dest_hash]->url != dest) {
-				cout << "\nCouldn't find destination article \"" << dest << "\"; it seems it didn't exist in the Wiki dump this is using.\n" << endl;
-				continue;
-			}
-			else {
-				search_results = seek_links(source_hash, dest_hash, table);
-				if (search_results.second == 0) {
-					cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-					cout << "\t" << setw(pad_length) << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
-					if (search_results.first) {
-						for (list<unsigned int>::iterator tmp_itr = search_results.first->begin(); tmp_itr != search_results.first->end(); tmp_itr++) {
-							cout << "\t" << setw(pad_length) << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
-						}
-					}
-					cout << "\t" << setw(pad_length) << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
-				}
-				else if (search_results.second == -1) {
-					cout << "Confirmed that no path exists between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-				}
-				else {
-					cout << "Search between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << " failed after " << search_results.second << " iterations." << endl;
-				}
-				t = clock() - t;
-				cout << "Total time: " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
-			}
-		//}
+        t = clock();
+        source_hash = resolve_collisions(source, table, table_entries, str_hash, collisions);
+        dest_hash = resolve_collisions(dest, table, table_entries, str_hash, collisions);
+        if (table[source_hash] == NULL || *table[source_hash]->url != source || table[source_hash]->links.empty()) {
+            cout << "\nCouldn't find source article \"" << source << "\"; it seems it didn't exist in the Wiki dump this is using.\n" << endl;
+            continue;
+        }
+        else if (table[dest_hash] == NULL || *table[dest_hash]->url != dest) {
+            cout << "\nCouldn't find destination article \"" << dest << "\"; it seems it didn't exist in the Wiki dump this is using.\n" << endl;
+            continue;
+        }
+        else {
+            search_results = seek_links(source_hash, dest_hash, table);
+            if (search_results.second == 0) {
+                cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+                cout << "\t" << setw(pad_length) << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
+                if (search_results.first) {
+                    for (list<unsigned int>::iterator tmp_itr = search_results.first->begin(); tmp_itr != search_results.first->end(); tmp_itr++) {
+                        cout << "\t" << setw(pad_length) << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
+                    }
+                }
+                cout << "\t" << setw(pad_length) << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
+            }
+            else if (search_results.second == -1) {
+                cout << "Confirmed that no path exists between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+            }
+            else {
+                cout << "Search between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << " failed after " << search_results.second << " iterations." << endl;
+            }
+            t = clock() - t;
+            cout << "Total time: " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
+        }
 	}
 
 	//out_file.close();
-	getchar();
+	//getchar();
 	//clean up (most) memory
 	/*
 	for (unsigned int i = 0; i < table_entries; i++) {
