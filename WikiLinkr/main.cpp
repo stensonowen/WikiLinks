@@ -226,6 +226,7 @@ int main(int argc, char* argv[]) {
 	if (argc != 2) {
 		cout << "Usage: \"" << "WikiLinkr.exe" << " path_to_parsed_file.txt\"" << endl;
 		cout << "(You must first run \"python parsr8.py path_to_wikipedia_dump.xml path_to_parsed_file.txt\")" << endl;
+		getchar();
 		exit(1);
 	}
 	//string path = argv[1];
@@ -358,7 +359,7 @@ int main(int argc, char* argv[]) {
 	pair<list<unsigned int>*, int> search_results;
 	int pad_length = log10(table_entries) + 1;
 	
-	///*
+	/*
 	ofstream out_file;
 	out_file.open("schools_output2.txt");
 	string schools[5] = { "Arizona State University", "Lafayette College", "Rensselaer Polytechnic Institute", "United States Air Force Academy", "University of Notre Dame" };
@@ -366,14 +367,15 @@ int main(int argc, char* argv[]) {
 		for (int j = 0; j < 5; j++) {
 			if (i == j) continue;
 			source = schools[i];
-			dest = schools[j];//*/
-	//while (true) {
-		/*
-		out_file << " Enter source: \t\t";
+			dest = schools[j];*/
+	while (true) {
+		
+		//out_file << " Enter source: \t\t";
+		cout << " Enter source: \t\t";
 		getline(cin, source);
-		out_file << " Enter destination: \t";
+		cout << " Enter destination: \t";
 		getline(cin, dest);
-		*/
+		
 			
 			if (source.empty() || dest.empty()) {
 				break;
@@ -397,29 +399,29 @@ int main(int argc, char* argv[]) {
 			else {
 				search_results = seek_links(source_hash, dest_hash, table);
 				if (search_results.second == 0) {
-					out_file << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
-					out_file << "\t" << setw(pad_length) << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
+					cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+					cout << "\t" << setw(pad_length) << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
 					if (search_results.first) {
 						for (list<unsigned int>::iterator tmp_itr = search_results.first->begin(); tmp_itr != search_results.first->end(); tmp_itr++) {
-							out_file << "\t" << setw(pad_length) << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
+							cout << "\t" << setw(pad_length) << *tmp_itr << "  =  " << *table[*tmp_itr]->url << endl;
 						}
 					}
-					out_file << "\t" << setw(pad_length) << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
+					cout << "\t" << setw(pad_length) << dest_hash << "  =  " << *table[dest_hash]->url << "*" << endl;
 				}
 				else if (search_results.second == -1) {
-					out_file << "Confirmed that no path exists between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+					cout << "Confirmed that no path exists between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
 				}
 				else {
-					out_file << "Search between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << " failed after " << search_results.second << " iterations." << endl;
+					cout << "Search between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << " failed after " << search_results.second << " iterations." << endl;
 				}
 				t = clock() - t;
-				out_file << "Total time: " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
+				cout << "Total time: " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
 			}
-		}
+		//}
 	}
 
-	out_file.close();
-	//getchar();
+	//out_file.close();
+	getchar();
 	//clean up (most) memory
 	/*
 	for (unsigned int i = 0; i < table_entries; i++) {
