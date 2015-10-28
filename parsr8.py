@@ -80,7 +80,7 @@ parsed = 0
 page = ""
 with open(input_file) as input:
     for line in input:
-        #page = ""
+        line = line.replace('\r', '')
         page += line
         if "</page>" in line:
             output.write(parse_page(page))
