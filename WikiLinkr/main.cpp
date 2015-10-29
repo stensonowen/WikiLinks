@@ -1,20 +1,14 @@
 /*
 Load link structure of Wikipedia into custom hash table
 Easily find shortest path between any two articles
-Requires parsed Wiki dump as input (parsr8.py)
-Written by Owen Stenson, Summer 2015
+Requires parsed Wiki dump as input (use parsr8.py)
+Written by Owen Stenson, Summer/Fall 2015
 */
 
 /*
-Run in 64-bit to use >2GB of memory; Tested using ~10GB (w/ 8GB system RAM) of contiguous memory in x64 without issue
+Run in 64-bit to use >2GB of memory; 
 Only tested with pagefile (windows); unknown useability with swap instead (linux)
-
-Benchmarks:
-	Complete Wiki (52GB originally, 6GB parsed): table populates in ~13 hours
-		Requires ~77GB additional swap space to store ~15.5 million new articles (excluding unmatched links) (on an SSD)
-		Finds articles seemingly instantly, populates correctly (as far as I can tell)
-	Sample Wiki (74MB parsed): table populates in 2-2.5 minutes, requires ~1GB RAM
-		Requires ~1GB RAM to store ~200k new articles (excluding unmatched links)		
+Linux swaps process memory while Windows pages memory frames; works with Windows, unknown with Linux
 */
 
 //IO
@@ -36,9 +30,7 @@ Benchmarks:
 #include <tr1/functional>   //fixes g++ issue in which std::hash not found
 #include <stdlib.h>         //atoi
 
-#define KILOBYTE 1024
-#define MEGABYTE 1024*1024
-#define GIGABYTE 1024*1024*1024
+#define MAX_DEPTH 10
 
 using namespace std;
 
@@ -62,9 +54,10 @@ unsigned int resolve_collisions(const string &str, entry ** table, unsigned int 
 		if (table[hash] == NULL || *(table[hash]->url) == str) { return hash; }
 		else { collisions++; }
 		offset = (offset - 1)*multiplier + 1;
-		//if (offset == 1) {
+		if (offset == 1) {
 			//offset gets stuck at 1 and never changes. Does it ever reach 1?
-		//}
+            cout << "\tWarning: collision offset at 1" << endl;
+		}
 		multiplier++;
 		hash += offset;
 		if (verbose) {
@@ -75,7 +68,8 @@ unsigned int resolve_collisions(const string &str, entry ** table, unsigned int 
 	}
 	if (verbose) std::cout << "   Didn't find any blank entries in k iterations;" << endl;
 	assert(false);
-	//if this assertion is hit, then something is wrong: table size should be increased (or for() loop limit should be)
+	//if this assertion is hit, then something is wrong: 
+    //table size should be increased (or for() loop limit should be)
 	return -1;	//will break something if it's ever returned
 }
 
@@ -114,9 +108,10 @@ void clean_up_search_mem(set<unsigned int> *link_tree_rest, map<unsigned int, li
 		delete[] link_tree_rest;
 		delete link_tree_rest;
 	}
+    map<unsigned int, list<unsigned int>*>::iterator tmp_itr;
 	//clean up first map
 	if (link_tree_row) {
-		for (map<unsigned int, list<unsigned int>*>::iterator tmp_itr = link_tree_row->begin(); tmp_itr != link_tree_row->end(); tmp_itr++) {
+		for (tmp_itr = link_tree_row->begin(); tmp_itr != link_tree_row->end(); tmp_itr++) {
 			delete[] tmp_itr->second;
 		}
 		delete[] link_tree_row;
@@ -124,7 +119,7 @@ void clean_up_search_mem(set<unsigned int> *link_tree_rest, map<unsigned int, li
 	}
 	//clean up second map
 	if (link_tree_new_row) {
-		for (map<unsigned int, list<unsigned int>*>::iterator tmp_itr = link_tree_new_row->begin(); tmp_itr != link_tree_new_row->end(); tmp_itr++) {
+		for (tmp_itr = link_tree_new_row->begin(); tmp_itr != link_tree_new_row->end(); tmp_itr++) {
 			delete[] tmp_itr->second;
 		}
 		delete[] link_tree_new_row;
@@ -178,10 +173,9 @@ pair<list<unsigned int>*, int> seek_links(unsigned int source, unsigned int dest
 	}
 
 
-	unsigned int max_depth = 10;
 	//start loop between rows within tree (10 layers deep is probably enough)
 	//increasing the max depth is possible, but not recommended because this thing scales horribly 
-	for (unsigned int i = 0; i < max_depth; i++){
+	for (unsigned int i = 0; i < MAX_DEPTH; i++){
 		//start loop between items in row
 		for (entry_itr = link_tree_row->begin(); entry_itr != link_tree_row->end(); entry_itr++) {
 			parent_path = entry_itr->second;
@@ -220,7 +214,7 @@ pair<list<unsigned int>*, int> seek_links(unsigned int source, unsigned int dest
 	}
 	std::cout << "The search exceeded its maximum depth; this can be increased, but it is expensive" << endl;
 	//clean_up_search_mem(link_tree_rest, link_tree_row, link_tree_new_row);
-	return pair<list<unsigned int>*, int>(NULL, max_depth);
+	return pair<list<unsigned int>*, int>(NULL, MAX_DEPTH);
 }
 
  
@@ -228,19 +222,14 @@ int main(int argc, char* argv[]) {
 	//parse command line arg
 	if (argc != 2) {
 		cout << "Usage: \"" << "WikiLinkr.exe" << " path_to_parsed_file.txt\"" << endl;
-		cout << "(You must first run \"python parsr8.py path_to_wikipedia_dump.xml path_to_parsed_file.txt\")" << endl;
-		//getchar();
+		cout <<"(You must first run \"python parsr8.py path_to_wikipedia_dump.xml path_to_parsed_file.txt\")" << endl;
 		exit(1);
 	}
-	//string path = argv[1];
-	//ifstream in_file(path);		//open file
 	ifstream in_file(argv[1]);
 	
 	//start timer:
-	clock_t t = clock();
-	//string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("simple_parsed2.txt");
-	//string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("english_wiki.txt");
-	//string path = string("E:\\OneDrive\\Programs\\C++_RPI\\WikiLinkr\\misc_data\\") + string("test_input3.txt");
+    clock_t t = clock();
+
 	
 	tr1::hash<string> str_hash;	//initialize string hash function (better tailored to strings than bj or djb2 are)
 	unsigned int hash;
@@ -261,7 +250,6 @@ int main(int argc, char* argv[]) {
 
 	//table info:
 	unsigned int table_entries = -1;
-	unsigned int table_bytes = -1;
 
 	//open file for reading
 	if (!in_file) {
@@ -276,24 +264,22 @@ int main(int argc, char* argv[]) {
     total_articles = atoi(total.c_str());
 
 	std::cout << "Initializing structure..." << endl;
-	//unsigned int table_entries = 5 * MEGABYTE;	//good size for sample english wiki (210,083 new articles, >2 minutes)
-	//unsigned int table_entries = 100 * MEGABYTE;	//good size for complete english wikipedia (15,819,375 new articles, >12 hours)
 	table_entries = 20 * total_articles + 1000;	//tentative equation
+    //5,000,000 works well for simple english wiki (210,083)
+    //100,000,000 works well for complete english wiki (15,819,375)
 
 	entry ** table = new entry*[table_entries];
 	for (unsigned int i = 0; i < table_entries; i++) {
 		//NULL out all entries
 		table[i] = NULL;
 	}
-	table_bytes = table_entries * sizeof(entry);
-			
 	
 	//start cycling through file:
 	std::cout << "Started reading..." << endl;
 	cout << " 0% \t[                                                  ]";
 	
 	//reading vars
-	string *title = NULL;		//pointer to 
+	string *title = NULL;
 	string line;
 	int link_hash;
 	list<unsigned int> *links = NULL;
@@ -357,31 +343,18 @@ int main(int argc, char* argv[]) {
 	std::cout << "Total time: " <<  ((float)t) / 1000 << " seconds." << endl << endl << endl;
 
 	
-	int input = -1;
 	std::cout << "To exit, leave either field blank.\n" << endl;
 	string source = "-1", dest = "-1";
 	unsigned int source_hash, dest_hash;
 	pair<list<unsigned int>*, int> search_results;
 	int pad_length = log10(table_entries) + 1;
 	
-	/*
-	ofstream out_file;
-	out_file.open("schools_output2.txt");
-	string schools[5] = { "Arizona State University", "Lafayette College", "Rensselaer Polytechnic Institute", "United States Air Force Academy", "University of Notre Dame" };
-	for (int i = 0; i < 5; i++) {
-		for (int j = 0; j < 5; j++) {
-			if (i == j) continue;
-			source = schools[i];
-			dest = schools[j];*/
 	while (true) {
-		
-		//out_file << " Enter source: \t\t";
 		cout << " Enter source: \t\t";
 		getline(cin, source);
 		cout << " Enter destination: \t";
 		getline(cin, dest);
 		
-			
         if (source.empty() || dest.empty()) {
             break;
         }
@@ -424,9 +397,6 @@ int main(int argc, char* argv[]) {
         }
 	}
 
-	//out_file.close();
-	//getchar();
-	//clean up (most) memory
 	/*
 	for (unsigned int i = 0; i < table_entries; i++) {
 		if (table[i]) {
@@ -446,10 +416,4 @@ int main(int argc, char* argv[]) {
 	Clean up memory after a search
 	Clean up memory at the end of the program
 	Parsr sometimes includes duplicate entries: should combine rather than replace
-	Re-devise UI
-
-	Implement update of links file in Python from log/newer dump (no)
-	Profiling to find expensive parts (not much I can fix)
-	swap out heavily used structures? string vs char[]? list vs vector?
-
 */
