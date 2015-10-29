@@ -284,15 +284,21 @@ int main(int argc, char* argv[]) {
 	int link_hash;
 	list<unsigned int> *links = NULL;
 	
-	
 	while (getline(in_file, line)) {
 		//process line-by-line
 		if (line == "<page>") {
 			//just finished reading in links; insert data into table
 			if(title != NULL){
+                //source of bug: duplicates in parsed file overwrite original entry
 				hash = resolve_collisions(*title, table, table_entries, str_hash, collisions);
-				create_entry(hash, title, table, links);
-				article_counter++;
+				
+                if(table[hash] == NULL){
+                    create_entry(hash, title, table, links);
+                } else {
+                    table[hash]->links.splice(table[hash]->links.end(), *links);
+                }
+				
+                article_counter++;
 				if (article_counter % (total_articles / 100) == 0) {
 					//print progress:
 					progress = article_counter / (total_articles / 100);
@@ -397,17 +403,18 @@ int main(int argc, char* argv[]) {
         }
 	}
 
-	/*
+    int a = 0;
 	for (unsigned int i = 0; i < table_entries; i++) {
 		if (table[i]) {
-			delete[] table[i]->url;
-			delete[] table[i];	//?
+			delete table[i]->url;
+			//delete[] table[i];	//?
 			delete table[i];	//?
+            a++;
 		}
 	}
 	delete[] table;
-	delete table;
-	*/
+    cout << "Deleted " << a << " urls/entries, freeing up " << a*sizeof(entry) << " bytes" << endl;
+	//delete table;
 	return 0;
 }
 
