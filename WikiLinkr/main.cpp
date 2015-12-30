@@ -30,7 +30,7 @@ Linux swaps process memory while Windows pages memory frames; works with Windows
 #include <tr1/functional>   //fixes g++ issue in which std::hash not found
 #include <stdlib.h>         //atoi
 
-#define MAX_DEPTH 10
+#define MAX_DEPTH 9
 
 using namespace std;
 
@@ -220,7 +220,7 @@ pair<list<unsigned int>*, int> seek_links(unsigned int source, unsigned int dest
  
 int main(int argc, char* argv[]) {
 	//parse command line arg
-	if (argc != 2) {
+	if (argc != 2 && argc != 4) {
 		cout << "Usage: \"" << "WikiLinkr.exe" << " path_to_parsed_file.txt\"" << endl;
 		cout <<"(You must first run \"python parsr8.py path_to_wikipedia_dump.xml path_to_parsed_file.txt\")" << endl;
 		exit(1);
@@ -283,6 +283,8 @@ int main(int argc, char* argv[]) {
 	string line;
 	int link_hash;
 	list<unsigned int> *links = NULL;
+    unsigned int a = 0;
+    unsigned int b = 0;
 	
 	while (getline(in_file, line)) {
 		//process line-by-line
@@ -294,8 +296,10 @@ int main(int argc, char* argv[]) {
 				
                 if(table[hash] == NULL){
                     create_entry(hash, title, table, links);
+                    a++;
                 } else {
                     table[hash]->links.splice(table[hash]->links.end(), *links);
+                    b++;
                 }
 				
                 article_counter++;
@@ -323,14 +327,16 @@ int main(int argc, char* argv[]) {
 			links->push_back(link_hash);
 		}
 	}
+    //cout << "\nCreated " << a << " new articles; appended to " << b << endl;
 	//insert last article data into table
 	hash = resolve_collisions(*title, table, table_entries, str_hash, collisions);
 	create_entry(hash, title, table, links);
 	in_file.close();
 	
 	cout << '\r' << flush << "100% \t[==================================================]" << endl;
-	std::cout << endl << endl;
+	std::cout << endl;
 	std::cout << "Done indexing; " << collisions << " collisions" << endl;
+    long pointers = 0;
 	unsigned int entries = 0;
 	unsigned int blanks = 0;
 	for (unsigned int i = 0; i < table_entries; i++) {
@@ -339,30 +345,37 @@ int main(int argc, char* argv[]) {
 		}
 		else {
 			entries++;
+            pointers += table[i]->links.size();
 		}
 	}
 	std::cout << "Found " << entries << " populated slots, " << blanks << " unpopulated." << endl;
-	std::cout << "With " << table_entries << " slots, that is " << float(entries) / table_entries * 100 << "%" << endl;
+    cout << "Total links: " << pointers << endl;
+    std::cout << "With " << table_entries << " slots, that is " << float(entries) / table_entries * 100 << "%" << endl;
 
 	//delete[] table;
 	t = clock() - t;
-	std::cout << "Total time: " <<  ((float)t) / 1000 << " seconds." << endl << endl << endl;
+	std::cout << "Total time: " <<  ((float)t) / CLOCKS_PER_SEC << " seconds." << endl;
 
 	
-	std::cout << "To exit, leave either field blank.\n" << endl;
+	std::cout << "To exit, leave either field blank." << endl;
 	string source = "-1", dest = "-1";
 	unsigned int source_hash, dest_hash;
 	pair<list<unsigned int>*, int> search_results;
 	int pad_length = log10(table_entries) + 1;
 	
 	while (true) {
-		cout << " Enter source: \t\t";
-		getline(cin, source);
-		cout << " Enter destination: \t";
-		getline(cin, dest);
-		
-        if (source.empty() || dest.empty()) {
-            break;
+        if(argc != 4){
+            cout << " Enter source: \t\t";
+            getline(cin, source);
+            cout << " Enter destination: \t";
+            getline(cin, dest);
+            
+            if (source.empty() || dest.empty()) {
+                break;
+            }
+        } else {
+            source = argv[2];
+            dest = argv[3];
         }
         //capitalize inputs:
         transform(source.begin(), source.end(), source.begin(), ::toupper);
@@ -383,7 +396,12 @@ int main(int argc, char* argv[]) {
         else {
             search_results = seek_links(source_hash, dest_hash, table);
             if (search_results.second == 0) {
-                cout << "\n\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+                cout << "\nFound path from " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << endl;
+                int depth = 0;  // src + dest ignored (excluded from MAX_DEPTH)
+                if(search_results.first){
+                    depth += search_results.first->size();
+                }
+                cout << " Depth: " << depth << endl;
                 cout << "\t" << setw(pad_length) << source_hash << "  =  " << *table[source_hash]->url << "*" << endl;
                 if (search_results.first) {
                     for (list<unsigned int>::iterator tmp_itr = search_results.first->begin(); tmp_itr != search_results.first->end(); tmp_itr++) {
@@ -399,11 +417,15 @@ int main(int argc, char* argv[]) {
                 cout << "Search between " << *table[source_hash]->url << " (" << source_hash << ") to " << *table[dest_hash]->url << " (" << source_hash << ")" << " failed after " << search_results.second << " iterations." << endl;
             }
             t = clock() - t;
-            cout << "Total time: " << ((float)t) / 1000 << " seconds." << std::endl << endl << endl;
+            cout << "Total time: " << ((float)t) / CLOCKS_PER_SEC << " seconds." << endl << endl;
+        }
+
+        if(argc == 4){
+            break;
         }
 	}
 
-    int a = 0;
+    a = 0;
 	for (unsigned int i = 0; i < table_entries; i++) {
 		if (table[i]) {
 			delete table[i]->url;
