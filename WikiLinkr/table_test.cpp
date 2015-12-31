@@ -9,13 +9,7 @@ int main(int argc, char* argv[]){
     }
     //Table t((char*)"../misc_data/simplewiki-20151020_out2");
     Table t(argv[1]);
-    string s = "test";
-    list<unsigned int> l;
-    Entry e(s, l);
-    Entry f(s);
-    cout << t.resolve_collisions(s) << endl;
-    cout << t.resolve_collisions(s) << endl;
-
-
+    t.details();
+    //getchar();
     return 0;
 }
