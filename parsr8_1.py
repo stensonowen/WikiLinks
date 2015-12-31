@@ -100,7 +100,7 @@ def main():
     output_n.close()
     output = open(output_master, 'w')
     output.write(str(parsed) + '\n')
-    output.write('\n'.join(files))
+    output.write('\n'.join(os.path.abspath(f) for f in files) + '\n')
     output.close()
     #prepend page count (overwrite blank line)
     #output.seek(0)
