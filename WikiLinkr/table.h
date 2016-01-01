@@ -42,7 +42,6 @@ class Table{
         Table(char *input_file);
         ~Table();
         unsigned int resolve_collisions(const string &title);
-        unsigned int create_if_absent(const string &title);
         pair<list<unsigned int>*, int> seek_links(unsigned int src, unsigned int dst);
         void details();
 };
@@ -63,15 +62,9 @@ void Table::details(){
     cout << "\tTotal links: " << links << " (average: " << links/used << ")" << endl;
 }
 
-unsigned int Table::create_if_absent(const string &title){
-    unsigned int hash = resolve_collisions(title);
-    if(table[hash] == NULL){
-        table[hash] = new Entry(title);
-    }
-    return hash;
-}
-
 void Table::read(string file){
+    //abandoned pthread because this is a member function
+    //currently no mutex; infinitesimally small chance of conflict at the moment.
     ifstream f_in((char*)file.c_str());
     string line;
     unsigned int addr, articles, lines, link_addr;
@@ -80,10 +73,10 @@ void Table::read(string file){
         lines++;
         if(line == "<page>"){
             getline(f_in, line);
-            addr = create_if_absent(line);
+            addr = resolve_collisions(line);
             articles++;
         } else {
-            link_addr = create_if_absent(line);
+            link_addr = resolve_collisions(line);
             table[addr]->links.push_back(link_addr);
         }
     }
@@ -156,14 +149,22 @@ unsigned int Table::resolve_collisions(const string &title){
     int offset = 2;
     for(unsigned int multiplier = 1; multiplier < MAX_ITERS; multiplier++){
         hash %= size;
-        if(table[hash] == NULL || table[hash]->title == title){
+        if(table[hash] == NULL){
+            //create if not exist
+            table[hash] = new Entry(title);
             if(multiplier>max_iters){    max_iters = multiplier;  }
             collisions += multiplier;
             return hash;
-        } else {    collisions++;   }
-        offset = (offset - 1)*multiplier + 1;
-        assert(offset != 1);
-        hash += offset;
+        } else if(table[hash]->title == title){
+            if(multiplier>max_iters){    max_iters = multiplier;  }
+            collisions += multiplier;
+            return hash;
+        } else {
+            collisions++;
+            offset = (offset - 1)*multiplier + 1;
+            assert(offset != 1);
+            hash += offset;
+        }
     }
     assert(MAX_ITERS != MAX_ITERS);
 }
