@@ -2,6 +2,7 @@
 #include<fstream>
 #include<vector>
 #include<list>
+#include<set>
 #include<tr1/functional>
 #include<string>
 #include<time.h>
@@ -9,6 +10,7 @@
 //#include<iomanip>
 #include<cassert>
 #include<stdlib.h>
+#include<pthread.h>
 using namespace std;
 
 #define MAX_DEPTH 10
@@ -33,14 +35,14 @@ class Table{
         unsigned int size;          //number of entries and blanks
         long collisions;
         long max_iters;
+        void populate(vector<string> files);        //multithread master
+        void *read(void *f);    //multithread slave
     public:
         Table(char *input_file);
         ~Table();
         unsigned int resolve_collisions(const string &title);
         unsigned int create_if_absent(const string &title);
         pair<list<unsigned int>*, int> seek_links(unsigned int src, unsigned int dst);
-        void populate(vector<string> files);        //multithread master
-        void *read(void *f);    //multithread slave
         void details();
 };
 
@@ -85,6 +87,7 @@ void *Table::read(void *f){
         }
     }
     //cout << " " << articles << " articles; " << lines << " lines; " << endl;
+    pthread_exit(NULL);
 }
 
 Table::Table(char *input_file){
@@ -113,11 +116,22 @@ Table::Table(char *input_file){
     populate(threads);
 }
 
-void Table::populate(vector<string> threads){
-    for(int i=0; i<threads.size(); i++){
-        //cout << threads[i] << endl;
-        read((void*)threads[i].c_str());
+void Table::populate(vector<string> files){
+    //create and run threads to populate table
+    //remember to add mutex system
+    vector<pthread_t> threads;
+    //threads.resize(files.size());
+    for(int i=0; i<files.size(); i++){
+        pthread_t thread;
+        //int res = pthread_create(&thread, NULL, &Table::read, NULL);
+        //cout << res << endl;
+        threads.push_back(thread);
     }
+
+    //for(int i=0; i<threads.size(); i++){
+        //cout << threads[i] << endl;
+    //    read((void*)threads[i].c_str());
+    //}
 }
 
 Table::~Table(){

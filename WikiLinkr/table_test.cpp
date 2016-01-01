@@ -9,7 +9,7 @@ int main(int argc, char* argv[]){
     }
     //Table t((char*)"../misc_data/simplewiki-20151020_out2");
     Table t(argv[1]);
-    t.details();
+    //t.details();
     //getchar();
     return 0;
 }
