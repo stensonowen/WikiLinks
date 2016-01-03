@@ -12,6 +12,9 @@
 #include<stdlib.h>
 //#include<pthread.h>
 #include<thread>
+#include<type_traits>
+#include<mutex>
+#include<atomic>
 using namespace std;
 
 #define MAX_DEPTH 10
@@ -34,6 +37,7 @@ class Table{
         Entry ** table;             //array itself
         unsigned int entries;       //number of entries
         unsigned int size;          //number of entries and blanks
+        mutex mtx; //mutex around Entry() adds ~6% overhead (pretty sure it's type safe)
         long collisions;
         long max_iters;
         void populate(vector<string> files);        //multithread master
@@ -151,10 +155,19 @@ unsigned int Table::resolve_collisions(const string &title){
         hash %= size;
         if(table[hash] == NULL){
             //create if not exist
-            table[hash] = new Entry(title);
-            if(multiplier>max_iters){    max_iters = multiplier;  }
-            collisions += multiplier;
-            return hash;
+            mtx.lock();
+            if(table[hash] != NULL){
+                //something changed in the last few instructions
+                //free up mutex so that other thread can finish and retry this function
+                mtx.unlock();
+                return resolve_collisions(title);
+            } else {
+                table[hash] = new Entry(title);
+                mtx.unlock();
+                if(multiplier>max_iters){    max_iters = multiplier;  }
+                collisions += multiplier;
+                return hash;
+            }
         } else if(table[hash]->title == title){
             if(multiplier>max_iters){    max_iters = multiplier;  }
             collisions += multiplier;
