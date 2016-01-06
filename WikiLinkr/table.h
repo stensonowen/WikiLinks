@@ -22,6 +22,7 @@ using namespace std;
 
 #define MAX_DEPTH 10
 #define MAX_ITERS 100
+#define NUM_MUTEX 100
 
 class Entry{
     public:
@@ -40,7 +41,8 @@ class Table{
         Entry ** table;             //array itself
         unsigned int entries;       //number of entries
         unsigned int size;          //number of entries and blanks
-        mutex mtx; //mutex around Entry() adds ~6% overhead (pretty sure it's type safe)
+        //mutex mtx; //mutex around Entry() adds ~6% overhead (pretty sure it's type safe)
+        mutex mtx[NUM_MUTEX];
         long collisions;
         long max_iters;
         void populate(vector<string> files);        //multithread master
@@ -70,11 +72,15 @@ void Table::printPath(string src, string dst){
     if(!table[src_] || !table[dst_]) return;
     results = seek_links(src_, dst_);
     if(results.second == -1) cout << "No path exists from " << table[src_]->title << " (" << src_ << ") to " << table[dst_]->title << " (" << dst_ << ")" << endl;
-    else if(results.second > 0) cout << "No path found from " << table[src_]->title << " (" << src_ << ") to " << table[dst_]->title << " (" << dst_ << ") after " << results.second << " iterations." << endl;
+    else if(results.second > 0){
+        cout << "No path found from " << table[src_]->title << " (" << src_ << ") to " << table[dst_]->title << " (" << dst_ << ") after " << results.second << " iterations." << endl;
+        t = clock() - t;
+        cout << "Total time: " << (float)t / CLOCKS_PER_SEC << " seconds." << endl << endl;
+    }
     else{
         int depth = 0;
         if(results.first) depth += results.first->size();
-        cout << "Found path from " << table[src_]->title << " (" << src_ << ") to " << table[dst_]->title << " (" << dst_ << ") in " << depth << " iterations." << endl;
+        cout << "Found path from " << table[src_]->title << " (" << src_ << ") to " << table[dst_]->title << " (" << dst_ << ") in " << depth << " iterations" << endl;
         cout << "\t" << setw(pad_length) << src_ << "  =  " << table[src_]->title << "*\n";
         if(results.first){
             for(res_itr = results.first->begin(); res_itr != results.first->end(); res_itr++){
@@ -265,17 +271,17 @@ unsigned int Table::resolve_collisions(const string &title, bool create){
         hash %= size;
         if(table[hash] == NULL){
             //create if not exist
-            mtx.lock();
+            mtx[hash % NUM_MUTEX].lock();
             if(table[hash] != NULL){
                 //something changed in the last few instructions
                 //free up mutex so that other thread can finish and retry this function
-                mtx.unlock();
+                mtx[hash % NUM_MUTEX].unlock();
                 return resolve_collisions(title);
             } else {
                 if(create){
                     table[hash] = new Entry(title);
                 }
-                mtx.unlock();
+                mtx[hash % NUM_MUTEX].unlock();
                 if(multiplier>max_iters){    max_iters = multiplier;  }
                 collisions += multiplier;
                 return hash;
