@@ -1,18 +1,21 @@
 #include<iostream>
 #include<fstream>
+//stl
+#include<string>
 #include<vector>
 #include<list>
 #include<set>
+#include<map>
+//
 #include<tr1/functional>
-#include<string>
 #include<time.h>
-//#include<algorithm>
-//#include<iomanip>
+#include<algorithm>
+#include<iomanip>
+//misc
 #include<cassert>
 #include<stdlib.h>
-//#include<pthread.h>
+//threading
 #include<thread>
-#include<type_traits>
 #include<mutex>
 #include<atomic>
 using namespace std;
@@ -27,7 +30,7 @@ class Entry{
         list<unsigned int> links;
         Entry() {}
         Entry(const string &t) : title(t) {}
-        Entry(string &t, list<unsigned int> &l) : title(t), links(l) {}
+        //Entry(string &t, list<unsigned int> &l) : title(t), links(l) {}
         ~Entry() {}
 };
 
@@ -45,10 +48,117 @@ class Table{
     public:
         Table(char *input_file);
         ~Table();
-        unsigned int resolve_collisions(const string &title);
+        unsigned int resolve_collisions(const string &title, bool create=true);
         pair<list<unsigned int>*, int> seek_links(unsigned int src, unsigned int dst);
         void details();
+        void printPath(string src, string dst);
 };
+
+void Table::printPath(string src, string dst){
+    clock_t t = clock();
+    //capitalize
+    transform(src.begin(), src.end(), src.begin(), ::toupper);
+    transform(dst.begin(), dst.end(), dst.begin(), ::toupper);
+    unsigned int src_ = resolve_collisions(src, false);
+    unsigned int dst_ = resolve_collisions(dst, false);
+    pair<list<unsigned int>*, int> results;
+    list<unsigned int>::iterator res_itr;
+    int pad_length = log10(size) + 1;
+    if(!table[src_]) cout << "Cannot find article \"" << src << "\" (" << src_ << ")" << endl;
+    //if(!src_ || table[src_]->title != src) cout << "Cannot find article \"" << src << "\" (" << src_ << ")" << endl;
+    if(!table[dst_]) cout << "Cannot find article \"" << dst << "\" (" << dst_ << ")" << endl;
+    if(!table[src_] || !table[dst_]) return;
+    results = seek_links(src_, dst_);
+    if(results.second == -1) cout << "No path exists from " << table[src_]->title << " (" << src_ << ") to " << table[dst_]->title << " (" << dst_ << ")" << endl;
+    else if(results.second > 0) cout << "No path found from " << table[src_]->title << " (" << src_ << ") to " << table[dst_]->title << " (" << dst_ << ") after " << results.second << " iterations." << endl;
+    else{
+        int depth = 0;
+        if(results.first) depth += results.first->size();
+        cout << "Found path from " << table[src_]->title << " (" << src_ << ") to " << table[dst_]->title << " (" << dst_ << ") in " << depth << " iterations." << endl;
+        cout << "\t" << setw(pad_length) << src_ << "  =  " << table[src_]->title << "*\n";
+        if(results.first){
+            for(res_itr = results.first->begin(); res_itr != results.first->end(); res_itr++){
+                cout << "\t" << setw(pad_length) << *res_itr << "  =  " << table[*res_itr]->title << endl;
+            }
+        }
+        cout << "\t" << setw(pad_length) << dst_ << "  =  " << table[dst_]->title << "*\n";
+        t = clock() - t;
+        cout << "Total time: " << (float)t / CLOCKS_PER_SEC << " seconds." << endl << endl;
+        return;
+    }
+}
+
+pair<list<unsigned int>*, int> Table::seek_links(unsigned int src, unsigned int dst){
+    //return pair<list<unsigned int>*, int>(NULL, 0);
+    //next step's hash, previous steps
+    map<unsigned int, list<unsigned int>*> *link_children = new map<unsigned int, list<unsigned int>*>;
+    map<unsigned int, list<unsigned int>*> *link_grandchildren = new map<unsigned int, list<unsigned int>*>;
+    set<unsigned int> *seen_links = new set<unsigned int>;
+
+    map<unsigned int, list<unsigned int>*>::iterator entry_itr;
+    pair<unsigned int, list<unsigned int>*> *link_entry;
+    list<unsigned int>::iterator link_itr;
+
+    list<unsigned int> node_links;
+    list<unsigned int> *parent_path = NULL;
+    list<unsigned int> *child_path = NULL;
+
+    if(src == dst){
+        //finished after 0 iterations
+        return pair<list<unsigned int>*, int>(NULL, 0);
+    }
+
+    //to start, insert all the source's links into the structure
+    //the source shouldn't be stored in all path lists redundantly
+    if(table[src]->links.empty()){
+        //article has no links
+        return pair<list<unsigned int>*, int>(NULL, -1);
+    } else {
+        node_links = table[src]->links;
+        for(link_itr = node_links.begin(); link_itr != node_links.end(); link_itr++){
+            if(*link_itr == dst){
+                //finished after 1st iteration
+                return pair<list<unsigned int>*, int>(NULL, 0);
+            } else if(*link_itr != src){
+                link_entry = new pair<unsigned int, list<unsigned int>*>(*link_itr, new list<unsigned int>);
+                link_children->insert(*link_entry);
+            }
+        }
+    }
+    
+    //populate each iteration of links
+    for(unsigned int i = 0; i < MAX_DEPTH; i++){
+        //loop between items in row
+        for(entry_itr = link_children->begin(); entry_itr != link_children->end(); entry_itr++){
+            parent_path = entry_itr->second;
+            node_links = table[entry_itr->first]->links;
+            //loop between links on a page
+            for(link_itr = node_links.begin(); link_itr != node_links.end(); link_itr++){
+                //add iff link hasn't been seen already
+                if(seen_links->find(*link_itr) == seen_links->end()){
+                    child_path = new list<unsigned int>(*parent_path);
+                    child_path->push_back(entry_itr->first);
+                    if(*link_itr == dst){
+                        return pair<list<unsigned int>*, int>(child_path, 0);
+                    }
+                    link_grandchildren->insert(pair<unsigned int, list<unsigned int>*>(*link_itr, child_path));
+                }
+            }
+            delete parent_path;
+        }
+        if(link_grandchildren->empty()){
+            //new list is empty (unlikely)
+            return pair<list<unsigned int>*, int>(NULL, -1);
+        }
+        //move on to next iteration
+        for(entry_itr = link_children->begin(); entry_itr != link_children->end(); entry_itr++){
+            seen_links->insert(entry_itr->first);
+        }
+        swap(link_children, link_grandchildren);
+        link_grandchildren->clear();
+    }
+    return pair<list<unsigned int>*, int>(NULL, MAX_DEPTH);
+}
 
 void Table::details(){
     cout << "Table details:" << endl;
@@ -140,7 +250,7 @@ Table::~Table(){
     delete[] table;
 }
 
-unsigned int Table::resolve_collisions(const string &title){
+unsigned int Table::resolve_collisions(const string &title, bool create){
     //using factorial-based generates primes more than squares
     //perhaps this isn't actually all that great. it finds primes relatively often,
     //  but they grow extremely quickly, which destroys spatial locality
@@ -162,7 +272,9 @@ unsigned int Table::resolve_collisions(const string &title){
                 mtx.unlock();
                 return resolve_collisions(title);
             } else {
-                table[hash] = new Entry(title);
+                if(create){
+                    table[hash] = new Entry(title);
+                }
                 mtx.unlock();
                 if(multiplier>max_iters){    max_iters = multiplier;  }
                 collisions += multiplier;
