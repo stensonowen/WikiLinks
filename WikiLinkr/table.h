@@ -14,6 +14,7 @@
 //misc
 #include<cassert>
 #include<stdlib.h>
+#include<memory>
 //threading
 #include<thread>
 #include<mutex>
@@ -51,7 +52,7 @@ class Table{
         Table(char *input_file);
         ~Table();
         unsigned int resolve_collisions(const string &title, bool create=true);
-        pair<list<unsigned int>*, int> seek_links(unsigned int src, unsigned int dst);
+        pair<shared_ptr<list<unsigned int>>, int> seek_links(unsigned int src, unsigned int dst);
         void details();
         void printPath(string src, string dst);
 };
@@ -63,7 +64,7 @@ void Table::printPath(string src, string dst){
     transform(dst.begin(), dst.end(), dst.begin(), ::toupper);
     unsigned int src_ = resolve_collisions(src, false);
     unsigned int dst_ = resolve_collisions(dst, false);
-    pair<list<unsigned int>*, int> results;
+    pair<shared_ptr<list<unsigned int>>, int> results;
     list<unsigned int>::iterator res_itr;
     int pad_length = log10(size) + 1;
     if(!table[src_]) cout << "Cannot find article \"" << src << "\" (" << src_ << ")" << endl;
@@ -79,7 +80,9 @@ void Table::printPath(string src, string dst){
     }
     else{
         int depth = 0;
-        if(results.first) depth += results.first->size();
+        if(results.first){
+            depth += results.first->size();
+        }
         cout << "Found path from " << table[src_]->title << " (" << src_ << ") to " << table[dst_]->title << " (" << dst_ << ") in " << depth << " iterations" << endl;
         cout << "\t" << setw(pad_length) << src_ << "  =  " << table[src_]->title << "*\n";
         if(results.first){
@@ -90,41 +93,46 @@ void Table::printPath(string src, string dst){
         cout << "\t" << setw(pad_length) << dst_ << "  =  " << table[dst_]->title << "*\n";
         t = clock() - t;
         cout << "Total time: " << (float)t / CLOCKS_PER_SEC << " seconds." << endl << endl;
+        //delete results;
         return;
     }
 }
 
-pair<list<unsigned int>*, int> Table::seek_links(unsigned int src, unsigned int dst){
+
+
+pair<shared_ptr<list<unsigned int>>, int> Table::seek_links(unsigned int src, unsigned int dst){
     //return pair<list<unsigned int>*, int>(NULL, 0);
-    //next step's hash, previous steps
-    map<unsigned int, list<unsigned int>*> *link_children = new map<unsigned int, list<unsigned int>*>;
-    map<unsigned int, list<unsigned int>*> *link_grandchildren = new map<unsigned int, list<unsigned int>*>;
-    set<unsigned int> *seen_links = new set<unsigned int>;
+    //structures store < next step's hash, previous hashes >
+    //apparently stl classes weren't really meant to store pointers, as are not native ways to delete structures of dynamically-allocated structures (aside from manually), so I'm just going to practice using smart pointers.
+    shared_ptr<map<unsigned int, list<unsigned int>*>> link_children(new map<unsigned int, list<unsigned int>*>);
+    shared_ptr<map<unsigned int, list<unsigned int>*>> link_grandchildren(new map<unsigned int, list<unsigned int>*>);
+    shared_ptr<set<unsigned int>> seen_links(new set<unsigned int>);
 
     map<unsigned int, list<unsigned int>*>::iterator entry_itr;
     pair<unsigned int, list<unsigned int>*> *link_entry;
     list<unsigned int>::iterator link_itr;
 
     list<unsigned int> node_links;
-    list<unsigned int> *parent_path = NULL;
-    list<unsigned int> *child_path = NULL;
+    //list<unsigned int> *parent_path = NULL;
+    //list<unsigned int> *child_path = NULL;
+    shared_ptr<list<unsigned int>> parent_path, child_path;
 
     if(src == dst){
         //finished after 0 iterations
-        return pair<list<unsigned int>*, int>(NULL, 0);
+        return pair<shared_ptr<list<unsigned int>>, int>(NULL, 0);
     }
 
     //to start, insert all the source's links into the structure
     //the source shouldn't be stored in all path lists redundantly
     if(table[src]->links.empty()){
         //article has no links
-        return pair<list<unsigned int>*, int>(NULL, -1);
+        return pair<shared_ptr<list<unsigned int>>, int>(NULL, -1);
     } else {
         node_links = table[src]->links;
         for(link_itr = node_links.begin(); link_itr != node_links.end(); link_itr++){
             if(*link_itr == dst){
                 //finished after 1st iteration
-                return pair<list<unsigned int>*, int>(NULL, 0);
+                return pair<shared_ptr<list<unsigned int>>, int>(NULL, 0);
             } else if(*link_itr != src){
                 link_entry = new pair<unsigned int, list<unsigned int>*>(*link_itr, new list<unsigned int>);
                 link_children->insert(*link_entry);
@@ -136,34 +144,48 @@ pair<list<unsigned int>*, int> Table::seek_links(unsigned int src, unsigned int 
     for(unsigned int i = 0; i < MAX_DEPTH; i++){
         //loop between items in row
         for(entry_itr = link_children->begin(); entry_itr != link_children->end(); entry_itr++){
-            parent_path = entry_itr->second;
+            //parent_path.reset(entry_itr->second);
+            parent_path = shared_ptr<list<unsigned int>>(entry_itr->second);
             node_links = table[entry_itr->first]->links;
             //loop between links on a page
             for(link_itr = node_links.begin(); link_itr != node_links.end(); link_itr++){
                 //add iff link hasn't been seen already
                 if(seen_links->find(*link_itr) == seen_links->end()){
-                    child_path = new list<unsigned int>(*parent_path);
+                    child_path = shared_ptr<list<unsigned int>>(new list<unsigned int>(*parent_path));
+                    //child_path.reset(new list<unsigned int>(*parent_path));
                     child_path->push_back(entry_itr->first);
                     if(*link_itr == dst){
-                        return pair<list<unsigned int>*, int>(child_path, 0);
+                        //delete link_children;
+                        //delete link_grandchildren;
+                        //delete seen_links;
+                        //delete parent_path;
+                        //delete link_entry;
+                        //delete child_path;
+                        //cout << "done" << endl;
+                        //link_children.reset();
+                        //link_grandchildren.reset();
+                        //seen_links.reset();
+                        return pair<shared_ptr<list<unsigned int>>, int>(child_path, 0);
                     }
-                    link_grandchildren->insert(pair<unsigned int, list<unsigned int>*>(*link_itr, child_path));
+                    link_grandchildren->insert(pair<unsigned int, list<unsigned int>*>(*link_itr, child_path.get()));
                 }
             }
-            delete parent_path;
+            //delete parent_path;
         }
         if(link_grandchildren->empty()){
             //new list is empty (unlikely)
-            return pair<list<unsigned int>*, int>(NULL, -1);
+            return pair<shared_ptr<list<unsigned int>>, int>(NULL, -1);
         }
         //move on to next iteration
         for(entry_itr = link_children->begin(); entry_itr != link_children->end(); entry_itr++){
             seen_links->insert(entry_itr->first);
         }
         swap(link_children, link_grandchildren);
+        //delete link_grandchildren;
+        //link_grandchildren = new map<unsigned int, list<unsigned int>*>;
         link_grandchildren->clear();
     }
-    return pair<list<unsigned int>*, int>(NULL, MAX_DEPTH);
+    return pair<shared_ptr<list<unsigned int>>, int>(NULL, MAX_DEPTH);
 }
 
 void Table::details(){
