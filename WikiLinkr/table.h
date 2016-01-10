@@ -6,12 +6,11 @@
 #include<list>
 #include<set>
 #include<map>
-//
+//misc
 #include<tr1/functional>
 #include<time.h>
 #include<algorithm>
 #include<iomanip>
-//misc
 #include<cassert>
 #include<stdlib.h>
 #include<memory>
@@ -19,22 +18,9 @@
 #include<thread>
 #include<mutex>
 #include<atomic>
+//headers
+#include "BFS.h"    //contains entry.h
 using namespace std;
-
-#define MAX_DEPTH 10
-#define MAX_ITERS 100
-#define NUM_MUTEX 100
-
-class Entry{
-    public:
-        //Entry will be on heap, so don't need pointer member vars
-        string title;
-        list<unsigned int> links;
-        Entry() {}
-        Entry(const string &t) : title(t) {}
-        //Entry(string &t, list<unsigned int> &l) : title(t), links(l) {}
-        ~Entry() {}
-};
 
 class Table{
     private:
@@ -55,6 +41,11 @@ class Table{
         pair<shared_ptr<list<unsigned int>>, int> seek_links(unsigned int src, unsigned int dst);
         void details();
         void printPath(string src, string dst);
+        void test(){
+            BFS *bfs = new BFS(table, 3042706, 452805);
+            bfs->SHP();
+            //bfs->path->print();
+        }
 };
 
 void Table::printPath(string src, string dst){
@@ -68,10 +59,14 @@ void Table::printPath(string src, string dst){
     list<unsigned int>::iterator res_itr;
     int pad_length = log10(size) + 1;
     if(!table[src_]) cout << "Cannot find article \"" << src << "\" (" << src_ << ")" << endl;
-    //if(!src_ || table[src_]->title != src) cout << "Cannot find article \"" << src << "\" (" << src_ << ")" << endl;
     if(!table[dst_]) cout << "Cannot find article \"" << dst << "\" (" << dst_ << ")" << endl;
     if(!table[src_] || !table[dst_]) return;
-    results = seek_links(src_, dst_);
+
+    BFS *bfs = new BFS(table, src_, dst_);
+    bfs->SHP();
+    bfs->print();
+    delete bfs;
+    /*results = seek_links(src_, dst_);
     if(results.second == -1) cout << "No path exists from " << table[src_]->title << " (" << src_ << ") to " << table[dst_]->title << " (" << dst_ << ")" << endl;
     else if(results.second > 0){
         cout << "No path found from " << table[src_]->title << " (" << src_ << ") to " << table[dst_]->title << " (" << dst_ << ") after " << results.second << " iterations." << endl;
@@ -95,7 +90,8 @@ void Table::printPath(string src, string dst){
         cout << "Total time: " << (float)t / CLOCKS_PER_SEC << " seconds." << endl << endl;
         //delete results;
         return;
-    }
+    }*/
+
 }
 
 
