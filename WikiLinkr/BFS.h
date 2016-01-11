@@ -60,6 +60,7 @@ class BFS{
 
 BFS::BFS(Entry ** t, unsigned int s, unsigned int d) : table(t), src(s), dst(d) {
     nodes = new vector<Path>;
+    tmp = NULL;
     path = NULL;
     cout << "New BFS: \n\tsrc : " << table[src]->title << "\n\tdst : " << table[dst]->title << endl;
 }
@@ -86,8 +87,8 @@ int BFS::iterate(){
         //delete p;
     }
     //clear up nodes
-    //delete nodes;
-    nodes->clear();
+    delete nodes;
+    //nodes->clear();
     swap(nodes, tmp);
     //tmp = new vector<Path>;
     return 0;
@@ -97,7 +98,7 @@ Path* BFS::SHP(){
     if(src == dst){
         code = 0;
         cout << "found" << endl;
-        path = new Path(dst);
+        //path = new Path(dst);
         clear();
         return path;
     }
