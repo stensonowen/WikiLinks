@@ -28,7 +28,6 @@ class Path{
         nodes = other.nodes;
         return *this;
     }
-    //vector<unsigned int> get(){ return nodes; }
     unsigned int size(){ return nodes.size(); }
     unsigned int operator[](unsigned int n){ return nodes[n]; }
 };
@@ -38,7 +37,6 @@ class BFS{
   private:
     Entry ** table;
     unsigned int src, dst;
-    Path *path;
     Path path_;
     int code;
     set<unsigned int> seen;
@@ -49,7 +47,7 @@ class BFS{
     void clear();
    public:
     BFS(Entry ** t, unsigned int s, unsigned int d);// : table(t), src(s), dst(d) {};
-    Path* SHP();
+    Path SHP();
     void print(){
         cout << "Path from " << table[src]->title << " to " << table[dst]->title << ":\n";
         for(int i=0; i<path_.size(); i++){
@@ -61,7 +59,6 @@ class BFS{
 BFS::BFS(Entry ** t, unsigned int s, unsigned int d) : table(t), src(s), dst(d) {
     nodes = new vector<Path>;
     tmp = NULL;
-    path = NULL;
     cout << "New BFS: \n\tsrc : " << table[src]->title << "\n\tdst : " << table[dst]->title << endl;
 }
 
@@ -76,7 +73,6 @@ int BFS::iterate(){
         for(list<unsigned int>::iterator j = tmp_links->begin(); j != tmp_links->end(); j++){
             if(*j == dst){
                 path_ = Path(*p, *j);
-                //clear();
                 return 1;
             } else if(seen.find(*j) == seen.end()){
                 seen.insert(*j);
@@ -84,34 +80,32 @@ int BFS::iterate(){
                 tmp->push_back(q);
             }
         }
-        //delete p;
     }
-    //clear up nodes
     delete nodes;
-    //nodes->clear();
     swap(nodes, tmp);
-    //tmp = new vector<Path>;
     return 0;
 }
 
-Path* BFS::SHP(){
+Path BFS::SHP(){
     if(src == dst){
         code = 0;
         cout << "found" << endl;
-        //path = new Path(dst);
         clear();
-        return path;
+        return path_;
     }
     seen.insert(src);
     nodes->push_back(Path(src));
     int status = 0;
-    for(int i=0; i<10; i++){
+    for(int i=0; i<5; i++){
+        status = iterate();
         if(status){
             clear();
-            return path;
+            return path_;
         }
-        else status = iterate();
     }
+    if(nodes) delete nodes;
+    cout << "nope" << endl;
+    return Path();
 }
 
 void BFS::clear(){
