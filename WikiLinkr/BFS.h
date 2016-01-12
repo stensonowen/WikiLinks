@@ -58,21 +58,25 @@ BFS::BFS(Entry ** t, unsigned int s, unsigned int d) : table(t), src(s), dst(d) 
 
 void BFS::iterate(){
     Path *p = NULL, q;
-    list<unsigned int> *tmp_links;
+    //list<unsigned int> *tmp_links;
+    unsigned int *tmp_links, link;
     tmp = new vector<Path>;
     //cycle through *nodes and add all children to *tmp (if not dst), then swap
     //cout << (nodes->size() == false) << endl;
     for(unsigned long i=0; i<nodes->size(); i++){
         p = &nodes->at(i);
-        tmp_links = &(table[p->get_destination()]->links);
-        for(list<unsigned int>::iterator j = tmp_links->begin(); j != tmp_links->end(); j++){
-            if(*j == dst){
+        //tmp_links = &(table[p->get_destination()]->links);
+        //for(list<unsigned int>::iterator j = tmp_links->begin(); j != tmp_links->end(); j++){
+        for(unsigned int j=0; j<table[p->get_destination()]->links.size(); j++){
+            //link = tmp_links[j];
+            link = table[p->get_destination()]->links[j];
+            if(link == dst){
                 code = 1;   //1 correlates to the step before iterate() is run
-                path = Path(*p, *j);
+                path = Path(*p, link);
                 return;
-            } else if(seen.find(*j) == seen.end()){
-                seen.insert(*j);
-                q = Path(*p, *j);
+            } else if(seen.find(link) == seen.end()){
+                seen.insert(link);
+                q = Path(*p, link);
                 tmp->push_back(q);
             }
         }
@@ -89,21 +93,13 @@ pair<Path,int> BFS::SHP(){
     nodes->push_back(Path(src));
     for(int i=0; i<MAX_DEPTH; i++){
         if(nodes->empty()) code = -1;
-        if(code){
+        if(code > 0){
             code = i;
             break;
         }
         iterate();
     }
-    clear();/*
-    if(code > 0){
-        //found a path
-        return path;
-    } else {
-        //code =  0:    no path found within MAX_DEPTH
-        //code = -1:    no path exists
-        return Path();
-    }*/
+    clear();
     return pair<Path,int>(path,code);
 }
 

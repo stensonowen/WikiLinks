@@ -36,7 +36,7 @@ class Table{
     public:
         Table(char *input_file);
         ~Table();
-        unsigned int resolve_collisions(const string &title, bool create=true);
+        unsigned int resolve_collisions(const string &title, int = -1);
         void details();
         void printPath(string src, string dst);
 };
@@ -46,8 +46,8 @@ void Table::printPath(string src, string dst){
     //capitalize
     transform(src.begin(), src.end(), src.begin(), ::toupper);
     transform(dst.begin(), dst.end(), dst.begin(), ::toupper);
-    unsigned int src_ = resolve_collisions(src, false);
-    unsigned int dst_ = resolve_collisions(dst, false);
+    unsigned int src_ = resolve_collisions(src);
+    unsigned int dst_ = resolve_collisions(dst);
     int pad_length = log10(size) + 1;
     if(!table[src_]) cout << "Cannot find article \"" << src << "\" (" << src_ << ")" << endl;
     if(!table[dst_]) cout << "Cannot find article \"" << dst << "\" (" << dst_ << ")" << endl;
@@ -78,22 +78,22 @@ void Table::printPath(string src, string dst){
     }
     if(results.second >= 0){
         t = clock() - t;
-        cout << " Search time: " << (float)t / CLOCKS_PER_SEC << " seconds (user time)." << endl;
+        cout << " Search time: " << (float)t / CLOCKS_PER_SEC << " seconds." << endl;
     }
 }
 
 void Table::read(string file){
-    //abandoned pthread because this is a member function
-    //currently no mutex; infinitesimally small chance of conflict at the moment.
+    //format should be <page> \n title \n #_links \n links...
     ifstream f_in((char*)file.c_str());
-    string line;
+    string line, title;
     unsigned int addr, link_addr;
     while(getline(f_in, line)){
         if(line == "<page>"){
+            getline(f_in, title);
             getline(f_in, line);
-            addr = resolve_collisions(line);
+            addr = resolve_collisions(title, atoi(line.c_str()));
         } else {
-            link_addr = resolve_collisions(line);
+            link_addr = resolve_collisions(line, 0);
             table[addr]->links.push_back(link_addr);
         }
     }
@@ -125,7 +125,7 @@ Table::Table(char *input_file){
     }
     populate(threads);
     t = clock() - t;
-    cout << " Load time: " << (float)t / CLOCKS_PER_SEC << " seconds." << endl;
+    cout << " Load time: " << (float)t / CLOCKS_PER_SEC << " seconds (user time)." << endl;
 }
 
 void Table::populate(vector<string> files){
@@ -138,7 +138,7 @@ void Table::populate(vector<string> files){
     for(unsigned int i=0; i<threads.size(); i++){
         threads[i].join();
     }
-    cout << "created " << threads.size() << " threads" << endl;
+    cout << "Started " << threads.size() << " threads" << endl;
 }
 
 Table::~Table(){
@@ -152,7 +152,7 @@ Table::~Table(){
     delete[] table;
 }
 
-unsigned int Table::resolve_collisions(const string &title, bool create){
+unsigned int Table::resolve_collisions(const string &title, int links){
     //using factorial-based generates primes more than squares
     //perhaps this isn't actually all that great. it finds primes relatively often,
     //  but they grow extremely quickly, which destroys spatial locality
@@ -160,6 +160,9 @@ unsigned int Table::resolve_collisions(const string &title, bool create){
     //      could store first few dozen and generate more as needed
     //      if values were stored it would be quite fast
     //      if 1's were excluded, it would generate small primes consistently
+    //links:
+    //  >=0 intended size of entry with specified title
+    //  -1  default: do not alter entry with this title
     unsigned int hash = (str_hash)(title) % size;
     int offset = 2;
     for(unsigned int multiplier = 1; multiplier < MAX_ITERS; multiplier++){
@@ -173,8 +176,8 @@ unsigned int Table::resolve_collisions(const string &title, bool create){
                 mtx[hash % NUM_MUTEX].unlock();
                 return resolve_collisions(title);
             } else {
-                if(create){
-                    table[hash] = new Entry(title);
+                if(links >= 0){
+                    table[hash] = new Entry(title, links);
                 }
                 mtx[hash % NUM_MUTEX].unlock();
                 if(multiplier>max_iters){    max_iters = multiplier;  }
@@ -182,6 +185,12 @@ unsigned int Table::resolve_collisions(const string &title, bool create){
                 return hash;
             }
         } else if(table[hash]->title == title){
+            //resize as necessary
+            if(links >= 0){
+                mtx[hash % NUM_MUTEX].lock();
+                table[hash]->resize(links);
+                mtx[hash % NUM_MUTEX].unlock();
+            }
             if(multiplier>max_iters){    max_iters = multiplier;  }
             collisions += multiplier;
             return hash;

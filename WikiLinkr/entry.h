@@ -11,9 +11,12 @@ class Entry{
     public:
         //Entry will be on heap, so don't need pointer member vars
         std::string title;
-        std::list<unsigned int> links;
+        std::vector<unsigned int> links;
+        void resize(int s){ links.reserve(s); }
         Entry() {}
-        Entry(const std::string &t) : title(t) {}
-        //Entry(string &t, list<unsigned int> &l) : title(t), links(l) {}
+        Entry(const std::string &t, int s=0) : title(t) {
+            links.reserve(s);
+            //links.shrink_to_fit();
+        }
         ~Entry() {}
 };
