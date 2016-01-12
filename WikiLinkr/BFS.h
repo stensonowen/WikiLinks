@@ -37,43 +37,39 @@ class BFS{
   private:
     Entry ** table;
     unsigned int src, dst;
-    Path path_;
+    Path path;
     int code;
     set<unsigned int> seen;
     vector<Path> *nodes, *tmp;
     //nodes represents all new elements to search, i.e. bottom row in tree
     //tmp is running total of nodes' children until it's filled and becomes 'nodes'
-    int iterate();
+    void iterate();
     void clear();
    public:
     BFS(Entry ** t, unsigned int s, unsigned int d);// : table(t), src(s), dst(d) {};
-    Path SHP();
-    void print(){
-        cout << "Path from " << table[src]->title << " to " << table[dst]->title << ":\n";
-        for(int i=0; i<path_.size(); i++){
-            cout << "\t" << table[path_[i]]->title << "\t=  " << path_[i] << ":\n";
-        }
-    }
+    pair<Path,int> SHP();
 };
 
 BFS::BFS(Entry ** t, unsigned int s, unsigned int d) : table(t), src(s), dst(d) {
     nodes = new vector<Path>;
     tmp = NULL;
-    cout << "New BFS: \n\tsrc : " << table[src]->title << "\n\tdst : " << table[dst]->title << endl;
+    code = 0;
 }
 
-int BFS::iterate(){
+void BFS::iterate(){
     Path *p = NULL, q;
     list<unsigned int> *tmp_links;
     tmp = new vector<Path>;
     //cycle through *nodes and add all children to *tmp (if not dst), then swap
-    for(long i=0; i<nodes->size(); i++){
+    //cout << (nodes->size() == false) << endl;
+    for(unsigned long i=0; i<nodes->size(); i++){
         p = &nodes->at(i);
         tmp_links = &(table[p->get_destination()]->links);
         for(list<unsigned int>::iterator j = tmp_links->begin(); j != tmp_links->end(); j++){
             if(*j == dst){
-                path_ = Path(*p, *j);
-                return 1;
+                code = 1;   //1 correlates to the step before iterate() is run
+                path = Path(*p, *j);
+                return;
             } else if(seen.find(*j) == seen.end()){
                 seen.insert(*j);
                 q = Path(*p, *j);
@@ -83,29 +79,32 @@ int BFS::iterate(){
     }
     delete nodes;
     swap(nodes, tmp);
-    return 0;
+    tmp = NULL;
+    return;
 }
 
-Path BFS::SHP(){
-    if(src == dst){
-        code = 0;
-        cout << "found" << endl;
-        clear();
-        return path_;
-    }
+pair<Path,int> BFS::SHP(){
+    if(src == dst) code = 1;
     seen.insert(src);
     nodes->push_back(Path(src));
-    int status = 0;
-    for(int i=0; i<5; i++){
-        status = iterate();
-        if(status){
-            clear();
-            return path_;
+    for(int i=0; i<MAX_DEPTH; i++){
+        if(nodes->empty()) code = -1;
+        if(code){
+            code = i;
+            break;
         }
+        iterate();
     }
-    if(nodes) delete nodes;
-    cout << "nope" << endl;
-    return Path();
+    clear();/*
+    if(code > 0){
+        //found a path
+        return path;
+    } else {
+        //code =  0:    no path found within MAX_DEPTH
+        //code = -1:    no path exists
+        return Path();
+    }*/
+    return pair<Path,int>(path,code);
 }
 
 void BFS::clear(){
