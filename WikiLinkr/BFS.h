@@ -1,9 +1,10 @@
+#ifndef _bfs_h_
+#define _bfs_h_
 
 #include<iostream>
 #include<vector>
 #include<set>
 #include<cassert>
-#include<memory>
 #include "entry.h"
 using namespace std;
 
@@ -100,3 +101,5 @@ void BFS::clear(){
     if(nodes) delete nodes;
     if(tmp) delete tmp;
 }
+
+#endif

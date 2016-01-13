@@ -1,23 +1,20 @@
+#ifndef _TABLE_H_
+#define _TABLE_H_
+
+//printing/formatting
 #include<iostream>
 #include<fstream>
+#include<algorithm>
+#include<iomanip>
 //stl
-#include<string>
 #include<vector>
-#include<list>
 #include<set>
-#include<map>
 //misc
 #include<tr1/functional>
 #include<time.h>
-#include<algorithm>
-#include<iomanip>
-#include<cassert>
-#include<stdlib.h>
-#include<memory>
 //threading
 #include<thread>
 #include<mutex>
-#include<atomic>
 //headers
 #include "BFS.h"    //contains entry.h
 using namespace std;
@@ -204,3 +201,4 @@ unsigned int Table::resolve_collisions(const string &title, int links){
     assert(MAX_ITERS != MAX_ITERS);
 }
 
+#endif

@@ -1,7 +1,8 @@
+#ifndef _entry_h_
+#define _entry_h_
+
 #include<iostream>
-#include<stdlib.h>
-#include<list>
-#include<string>
+#include<vector>
 
 #define MAX_DEPTH 10
 #define MAX_ITERS 100
@@ -21,3 +22,5 @@ class Entry{
         }
         ~Entry() {}
 };
+
+#endif
