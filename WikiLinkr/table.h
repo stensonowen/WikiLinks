@@ -94,8 +94,8 @@ void Table::read(string file, unsigned int n){
             addr = resolve_collisions(title, atoi(line.c_str()));
             articles++;
             if(articles % (entries / (100/UNIT)) == 0){
-                //cout << "Thread " << n << " is " << (articles * 100) / entries << "%\n";
-                printf("Thread %d is %3.0f%%\n", n, (articles*100.0)/entries);
+                for(unsigned int i=0; i<n; i++) printf("    ");
+                printf("%4.0f%%\n", (articles*100.0)/entries);
             }
         } else {
             link_addr = resolve_collisions(line, 0);
@@ -140,10 +140,12 @@ void Table::populate(vector<string> files){
     for(unsigned int i=0; i<files.size(); i++){
         threads.push_back(thread(&Table::read, this, files[i], i));
     }
+    cout << "Thread Progress:" << endl;
+    for(unsigned int i=0; i<threads.size(); i++) printf("%4d", i);
+    cout << endl;
     for(unsigned int i=0; i<threads.size(); i++){
         threads[i].join();
     }
-    cout << "Started " << threads.size() << " threads" << endl;
 }
 
 Table::~Table(){
