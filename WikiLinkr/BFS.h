@@ -66,7 +66,7 @@ void BFS::iterate(){
         for(unsigned int j=0; j<table[p->get_destination()]->links.size(); j++){
             link = table[p->get_destination()]->links[j];
             if(link == dst){
-                code = 1;   //1 correlates to the step before iterate() is run
+                code = -2;   //signal to make code equal to iteration number
                 path = Path(*p, link);
                 return;
             } else if(seen.find(link) == seen.end()){
@@ -87,11 +87,9 @@ pair<Path,int> BFS::SHP(){
     seen.insert(src);
     nodes->push_back(Path(src));
     for(int i=0; i<MAX_DEPTH; i++){
-        if(nodes->empty()) code = -1;
-        if(code > 1){
-            code = i;
-            break;
-        }
+        if(nodes->empty())  code = -1;
+        if(code == -2)      code = i;
+        if(code != 0)       break;
         iterate();
     }
     clear();

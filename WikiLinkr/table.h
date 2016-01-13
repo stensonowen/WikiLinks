@@ -32,7 +32,7 @@ class Table{
         long collisions;
         long max_iters;
         void populate(vector<string> files);        //multithread master
-        void read(string file, unsigned int n);    //multithread slave
+        void read(string file);    //multithread slave
     public:
         Table(char *input_file);
         ~Table();
@@ -82,21 +82,16 @@ void Table::printPath(string src, string dst){
     }
 }
 
-void Table::read(string file, unsigned int n){
+void Table::read(string file){
     //format should be <page> \n title \n #_links \n links...
     ifstream f_in((char*)file.c_str());
     string line, title;
-    unsigned int addr, link_addr, articles = 0;
+    unsigned int addr, link_addr;
     while(getline(f_in, line)){
         if(line == "<page>"){
             getline(f_in, title);
             getline(f_in, line);
             addr = resolve_collisions(title, atoi(line.c_str()));
-            articles++;
-            if(articles % (entries / (100/UNIT)) == 0){
-                for(unsigned int i=0; i<n; i++) printf("    ");
-                printf("%4.0f%%\n", (articles*100.0)/entries);
-            }
         } else {
             link_addr = resolve_collisions(line, 0);
             table[addr]->links.push_back(link_addr);
@@ -138,11 +133,9 @@ void Table::populate(vector<string> files){
     //remember to add mutex system
     vector<thread> threads;
     for(unsigned int i=0; i<files.size(); i++){
-        threads.push_back(thread(&Table::read, this, files[i], i));
+        threads.push_back(thread(&Table::read, this, files[i]));
     }
-    cout << "Thread Progress:" << endl;
-    for(unsigned int i=0; i<threads.size(); i++) printf("%4d", i);
-    cout << endl;
+    cout << "Starting " << threads.size() << " threads." << endl;
     for(unsigned int i=0; i<threads.size(); i++){
         threads[i].join();
     }
