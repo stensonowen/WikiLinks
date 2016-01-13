@@ -88,7 +88,7 @@ pair<Path,int> BFS::SHP(){
     nodes->push_back(Path(src));
     for(int i=0; i<MAX_DEPTH; i++){
         if(nodes->empty()) code = -1;
-        if(code > 0){
+        if(code > 1){
             code = i;
             break;
         }

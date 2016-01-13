@@ -14,10 +14,19 @@ int main(int argc, char* argv[]){
     //Table t((char*)"../misc_data/simplewiki-20151020_out2");
     Table t(argv[1]);
     //t.details();
-    if(argc == 4){
+    /*if(argc == 4){
         string a(argv[2]);
         string b(argv[3]);
         t.printPath(a, b);
+    }*/
+    string src = "-1", dst = "-1";
+    while(true){
+        cout << "Enter src: \t";
+        getline(cin, src);
+        cout << "Enter dst: \t";
+        getline(cin, dst);
+        if(src.empty() || dst.empty()) break;
+        t.printPath(src, dst);
     }
     //getchar();
     return 0;
