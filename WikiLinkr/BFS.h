@@ -58,17 +58,12 @@ BFS::BFS(Entry ** t, unsigned int s, unsigned int d) : table(t), src(s), dst(d) 
 
 void BFS::iterate(){
     Path *p = NULL, q;
-    //list<unsigned int> *tmp_links;
-    unsigned int *tmp_links, link;
+    unsigned int link;
     tmp = new vector<Path>;
     //cycle through *nodes and add all children to *tmp (if not dst), then swap
-    //cout << (nodes->size() == false) << endl;
     for(unsigned long i=0; i<nodes->size(); i++){
         p = &nodes->at(i);
-        //tmp_links = &(table[p->get_destination()]->links);
-        //for(list<unsigned int>::iterator j = tmp_links->begin(); j != tmp_links->end(); j++){
         for(unsigned int j=0; j<table[p->get_destination()]->links.size(); j++){
-            //link = tmp_links[j];
             link = table[p->get_destination()]->links[j];
             if(link == dst){
                 code = 1;   //1 correlates to the step before iterate() is run
