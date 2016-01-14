@@ -6,53 +6,52 @@
 #include<set>
 #include<cassert>
 #include "entry.h"
-using namespace std;
 
 class Path{
-  private:
-    vector<unsigned int> nodes;
-  public:
-    Path(){};
-    ~Path(){};
-    Path(const unsigned int n){ nodes.push_back(n); }
-    //Path(const vector<unsigned int> n) : nodes(n) {}
-    //void add(unsigned int child){ nodes.push_back(child); }
-    unsigned int get_destination(){
-        assert(nodes.size() > 0);
-        return nodes[nodes.size()-1];
-    }
-    Path(const Path &other, const unsigned int child){
-        nodes = other.nodes;
-        nodes.push_back(child);
-    }
-    Path &operator=(const Path &other){
-        nodes = other.nodes;
-        return *this;
-    }
-    unsigned int size(){ return nodes.size(); }
-    unsigned int operator[](unsigned int n){ return nodes[n]; }
+    private:
+        std::vector<unsigned int> nodes;
+    public:
+        Path(){};
+        ~Path(){};
+        Path(const unsigned int n){ nodes.push_back(n); }
+        //Path(const vector<unsigned int> n) : nodes(n) {}
+        //void add(unsigned int child){ nodes.push_back(child); }
+        unsigned int get_destination(){
+            assert(nodes.size() > 0);
+            return nodes[nodes.size()-1];
+        }
+        Path(const Path &other, const unsigned int child){
+            nodes = other.nodes;
+            nodes.push_back(child);
+        }
+        Path &operator=(const Path &other){
+            nodes = other.nodes;
+            return *this;
+        }
+        unsigned int size(){ return nodes.size(); }
+        unsigned int operator[](unsigned int n){ return nodes[n]; }
 };
 
 
 class BFS{
-  private:
-    Entry ** table;
-    unsigned int src, dst;
-    Path path;
-    int code;
-    set<unsigned int> seen;
-    vector<Path> *nodes, *tmp;
-    //nodes represents all new elements to search, i.e. bottom row in tree
-    //tmp is running total of nodes' children until it's filled and becomes 'nodes'
-    void iterate();
-    void clear();
-   public:
-    BFS(Entry ** t, unsigned int s, unsigned int d);// : table(t), src(s), dst(d) {};
-    pair<Path,int> SHP();
+    private:
+        Entry ** table;
+        unsigned int src, dst;
+        Path path;
+        int code;
+        std::set<unsigned int> seen;
+        std::vector<Path> *nodes, *tmp;
+        //nodes represents all new elements to search, i.e. bottom row in tree
+        //tmp is running total of nodes' children until it's filled and becomes 'nodes'
+        void iterate();
+        void clear();
+    public:
+        BFS(Entry ** t, unsigned int s, unsigned int d);// : table(t), src(s), dst(d) {};
+        std::pair<Path,int> SHP();
 };
 
 BFS::BFS(Entry ** t, unsigned int s, unsigned int d) : table(t), src(s), dst(d) {
-    nodes = new vector<Path>;
+    nodes = new std::vector<Path>;
     tmp = NULL;
     code = 0;
 }
@@ -60,7 +59,7 @@ BFS::BFS(Entry ** t, unsigned int s, unsigned int d) : table(t), src(s), dst(d) 
 void BFS::iterate(){
     Path *p = NULL, q;
     unsigned int link;
-    tmp = new vector<Path>;
+    tmp = new std::vector<Path>;
     //cycle through *nodes and add all children to *tmp (if not dst), then swap
     for(unsigned long i=0; i<nodes->size(); i++){
         p = &nodes->at(i);
@@ -83,7 +82,7 @@ void BFS::iterate(){
     return;
 }
 
-pair<Path,int> BFS::SHP(){
+std::pair<Path,int> BFS::SHP(){
     if(src == dst) code = 1;
     seen.insert(src);
     nodes->push_back(Path(src));
@@ -94,7 +93,7 @@ pair<Path,int> BFS::SHP(){
         iterate();
     }
     clear();
-    return pair<Path,int>(path,code);
+    return std::pair<Path,int>(path,code);
 }
 
 void BFS::clear(){
