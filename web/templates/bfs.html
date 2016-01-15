@@ -21,24 +21,20 @@
 	<body>
 	<!--<center><h3>This is a project.</h3></center>-->
 	<hr />
-	This is content
-	<p id="src"><tt>SRC</tt></p>
-	<p id="dst"><tt>DST</tt></p>
 	<tt>
+	<!-- <form action="/x.asp" method="get"> -->
 	<form>
-		en.wikipedia.org/wiki/ <input type="text" name="src" value={{src}} />
+		en.wikipedia.org/wiki/ <input type="text" name="src" />
 		<br>
-		en.wikipedia.org/wiki/ <input type="text" name="dst" value={{dst}} />
+		en.wikipedia.org/wiki/ <input type="text" name="dst" />
 		<br>
 		<input type="submit" name="submit" value="Submit" />
 	</form>
 	</tt>
 	
 	<hr />
-	<p> Path from <tt>{{src}}</tt> to <tt>{{dst}}</tt>:</p>
-	<p> <tt>Source: </tt>{{src}}</p>
-	<p> <tt>Destination: </tt>{{dst}}</p>
-	<p> <tt>Path: </tt> <br>{{{path}}}</p>
+	Path from <tt>"{{src}}"</tt> to <tt>"{{dst}}"</tt>:<br>
+	{{{path}}}
 	
 	</body>
 	
