@@ -9,46 +9,44 @@
 
 using namespace std;
 
+int main(int argc, char* argv[]){
+    //construct table:
+    if(argc != 2){
+        std::cerr << "usage: WikiLinks.out path_to_parsed_file" << std::endl;
+        exit(1);
+    }
+    Table t(argv[1]);
 
-int main(){
+    //construct web fw
     crow::SimpleApp app;
     crow::mustache::set_base(".");
 
+    //define locations a la flask
     CROW_ROUTE(app, "/")
         ([]() {
          //TODO: create index.html
          return "Hell World\n";
          });
    
-    //CROW_ROUTE(app, "/bfs/<int>/<int>")
-        //([](const crow::request& req,crow::response& res, std::string src, std::string dst){
-         //crow::mustache::context ctx;
-         //ctx["src"] = src;
-         //ctx["dst"] = dst;
-         //return crow::mustache::load("templates/bfs.html").render(ctx);
-
-         //return "TEST";
-         //});
     CROW_ROUTE(app, "/bfs/<string>/<string>")
-        ([](const crow::request& req, crow::response& res, string a, string b){
-         //std::ostringstream os;
-         //os << a+b;
+        ([&t](const crow::request& req, crow::response& res, string src, string dst){
          crow::mustache::context ctx;
-         ctx["src"] = a;
-         ctx["dst"] = b;
+         ctx["src"] = src;
+         ctx["dst"] = dst;
+         ctx["path"] = t.htmlPath(src, dst);
          res.write(crow::mustache::load("templates/bfs.html").render(ctx));
          res.end();
          });
 
     CROW_ROUTE(app, "/bfs")
-        ([](const crow::request& req){
+        ([&t](const crow::request& req){
          std::string src, dst;
          crow::mustache::context ctx;
-         if(req.url_params.get("src") != nullptr) src = req.url_params.get("src");
-         else src = "SRC NOT FOUND";
-         dst = (req.url_params.get("dst") == nullptr ? "DST NOT FOUND" : req.url_params.get("dst"));
+         src = (req.url_params.get("src") == nullptr ? "" : req.url_params.get("src"));
+         dst = (req.url_params.get("dst") == nullptr ? "" : req.url_params.get("dst"));
          ctx["src"] = src;
          ctx["dst"] = dst;
+         ctx["path"] = t.htmlPath(src, dst);
          return crow::mustache::load("templates/bfs.html").render(ctx);
          });
 
@@ -57,3 +55,6 @@ int main(){
     
     return 0;
 }
+
+
+

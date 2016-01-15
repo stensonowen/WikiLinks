@@ -26,17 +26,19 @@
 	<p id="dst"><tt>DST</tt></p>
 	<tt>
 	<form>
-		en.wikipedia.org/wiki/ <input type="text" name="src" />
+		en.wikipedia.org/wiki/ <input type="text" name="src" value={{src}} />
 		<br>
-		en.wikipedia.org/wiki/ <input type="text" name="dst" />
+		en.wikipedia.org/wiki/ <input type="text" name="dst" value={{dst}} />
 		<br>
 		<input type="submit" name="submit" value="Submit" />
 	</form>
 	</tt>
 	
 	<hr />
-	<p> <tt>Source:	</tt>{{src}}</p>
+	<p> Path from <tt>{{src}}</tt> to <tt>{{dst}}</tt>:</p>
+	<p> <tt>Source: </tt>{{src}}</p>
 	<p> <tt>Destination: </tt>{{dst}}</p>
+	<p> <tt>Path: </tt> <br>{{{path}}}</p>
 	
 	</body>
 	
