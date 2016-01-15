@@ -11,7 +11,7 @@ int main(int argc, char* argv[]){
         exit(1);
     }
     Table t(argv[1]);
-    //t.details();
+    t.details();
     std::string src, dst;
     while(true){
         std::cout << "Enter src: \t";

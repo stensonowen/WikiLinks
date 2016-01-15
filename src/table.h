@@ -35,7 +35,18 @@ class Table{
         unsigned int resolve_collisions(const std::string &title, int = -1);
         void details();
         void printPath(std::string src, std::string dst);
+        void details();
 };
+
+void Table::details(){
+    std::cout << "Table details:" << std::endl;
+    std::cout << "Size: " << size << "    Entries: " << entries << std::endl;
+    unsigned int l = 0;
+    for(unsigned int i=0; i<size; i++)
+        if(table[i])
+            l += table[i]->links.size()
+    std::cout << "Total number of links: " << l;
+}
 
 void Table::printPath(std::string src, std::string dst){
     clock_t t = clock();
