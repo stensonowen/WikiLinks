@@ -5,7 +5,9 @@
 #include "../crow/include/mustache.h"
 #include "../crow/include/json.h"
 //table headers
-#include "../WikiLinkr/table.h"
+#include "../src/table.h"
+
+//g++ main.cpp -std=c++11 -lboost_system -pthread
 
 using namespace std;
 
@@ -19,7 +21,7 @@ int main(int argc, char* argv[]){
 
     //construct web fw
     crow::SimpleApp app;
-    crow::mustache::set_base(".");
+    crow::mustache::set_base("./templates/");
 
     //define locations a la flask
     CROW_ROUTE(app, "/")
@@ -34,7 +36,7 @@ int main(int argc, char* argv[]){
          ctx["src"] = src;
          ctx["dst"] = dst;
          ctx["path"] = t.htmlPath(src, dst);
-         res.write(crow::mustache::load("templates/bfs.html").render(ctx));
+         res.write(crow::mustache::load("bfs.html").render(ctx));
          res.end();
          });
 
@@ -50,7 +52,7 @@ int main(int argc, char* argv[]){
          return crow::mustache::load("templates/bfs.html").render(ctx);
          });
 
-    app.port(8000).run();
+    app.port(8000).multithreaded().run();
 
     
     return 0;

@@ -45,7 +45,7 @@ void Table::details(){
     for(unsigned int i=0; i<size; i++)
         if(table[i])
             l += table[i]->links.size();
-    std::cout << "Total number of links: " << l;
+    std::cout << "Total number of links: " << l << std::endl;
 }
 
 std::string Table::htmlPath(std::string src, std::string dst){
@@ -69,9 +69,9 @@ std::string Table::htmlPath(std::string src, std::string dst){
     else if(results.second == 0){
         return "No path found after " + std::to_string(MAX_DEPTH) + "iterations";
     } else {
-        std::string directions = "";
+        std::string directions = "\n";
         for(unsigned int i=0; i<results.first.size(); i++)
-            directions += "&nbsp;" + table[results.first[i]]->title + "<br>";
+            directions += "\t\t&nbsp;" + table[results.first[i]]->title + "<br>\n";
         return directions;
     }
 }
