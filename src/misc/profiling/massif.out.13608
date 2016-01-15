@@ -1,0 +1,1786 @@
+desc: (none)
+cmd: ./a.out ../misc_data/simplewiki-20151020_out2 a a
+time_unit: i
+#-----------
+snapshot=0
+#-----------
+time=0
+mem_heap_B=0
+mem_heap_extra_B=0
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=1
+#-----------
+time=72369375
+mem_heap_B=35921206
+mem_heap_extra_B=1403450
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=2
+#-----------
+time=135329995
+mem_heap_B=39367835
+mem_heap_extra_B=3970453
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=3
+#-----------
+time=189974028
+mem_heap_B=42273468
+mem_heap_extra_B=6093284
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=4
+#-----------
+time=277813756
+mem_heap_B=46378699
+mem_heap_extra_B=9000309
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=5
+#-----------
+time=335976475
+mem_heap_B=48979856
+mem_heap_extra_B=10837344
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=6
+#-----------
+time=396435111
+mem_heap_B=51483500
+mem_heap_extra_B=12602580
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=7
+#-----------
+time=492515842
+mem_heap_B=55279966
+mem_heap_extra_B=15255082
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=8
+#-----------
+time=557714301
+mem_heap_B=58299891
+mem_heap_extra_B=17348981
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=9
+#-----------
+time=606415304
+mem_heap_B=60456018
+mem_heap_extra_B=18829918
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=10
+#-----------
+time=687248392
+mem_heap_B=64046507
+mem_heap_extra_B=21298341
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=11
+#-----------
+time=784248005
+mem_heap_B=68435852
+mem_heap_extra_B=24313732
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=12
+#-----------
+time=851273521
+mem_heap_B=71453336
+mem_heap_extra_B=26395416
+mem_stacks_B=0
+heap_tree=detailed
+n6: 71453336 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n1: 18461328 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 18461328 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 18461328 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 18461328 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 18461328 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 16892280 0x403248: main (main.cpp:327)
+      n1: 1569048 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 1569048 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 1569048 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 1569048 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 1569048 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 1569048 0x402FAA: main (main.cpp:298)
+ n2: 11173856 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 11173831 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 11173831 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 11173831 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n2: 11173831 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 10351372 0x403261: main (main.cpp:289)
+      n0: 822459 in 2 places, all below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n2: 5456016 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 5328576 0x403223: main (main.cpp:325)
+  n0: 127440 in 1 place, below massif's threshold (01.00%)
+ n0: 1776192 0x4031F2: main (main.cpp:325)
+ n0: 528024 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=13
+#-----------
+time=931471367
+mem_heap_B=75147686
+mem_heap_extra_B=28982786
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=14
+#-----------
+time=1023499677
+mem_heap_B=79419521
+mem_heap_extra_B=31944447
+mem_stacks_B=0
+heap_tree=detailed
+n6: 79419521 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n1: 22385232 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 22385232 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 22385232 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 22385232 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 22385232 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 20286624 0x403248: main (main.cpp:327)
+      n1: 2098608 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 2098608 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 2098608 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 2098608 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 2098608 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 2098608 0x402FAA: main (main.cpp:298)
+ n2: 13596537 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 13596512 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 13596512 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 13596512 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 13596512 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 12463703 0x403261: main (main.cpp:289)
+      n0: 1132774 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n2: 6543624 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 6367056 0x403223: main (main.cpp:325)
+  n0: 176568 in 1 place, below massif's threshold (01.00%)
+ n0: 2122352 0x4031F2: main (main.cpp:325)
+ n0: 713856 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=15
+#-----------
+time=1084687397
+mem_heap_B=82174070
+mem_heap_extra_B=33829322
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=16
+#-----------
+time=1143461256
+mem_heap_B=84822615
+mem_heap_extra_B=35621017
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=17
+#-----------
+time=1206788173
+mem_heap_B=87649177
+mem_heap_extra_B=37541679
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=18
+#-----------
+time=1299165394
+mem_heap_B=91642828
+mem_heap_extra_B=40258356
+mem_stacks_B=0
+heap_tree=detailed
+n6: 91642828 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n1: 28739856 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 28739856 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 28739856 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 28739856 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 28739856 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 25731288 0x403248: main (main.cpp:327)
+      n1: 3008568 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 3008568 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 3008568 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 3008568 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 3008568 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 3008568 0x402FAA: main (main.cpp:298)
+ n2: 17183940 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 17183915 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 17183915 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 17183915 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 17183915 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 15509242 0x403261: main (main.cpp:289)
+      n0: 1674638 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n2: 8041608 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 7780512 0x403223: main (main.cpp:325)
+  n0: 261096 in 1 place, below massif's threshold (01.00%)
+ n0: 2593504 0x4031F2: main (main.cpp:325)
+ n0: 1026000 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=19
+#-----------
+time=1379428410
+mem_heap_B=95574766
+mem_heap_extra_B=43055274
+mem_stacks_B=0
+heap_tree=detailed
+n6: 95574766 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n1: 30588216 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 30588216 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 30588216 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 30588216 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 30588216 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 27267120 0x403248: main (main.cpp:327)
+      n1: 3321096 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 3321096 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 3321096 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 3321096 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 3321096 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 3321096 0x402FAA: main (main.cpp:298)
+ n2: 18418806 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 18418781 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 18418781 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 18418781 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 18418781 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 16593065 0x403261: main (main.cpp:289)
+      n0: 1825681 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n2: 8621376 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 8336712 0x403223: main (main.cpp:325)
+  n0: 284664 in 1 place, below massif's threshold (01.00%)
+ n0: 2778904 0x4031F2: main (main.cpp:325)
+ n0: 1109544 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=20
+#-----------
+time=1452586970
+mem_heap_B=98922503
+mem_heap_extra_B=45336833
+mem_stacks_B=0
+heap_tree=detailed
+n6: 98922503 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n1: 32261352 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 32261352 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 32261352 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 32261352 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 32261352 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 28679472 0x403248: main (main.cpp:327)
+      n1: 3581880 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 3581880 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 3581880 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 3581880 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 3581880 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 3581880 0x402FAA: main (main.cpp:298)
+ n2: 19445023 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 19445023 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 19445023 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 19445023 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 19445023 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 17465187 0x403261: main (main.cpp:289)
+      n0: 1979801 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 0 in 1 place, below massif's threshold (01.00%)
+ n2: 9047328 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 8741208 0x403223: main (main.cpp:325)
+  n0: 306120 in 1 place, below massif's threshold (01.00%)
+ n0: 2913736 0x4031F2: main (main.cpp:325)
+ n0: 1197144 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=21
+#-----------
+time=1531282484
+mem_heap_B=102411656
+mem_heap_extra_B=47707768
+mem_stacks_B=0
+heap_tree=detailed
+n6: 102411656 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 34082400 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 34082400 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 34082400 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 34082400 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 34082400 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 30207480 0x403248: main (main.cpp:327)
+      n1: 3874920 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 3874920 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 3874920 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 3874920 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 3874920 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 3874920 0x402FAA: main (main.cpp:298)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 20463544 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 20463519 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 20463519 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 20463519 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 20463519 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 18314028 0x403261: main (main.cpp:289)
+      n0: 2149456 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n2: 9472296 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 9134760 0x403223: main (main.cpp:325)
+  n0: 337536 in 1 place, below massif's threshold (01.00%)
+ n0: 3044920 0x4031F2: main (main.cpp:325)
+ n0: 1290576 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=22
+#-----------
+time=1611271452
+mem_heap_B=105870047
+mem_heap_extra_B=50019585
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=23
+#-----------
+time=1701747559
+mem_heap_B=109847839
+mem_heap_extra_B=52716521
+mem_stacks_B=0
+heap_tree=detailed
+n6: 109847839 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 38109384 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 38109384 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 38109384 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 38109384 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 38109384 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 33491184 0x403248: main (main.cpp:327)
+      n1: 4618200 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 4618200 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 4618200 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 4618200 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 4618200 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 4618200 0x402FAA: main (main.cpp:298)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 22556663 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 22556638 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 22556638 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 22556638 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 22556638 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 20030030 0x403261: main (main.cpp:289)
+      n0: 2526573 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n2: 10315080 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 9908808 0x403223: main (main.cpp:325)
+  n0: 406272 in 1 place, below massif's threshold (01.00%)
+ n0: 3302936 0x4031F2: main (main.cpp:325)
+ n0: 1505856 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=24
+#-----------
+time=1813389375
+mem_heap_B=114825350
+mem_heap_extra_B=56033842
+mem_stacks_B=0
+heap_tree=detailed
+n6: 114825350 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 40819680 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 40819680 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 40819680 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 40819680 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 40819680 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 35613768 0x403248: main (main.cpp:327)
+      n1: 5205912 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 5205912 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 5205912 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 5205912 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 5205912 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 5205912 0x402FAA: main (main.cpp:298)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 23967766 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 23967741 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 23967741 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 23967741 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 23967741 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 21206499 0x403261: main (main.cpp:289)
+      n0: 2761207 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n2: 10870224 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 10423632 0x403223: main (main.cpp:325)
+  n0: 446592 in 1 place, below massif's threshold (01.00%)
+ n0: 3474544 0x4031F2: main (main.cpp:325)
+ n0: 1635216 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=25
+#-----------
+time=1888073012
+mem_heap_B=117914112
+mem_heap_extra_B=58123104
+mem_stacks_B=0
+heap_tree=detailed
+n6: 117914112 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 42534384 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 42534384 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 42534384 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 42534384 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 42534384 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 37027752 0x403248: main (main.cpp:327)
+      n1: 5506632 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 5506632 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 5506632 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 5506632 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 5506632 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 5506632 0x402FAA: main (main.cpp:298)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 24805464 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 24805439 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 24805439 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 24805439 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 24805439 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 21815343 0x403261: main (main.cpp:289)
+      n0: 2990061 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n2: 11175912 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 10702512 0x403223: main (main.cpp:325)
+  n0: 473400 in 1 place, below massif's threshold (01.00%)
+ n0: 3567504 0x4031F2: main (main.cpp:325)
+ n0: 1772928 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=26
+#-----------
+time=1986014561
+mem_heap_B=122166902
+mem_heap_extra_B=61018882
+mem_stacks_B=0
+heap_tree=detailed
+n6: 122166902 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 44889840 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 44889840 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 44889840 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 44889840 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 44889840 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 38877096 0x403248: main (main.cpp:327)
+      n1: 6012744 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 6012744 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 6012744 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 6012744 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 6012744 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 6012744 0x402FAA: main (main.cpp:298)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 25956398 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 25956373 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 25956373 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 25956373 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 25956373 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 22720486 0x403261: main (main.cpp:289)
+      n0: 3235852 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n2: 11639760 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 11126664 0x403223: main (main.cpp:325)
+  n0: 513096 in 1 place, below massif's threshold (01.00%)
+ n0: 3708888 0x4031F2: main (main.cpp:325)
+ n0: 1914096 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=27
+#-----------
+time=2081628873
+mem_heap_B=126402600
+mem_heap_extra_B=63885400
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=28
+#-----------
+time=2143837412
+mem_heap_B=128907271
+mem_heap_extra_B=65549113
+mem_stacks_B=0
+heap_tree=detailed
+n6: 128907271 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 48553608 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 48553608 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 48553608 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 48553608 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 48553608 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 41959704 0x403248: main (main.cpp:327)
+      n1: 6593904 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 6593904 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 6593904 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 6593904 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 6593904 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 6593904 0x402FAA: main (main.cpp:298)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 27857383 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 27857358 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 27857358 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 27857358 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 27857358 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 24255482 0x403261: main (main.cpp:289)
+      n0: 3601841 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n2: 12388584 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 11822184 0x403223: main (main.cpp:325)
+  n0: 566400 in 1 place, below massif's threshold (01.00%)
+ n0: 3940728 0x4031F2: main (main.cpp:325)
+ n0: 2109048 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=29
+#-----------
+time=2254315761
+mem_heap_B=133630675
+mem_heap_extra_B=68736109
+mem_stacks_B=0
+heap_tree=detailed
+n6: 133630675 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 51295752 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 51295752 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 51295752 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 51295752 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 51295752 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 43995072 0x403248: main (main.cpp:327)
+      n1: 7300680 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 7300680 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 7300680 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 7300680 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 7300680 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 7300680 0x402FAA: main (main.cpp:298)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 29044619 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 29044594 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 29044594 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 29044594 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 29044594 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 25154863 0x403261: main (main.cpp:289)
+      n0: 3889696 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n2: 12881472 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 12233040 0x403223: main (main.cpp:325)
+  n0: 648432 in 1 place, below massif's threshold (01.00%)
+ n0: 4077680 0x4031F2: main (main.cpp:325)
+ n0: 2273232 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=30
+#-----------
+time=2306856607
+mem_heap_B=135804250
+mem_heap_extra_B=70182726
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=31
+#-----------
+time=2365995718
+mem_heap_B=138301887
+mem_heap_extra_B=71852361
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=32
+#-----------
+time=2426755177
+mem_heap_B=140847514
+mem_heap_extra_B=73545998
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=33
+#-----------
+time=2488430627
+mem_heap_B=143370541
+mem_heap_extra_B=75224907
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=34
+#-----------
+time=2551122438
+mem_heap_B=145984840
+mem_heap_extra_B=76947880
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=35
+#-----------
+time=2615463211
+mem_heap_B=148717503
+mem_heap_extra_B=78767361
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=36
+#-----------
+time=2688786278
+mem_heap_B=151808890
+mem_heap_extra_B=80816990
+mem_stacks_B=0
+heap_tree=detailed
+n6: 151808890 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 61923936 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 61923936 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 61923936 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 61923936 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 61923936 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 52339296 0x403248: main (main.cpp:327)
+      n1: 9584640 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 9584640 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 9584640 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 9584640 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 9584640 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 9584640 0x402FAA: main (main.cpp:298)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 33713114 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 33713089 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 33713089 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 33713089 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 33713089 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 28837757 0x403261: main (main.cpp:289)
+      n0: 4875297 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n2: 14688504 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 13826400 0x403223: main (main.cpp:325)
+  n0: 862104 in 1 place, below massif's threshold (01.00%)
+ n0: 4608800 0x4031F2: main (main.cpp:325)
+ n0: 2816616 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=37
+#-----------
+time=2754479972
+mem_heap_B=154597180
+mem_heap_extra_B=82653164
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=38
+#-----------
+time=2856566920
+mem_heap_B=160181356
+mem_heap_extra_B=86756164
+mem_stacks_B=0
+heap_tree=detailed
+n6: 160181356 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 66041376 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 66041376 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 66041376 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 66041376 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 66041376 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 55422168 0x403248: main (main.cpp:327)
+      n1: 10619208 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 10619208 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 10619208 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 10619208 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 10619208 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 10619208 0x402FAA: main (main.cpp:298)
+ n2: 36242468 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 36242443 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 36242443 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 36242443 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 36242443 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 31058894 0x403261: main (main.cpp:289)
+      n0: 5183514 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 15873144 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 14957232 0x403223: main (main.cpp:325)
+  n0: 915912 in 1 place, below massif's threshold (01.00%)
+ n0: 4985744 0x4031F2: main (main.cpp:325)
+ n0: 2980704 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=39
+#-----------
+time=2920496876
+mem_heap_B=163120832
+mem_heap_extra_B=88748504
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=40
+#-----------
+time=2986418135
+mem_heap_B=166112422
+mem_heap_extra_B=90725482
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=41
+#-----------
+time=3094460980
+mem_heap_B=170650054
+mem_heap_extra_B=93721418
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=42
+#-----------
+time=3192319665
+mem_heap_B=175389037
+mem_heap_extra_B=96971083
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=43
+#-----------
+time=3296848451
+mem_heap_B=180471027
+mem_heap_extra_B=100568797
+mem_stacks_B=0
+heap_tree=detailed
+n6: 180471027 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 76485744 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 76485744 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 76485744 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 76485744 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 76485744 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 63762384 0x403248: main (main.cpp:327)
+      n1: 12723360 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 12723360 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 12723360 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 12723360 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 12723360 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 12723360 0x402FAA: main (main.cpp:298)
+ n2: 42273411 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 42273386 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 42273386 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 42273386 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 42273386 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 36143209 0x403261: main (main.cpp:289)
+      n0: 6130142 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 18405696 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 17334360 0x403223: main (main.cpp:325)
+  n0: 1071336 in 1 place, below massif's threshold (01.00%)
+ n0: 5778120 0x4031F2: main (main.cpp:325)
+ n0: 3470136 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=44
+#-----------
+time=3371292677
+mem_heap_B=183844566
+mem_heap_extra_B=102844290
+mem_stacks_B=0
+heap_tree=detailed
+n6: 183844566 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 78141624 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 78141624 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 78141624 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 78141624 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 78141624 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 65206248 0x403248: main (main.cpp:327)
+      n1: 12935376 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 12935376 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 12935376 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 12935376 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 12935376 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 12935376 0x402FAA: main (main.cpp:298)
+ n2: 43339254 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 43339204 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 43339204 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 43339204 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 43339204 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 37061631 0x403261: main (main.cpp:289)
+      n0: 6277538 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 50 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 18839904 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 17748432 0x403223: main (main.cpp:325)
+  n0: 1091472 in 1 place, below massif's threshold (01.00%)
+ n0: 5916144 0x4031F2: main (main.cpp:325)
+ n0: 3549720 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=45
+#-----------
+time=3438305775
+mem_heap_B=187015381
+mem_heap_extra_B=105017067
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=46
+#-----------
+time=3516032730
+mem_heap_B=190732096
+mem_heap_extra_B=107599824
+mem_stacks_B=0
+heap_tree=detailed
+n6: 190732096 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 81612240 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 81612240 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 81612240 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 81612240 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 81612240 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 67907280 0x403248: main (main.cpp:327)
+      n1: 13704960 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 13704960 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 13704960 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 13704960 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 13704960 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 13704960 0x402FAA: main (main.cpp:298)
+ n2: 45412816 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 45412791 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 45412791 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 45412791 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 45412791 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 38863833 0x403261: main (main.cpp:289)
+      n0: 6548923 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 19749816 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 18611928 0x403223: main (main.cpp:325)
+  n0: 1137888 in 1 place, below massif's threshold (01.00%)
+ n0: 6203976 0x4031F2: main (main.cpp:325)
+ n0: 3695328 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=47
+#-----------
+time=3586755910
+mem_heap_B=193933216
+mem_heap_extra_B=109723080
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=48
+#-----------
+time=3639135681
+mem_heap_B=196180116
+mem_heap_extra_B=111192468
+mem_stacks_B=0
+heap_tree=detailed
+n6: 196180116 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 84563616 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 84563616 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 84563616 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 84563616 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 84563616 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 70171344 0x403248: main (main.cpp:327)
+      n1: 14392272 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 14392272 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 14392272 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 14392272 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 14392272 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 14392272 0x402FAA: main (main.cpp:298)
+ n2: 46970860 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 46970810 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 46970810 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 46970810 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 46970810 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 40091577 0x403261: main (main.cpp:289)
+      n0: 6879198 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 50 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 20340384 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 19138344 0x403223: main (main.cpp:325)
+  n0: 1202040 in 1 place, below massif's threshold (01.00%)
+ n0: 6379448 0x4031F2: main (main.cpp:325)
+ n0: 3867888 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=49
+#-----------
+time=3670964064
+mem_heap_B=197516058
+mem_heap_extra_B=112065734
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=50
+#-----------
+time=3681673240
+mem_heap_B=198026973
+mem_heap_extra_B=112421011
+mem_stacks_B=0
+heap_tree=detailed
+n6: 198026973 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 85516248 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 85516248 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 85516248 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 85516248 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 85516248 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 70962336 0x403248: main (main.cpp:327)
+      n1: 14553912 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 14553912 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 14553912 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 14553912 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 14553912 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 14553912 0x402FAA: main (main.cpp:298)
+ n2: 47527509 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 47527484 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 47527484 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 47527484 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 47527484 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 40513408 0x403261: main (main.cpp:289)
+      n0: 7014041 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 20544864 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 19323072 0x403223: main (main.cpp:325)
+  n0: 1221792 in 1 place, below massif's threshold (01.00%)
+ n0: 6441024 0x4031F2: main (main.cpp:325)
+ n0: 3939408 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=51
+#-----------
+time=3728304252
+mem_heap_B=199914150
+mem_heap_extra_B=113638754
+mem_stacks_B=0
+heap_tree=detailed
+n6: 199914150 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 86553960 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 86553960 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 86553960 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 86553960 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 86553960 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 71830608 0x403248: main (main.cpp:327)
+      n1: 14723352 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 14723352 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 14723352 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 14723352 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 14723352 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 14723352 0x402FAA: main (main.cpp:298)
+ n2: 48070430 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 48070405 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 48070405 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 48070405 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 48070405 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 40882746 0x403261: main (main.cpp:289)
+      n0: 7187624 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 20713968 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 19470792 0x403223: main (main.cpp:325)
+  n0: 1243176 in 1 place, below massif's threshold (01.00%)
+ n0: 6490264 0x4031F2: main (main.cpp:325)
+ n0: 4027608 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=52
+#-----------
+time=3774433124
+mem_heap_B=201819001
+mem_heap_extra_B=114869495
+mem_stacks_B=0
+heap_tree=detailed
+n6: 201819001 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 87632400 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 87632400 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 87632400 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 87632400 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 87632400 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 72673680 0x403248: main (main.cpp:327)
+      n1: 14958720 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 14958720 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 14958720 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 14958720 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 14958720 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 14958720 0x402FAA: main (main.cpp:298)
+ n2: 48596665 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 48596640 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 48596640 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 48596640 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 48596640 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 41247957 0x403261: main (main.cpp:289)
+      n0: 7348648 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 20885640 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 19618200 0x403223: main (main.cpp:325)
+  n0: 1267440 in 1 place, below massif's threshold (01.00%)
+ n0: 6539400 0x4031F2: main (main.cpp:325)
+ n0: 4106976 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=53
+#-----------
+time=3823010567
+mem_heap_B=203740306
+mem_heap_extra_B=116115342
+mem_stacks_B=0
+heap_tree=detailed
+n6: 203740306 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 88780272 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 88780272 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 88780272 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 88780272 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 88780272 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 73587744 0x403248: main (main.cpp:327)
+      n1: 15192528 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 15192528 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 15192528 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 15192528 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 15192528 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 15192528 0x402FAA: main (main.cpp:298)
+ n2: 49090962 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 49090937 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 49090937 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 49090937 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 49090937 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 41580639 0x403261: main (main.cpp:289)
+      n0: 7510263 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 21037680 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 19750584 0x403223: main (main.cpp:325)
+  n0: 1287096 in 1 place, below massif's threshold (01.00%)
+ n0: 6583528 0x4031F2: main (main.cpp:325)
+ n0: 4189944 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=54
+#-----------
+time=3870085002
+mem_heap_B=205669183
+mem_heap_extra_B=117385113
+mem_stacks_B=0
+heap_tree=detailed
+n6: 205669183 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 89903880 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 89903880 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 89903880 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 89903880 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 89903880 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 74479992 0x403248: main (main.cpp:327)
+      n1: 15423888 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 15423888 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 15423888 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 15423888 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 15423888 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 15423888 0x402FAA: main (main.cpp:298)
+ n2: 49595527 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 49595477 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 49595477 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 49595477 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 49595477 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 41957776 0x403261: main (main.cpp:289)
+      n0: 7637666 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 50 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 21216768 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 19912824 0x403223: main (main.cpp:325)
+  n0: 1303944 in 1 place, below massif's threshold (01.00%)
+ n0: 6637608 0x4031F2: main (main.cpp:325)
+ n0: 4257480 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=55
+#-----------
+time=3918786337
+mem_heap_B=207604607
+mem_heap_extra_B=118645065
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=56
+#-----------
+time=3919309688
+mem_heap_B=207625869
+mem_heap_extra_B=118659083
+mem_stacks_B=0
+heap_tree=detailed
+n6: 207625869 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 91055688 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 91055688 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 91055688 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 91055688 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 91055688 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 75422976 0x403248: main (main.cpp:327)
+      n1: 15632712 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 15632712 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 15632712 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 15632712 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 15632712 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 15632712 0x402FAA: main (main.cpp:298)
+ n2: 50104813 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 50104788 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 50104788 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 50104788 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 50104788 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 42318454 0x403261: main (main.cpp:289)
+      n0: 7786299 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 21387504 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 20060736 0x403223: main (main.cpp:325)
+  n0: 1326768 in 1 place, below massif's threshold (01.00%)
+ n0: 6686912 0x4031F2: main (main.cpp:325)
+ n0: 4333032 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=57
+#-----------
+time=3968010736
+mem_heap_B=209529020
+mem_heap_extra_B=119896860
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=58
+#-----------
+time=3969924374
+mem_heap_B=209603372
+mem_heap_extra_B=119944988
+mem_stacks_B=0
+heap_tree=detailed
+n6: 209603372 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 92252400 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 92252400 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 92252400 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 92252400 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 92252400 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 76399128 0x403248: main (main.cpp:327)
+      n1: 15853272 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 15853272 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 15853272 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 15853272 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 15853272 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 15853272 0x402FAA: main (main.cpp:298)
+ n2: 50600364 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 50600314 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 50600314 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 50600314 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 50600314 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 42675392 0x403261: main (main.cpp:289)
+      n0: 7924887 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 50 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 21550368 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 20201568 0x403223: main (main.cpp:325)
+  n0: 1348800 in 1 place, below massif's threshold (01.00%)
+ n0: 6733856 0x4031F2: main (main.cpp:325)
+ n0: 4408464 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=59
+#-----------
+time=4018625486
+mem_heap_B=211561909
+mem_heap_extra_B=121206755
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=60
+#-----------
+time=4019749074
+mem_heap_B=211607342
+mem_heap_extra_B=121236562
+mem_stacks_B=0
+heap_tree=detailed
+n6: 211607342 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 93417888 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 93417888 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 93417888 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 93417888 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 93417888 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 77330760 0x403248: main (main.cpp:327)
+      n1: 16087128 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 16087128 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 16087128 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 16087128 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 16087128 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 16087128 0x402FAA: main (main.cpp:298)
+ n2: 51139486 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 51139436 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 51139436 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 51139436 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 51139436 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 43057846 0x403261: main (main.cpp:289)
+      n0: 8081555 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 50 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 21718344 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 20347320 0x403223: main (main.cpp:325)
+  n0: 1371024 in 1 place, below massif's threshold (01.00%)
+ n0: 6782440 0x4031F2: main (main.cpp:325)
+ n0: 4491264 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=61
+#-----------
+time=4068450175
+mem_heap_B=213547301
+mem_heap_extra_B=122493075
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=62
+#-----------
+time=4070647581
+mem_heap_B=213628929
+mem_heap_extra_B=122545103
+mem_stacks_B=0
+heap_tree=detailed
+n6: 213628929 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 94595400 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 94595400 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 94595400 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 94595400 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 94595400 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 78304152 0x403248: main (main.cpp:327)
+      n1: 16291248 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 16291248 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 16291248 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 16291248 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 16291248 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 16291248 0x402FAA: main (main.cpp:298)
+ n2: 51683033 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 51682983 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 51682983 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 51682983 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 51682983 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 43454139 0x403261: main (main.cpp:289)
+      n0: 8228809 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 50 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 21891240 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 20502192 0x403223: main (main.cpp:325)
+  n0: 1389048 in 1 place, below massif's threshold (01.00%)
+ n0: 6834064 0x4031F2: main (main.cpp:325)
+ n0: 4567272 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=63
+#-----------
+time=4119348858
+mem_heap_B=215581473
+mem_heap_extra_B=123820679
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=64
+#-----------
+time=4121418980
+mem_heap_B=215663153
+mem_heap_extra_B=123873143
+mem_stacks_B=0
+heap_tree=detailed
+n6: 215663153 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 95810808 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 95810808 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 95810808 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 95810808 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 95810808 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 79272408 0x403248: main (main.cpp:327)
+      n1: 16538400 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 16538400 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 16538400 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 16538400 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 16538400 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 16538400 0x402FAA: main (main.cpp:298)
+ n2: 52201697 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 52201647 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 52201647 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 52201647 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 52201647 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 43831594 0x403261: main (main.cpp:289)
+      n0: 8370018 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 50 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 22066848 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 20656224 0x403223: main (main.cpp:325)
+  n0: 1410624 in 1 place, below massif's threshold (01.00%)
+ n0: 6885408 0x4031F2: main (main.cpp:325)
+ n0: 4640472 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=65
+#-----------
+time=4170120353
+mem_heap_B=217569000
+mem_heap_extra_B=125103264
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=66
+#-----------
+time=4174323654
+mem_heap_B=217727128
+mem_heap_extra_B=125204856
+mem_stacks_B=0
+heap_tree=detailed
+n6: 217727128 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 97016328 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 97016328 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 97016328 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 97016328 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 97016328 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 80303232 0x403248: main (main.cpp:327)
+      n1: 16713096 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 16713096 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 16713096 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 16713096 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 16713096 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 16713096 0x402FAA: main (main.cpp:298)
+ n2: 52752520 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 52752495 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 52752495 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 52752495 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 52752495 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 44240843 0x403261: main (main.cpp:289)
+      n0: 8511617 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 22246968 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 20815416 0x403223: main (main.cpp:325)
+  n0: 1431552 in 1 place, below massif's threshold (01.00%)
+ n0: 6938472 0x4031F2: main (main.cpp:325)
+ n0: 4714920 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=67
+#-----------
+time=4222574912
+mem_heap_B=219787515
+mem_heap_extra_B=126574045
+mem_stacks_B=0
+heap_tree=detailed
+n6: 219787515 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 98172960 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 98172960 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 98172960 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 98172960 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 98172960 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 81213216 0x403248: main (main.cpp:327)
+      n1: 16959744 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 16959744 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 16959744 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 16959744 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 16959744 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 16959744 0x402FAA: main (main.cpp:298)
+ n2: 53320771 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 53320746 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 53320746 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 53320746 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 53320746 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 44689605 0x403261: main (main.cpp:289)
+      n0: 8631106 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 25 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 22454904 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 21006024 0x403223: main (main.cpp:325)
+  n0: 1448880 in 1 place, below massif's threshold (01.00%)
+ n0: 7002008 0x4031F2: main (main.cpp:325)
+ n0: 4778952 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=68
+#-----------
+time=4271276827
+mem_heap_B=221738606
+mem_heap_extra_B=127849106
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=69
+#-----------
+time=4274885985
+mem_heap_B=221882414
+mem_heap_extra_B=127942834
+mem_stacks_B=0
+heap_tree=detailed
+n6: 221882414 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 99447936 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 99447936 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 99447936 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 99447936 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 99447936 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 82191312 0x403248: main (main.cpp:327)
+      n1: 17256624 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 17256624 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 17256624 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 17256624 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 17256624 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 17256624 0x402FAA: main (main.cpp:298)
+ n2: 53838102 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 53838052 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 53838052 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 53838052 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 53838052 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 45053377 0x403261: main (main.cpp:289)
+      n0: 8784640 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 50 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 22625808 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 21152256 0x403223: main (main.cpp:325)
+  n0: 1473552 in 1 place, below massif's threshold (01.00%)
+ n0: 7050752 0x4031F2: main (main.cpp:325)
+ n0: 4861896 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=70
+#-----------
+time=4323587861
+mem_heap_B=223847790
+mem_heap_extra_B=129225314
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=71
+#-----------
+time=4326868468
+mem_heap_B=223998646
+mem_heap_extra_B=129326282
+mem_stacks_B=0
+heap_tree=detailed
+n6: 223998646 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 100739064 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 100739064 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 100739064 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 100739064 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 100739064 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 83156040 0x403248: main (main.cpp:327)
+      n1: 17583024 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 17583024 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 17583024 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 17583024 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 17583024 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 17583024 0x402FAA: main (main.cpp:298)
+ n2: 54355742 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 54355692 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 54355692 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 54355692 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 54355692 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 45428793 0x403261: main (main.cpp:289)
+      n0: 8926864 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 50 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 22804944 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 21302592 0x403223: main (main.cpp:325)
+  n0: 1502352 in 1 place, below massif's threshold (01.00%)
+ n0: 7100864 0x4031F2: main (main.cpp:325)
+ n0: 4940112 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=72
+#-----------
+time=4375569751
+mem_heap_B=225924445
+mem_heap_extra_B=130575435
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=73
+#-----------
+time=4379048488
+mem_heap_B=226141945
+mem_heap_extra_B=130716271
+mem_stacks_B=0
+heap_tree=detailed
+n6: 226141945 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 101957208 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 101957208 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 101957208 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 101957208 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 101957208 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 84162192 0x403248: main (main.cpp:327)
+      n1: 17795016 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 17795016 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 17795016 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 17795016 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 17795016 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 17795016 0x402FAA: main (main.cpp:298)
+ n2: 54949361 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 54949311 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 54949311 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 54949311 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 54949311 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 45893254 0x403261: main (main.cpp:289)
+      n0: 9056022 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 50 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 23007024 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 21485544 0x403223: main (main.cpp:325)
+  n0: 1521480 in 1 place, below massif's threshold (01.00%)
+ n0: 7161848 0x4031F2: main (main.cpp:325)
+ n0: 5008584 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=74
+#-----------
+time=4420660964
+mem_heap_B=228303780
+mem_heap_extra_B=132123180
+mem_stacks_B=0
+heap_tree=detailed
+n6: 228303780 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 103103640 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 103103640 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 103103640 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 103103640 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 103103640 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 84870720 0x403248: main (main.cpp:327)
+      n1: 18232920 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 18232920 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 18232920 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 18232920 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 18232920 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 18232920 0x402FAA: main (main.cpp:298)
+ n2: 55605732 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 55605682 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 55605682 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 55605682 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 55605682 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 46489711 0x403261: main (main.cpp:289)
+      n0: 9115936 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 50 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 23254944 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 21724344 0x403223: main (main.cpp:325)
+  n0: 1530600 in 1 place, below massif's threshold (01.00%)
+ n0: 7241448 0x4031F2: main (main.cpp:325)
+ n0: 5040096 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=75
+#-----------
+time=4466272059
+mem_heap_B=230468121
+mem_heap_extra_B=133563207
+mem_stacks_B=0
+heap_tree=peak
+n6: 230468121 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 104233776 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 104233776 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 104233776 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 104233776 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n2: 104233776 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 85717104 0x403248: main (main.cpp:327)
+      n1: 18516672 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 18516672 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 18516672 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n1: 18516672 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 18516672 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 18516672 0x402FAA: main (main.cpp:298)
+ n2: 56255097 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n1: 56255047 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 56255047 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 56255047 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 56255047 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 47058285 0x403261: main (main.cpp:289)
+      n0: 9196727 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 50 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 23518536 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 21975480 0x403223: main (main.cpp:325)
+  n0: 1543056 in 1 place, below massif's threshold (01.00%)
+ n0: 7325160 0x4031F2: main (main.cpp:325)
+ n0: 5077632 in 4 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=76
+#-----------
+time=4806981408
+mem_heap_B=232202342
+mem_heap_extra_B=134732962
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=77
+#-----------
+time=4855682412
+mem_heap_B=221760888
+mem_heap_extra_B=127609920
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=78
+#-----------
+time=4904383443
+mem_heap_B=211198000
+mem_heap_extra_B=120414672
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=79
+#-----------
+time=4953084557
+mem_heap_B=200676028
+mem_heap_extra_B=113230308
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=80
+#-----------
+time=5001785611
+mem_heap_B=190137531
+mem_heap_extra_B=106045725
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=81
+#-----------
+time=5050486706
+mem_heap_B=179504309
+mem_heap_extra_B=98795259
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=82
+#-----------
+time=5099187727
+mem_heap_B=168940193
+mem_heap_extra_B=91585367
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=83
+#-----------
+time=5147888799
+mem_heap_B=158403803
+mem_heap_extra_B=84400029
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=84
+#-----------
+time=5196589898
+mem_heap_B=147742292
+mem_heap_extra_B=77138396
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=85
+#-----------
+time=5245290941
+mem_heap_B=137200520
+mem_heap_extra_B=69946080
+mem_stacks_B=0
+heap_tree=detailed
+n7: 137200520 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 56284704 0x406AAB: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+  n1: 56284704 0x4067F0: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+   n1: 56284704 0x405F5B: std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node(unsigned int const&) (stl_list.h:484)
+    n1: 56284704 0x4053FD: std::list<unsigned int, std::allocator<unsigned int> >::_M_insert(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1553)
+     n3: 56284704 0x404A54: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+      n0: 47894592 0x403248: main (main.cpp:327)
+      n1: 8387784 0x4053B0: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1493)
+       n1: 8387784 0x4058AB: std::list<unsigned int, std::allocator<unsigned int> >::list<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::allocator<unsigned int> const&) (stl_list.h:636)
+        n1: 8387784 0x404F08: void std::list<unsigned int, std::allocator<unsigned int> >::insert<std::_List_const_iterator<unsigned int> >(std::_List_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>) (stl_list.h:1152)
+         n2: 8387784 0x40452C: std::list<unsigned int, std::allocator<unsigned int> >::operator=(std::list<unsigned int, std::allocator<unsigned int> > const&) (list.tcc:199)
+          n1: 8387784 0x401FE1: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:80)
+           n0: 8387784 0x402FAA: main (main.cpp:298)
+          n0: 0 in 2 places, all below massif's threshold (01.00%)
+      n0: 2328 in 1 place, below massif's threshold (01.00%)
+ n0: 34057920 0x402E55: main (main.cpp:271)
+ n2: 28400248 0x4EE8207: std::string::_Rep::_S_create(unsigned long, unsigned long, std::allocator<char> const&) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+  n2: 28400194 0x4EE8DC9: std::string::_Rep::_M_clone(std::allocator<char> const&, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+   n2: 28400194 0x4EE8E62: std::string::reserve(unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+    n1: 28400194 0x4EE90AD: std::string::append(char const*, unsigned long) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+     n3: 28400194 0x4EA3EB2: std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.19)
+      n0: 20804802 0x403261: main (main.cpp:289)
+      n0: 7595357 0x403188: main (main.cpp:318)
+      n0: 35 in 1 place, below massif's threshold (01.00%)
+    n0: 0 in 1 place, below massif's threshold (01.00%)
+   n0: 0 in 1 place, below massif's threshold (01.00%)
+  n0: 54 in 2 places, all below massif's threshold (01.00%)
+ n2: 10395288 0x401F76: create_entry(unsigned int, std::string*, entry**, std::list<unsigned int, std::allocator<unsigned int> >*) (main.cpp:78)
+  n0: 9714720 0x403223: main (main.cpp:325)
+  n0: 680568 in 2 places, all below massif's threshold (01.00%)
+ n0: 3404992 0x40315D: main (main.cpp:316)
+ n0: 3238240 0x4031F2: main (main.cpp:325)
+ n0: 1419128 in 10 places, all below massif's threshold (01.00%)
+#-----------
+snapshot=86
+#-----------
+time=5293992079
+mem_heap_B=126604193
+mem_heap_extra_B=62729567
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=87
+#-----------
+time=5342693196
+mem_heap_B=116021420
+mem_heap_extra_B=55516764
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=88
+#-----------
+time=5391394267
+mem_heap_B=105421884
+mem_heap_extra_B=48291796
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=89
+#-----------
+time=5440095280
+mem_heap_B=94850347
+mem_heap_extra_B=41081005
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=90
+#-----------
+time=5488796427
+mem_heap_B=84249069
+mem_heap_extra_B=33854059
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=91
+#-----------
+time=5537497446
+mem_heap_B=73643583
+mem_heap_extra_B=26621225
+mem_stacks_B=0
+heap_tree=empty

@@ -1,0 +1,85 @@
+==31680== Memcheck, a memory error detector
+==31680== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
+==31680== Using Valgrind-3.10.1 and LibVEX; rerun with -h for copyright info
+==31680== Command: ./a.out ../misc_data/ssimplewiki-20151226-pages-articles_out0 alphabet reagan
+==31680== 
+==31680== 
+==31680== HEAP SUMMARY:
+==31680==     in use at exit: 193,978,120 bytes in 8,613,237 blocks
+==31680==   total heap usage: 23,946,335 allocs, 15,333,098 frees, 662,525,740 bytes allocated
+==31680== 
+==31680== 16 bytes in 1 blocks are possibly lost in loss record 1 of 11
+==31680==    at 0x4C2B0E0: operator new(unsigned long) (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==31680==    by 0x402C6C: Table::seek_links(unsigned int, unsigned int) (table.h:146)
+==31680==    by 0x40239E: Table::printPath(std::string, std::string) (table.h:73)
+==31680==    by 0x403DDC: main (table_test.cpp:20)
+==31680== 
+==31680== 24 bytes in 1 blocks are possibly lost in loss record 2 of 11
+==31680==    at 0x4C2B0E0: operator new(unsigned long) (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==31680==    by 0x408CA0: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+==31680==    by 0x408287: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+==31680==    by 0x406F68: std::_List_node<unsigned int>* std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node<unsigned int const&>(unsigned int const&) (stl_list.h:502)
+==31680==    by 0x405A4B: void std::list<unsigned int, std::allocator<unsigned int> >::_M_insert<unsigned int const&>(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1561)
+==31680==    by 0x404B2F: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+==31680==    by 0x402CA3: Table::seek_links(unsigned int, unsigned int) (table.h:147)
+==31680==    by 0x40239E: Table::printPath(std::string, std::string) (table.h:73)
+==31680==    by 0x403DDC: main (table_test.cpp:20)
+==31680== 
+==31680== 72 bytes in 3 blocks are possibly lost in loss record 4 of 11
+==31680==    at 0x4C2B0E0: operator new(unsigned long) (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==31680==    by 0x408CA0: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+==31680==    by 0x408287: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+==31680==    by 0x406F68: std::_List_node<unsigned int>* std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node<unsigned int const&>(unsigned int const&) (stl_list.h:502)
+==31680==    by 0x405A4B: void std::list<unsigned int, std::allocator<unsigned int> >::_M_insert<unsigned int const&>(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1561)
+==31680==    by 0x406F44: void std::list<unsigned int, std::allocator<unsigned int> >::emplace_back<unsigned int const&>(unsigned int const&) (stl_list.h:1026)
+==31680==    by 0x4059E5: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1491)
+==31680==    by 0x404AD8: std::list<unsigned int, std::allocator<unsigned int> >::list(std::list<unsigned int, std::allocator<unsigned int> > const&) (stl_list.h:584)
+==31680==    by 0x402C7E: Table::seek_links(unsigned int, unsigned int) (table.h:146)
+==31680==    by 0x40239E: Table::printPath(std::string, std::string) (table.h:73)
+==31680==    by 0x403DDC: main (table_test.cpp:20)
+==31680== 
+==31680== 7,216 (928 direct, 6,288 indirect) bytes in 58 blocks are definitely lost in loss record 5 of 11
+==31680==    at 0x4C2B0E0: operator new(unsigned long) (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==31680==    by 0x402B23: Table::seek_links(unsigned int, unsigned int) (table.h:130)
+==31680==    by 0x40239E: Table::printPath(std::string, std::string) (table.h:73)
+==31680==    by 0x403DDC: main (table_test.cpp:20)
+==31680== 
+==31680== 2,578,584 (474,264 direct, 2,104,320 indirect) bytes in 19,761 blocks are definitely lost in loss record 6 of 11
+==31680==    at 0x4C2B0E0: operator new(unsigned long) (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==31680==    by 0x408CA0: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+==31680==    by 0x408287: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+==31680==    by 0x406F68: std::_List_node<unsigned int>* std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node<unsigned int const&>(unsigned int const&) (stl_list.h:502)
+==31680==    by 0x405A4B: void std::list<unsigned int, std::allocator<unsigned int> >::_M_insert<unsigned int const&>(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1561)
+==31680==    by 0x404B2F: std::list<unsigned int, std::allocator<unsigned int> >::push_back(unsigned int const&) (stl_list.h:1016)
+==31680==    by 0x402CA3: Table::seek_links(unsigned int, unsigned int) (table.h:147)
+==31680==    by 0x40239E: Table::printPath(std::string, std::string) (table.h:73)
+==31680==    by 0x403DDC: main (table_test.cpp:20)
+==31680== 
+==31680== 20,239,976 (3,621,792 direct, 16,618,184 indirect) bytes in 150,908 blocks are definitely lost in loss record 8 of 11
+==31680==    at 0x4C2B0E0: operator new(unsigned long) (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==31680==    by 0x408CA0: __gnu_cxx::new_allocator<std::_List_node<unsigned int> >::allocate(unsigned long, void const*) (new_allocator.h:104)
+==31680==    by 0x408287: std::_List_base<unsigned int, std::allocator<unsigned int> >::_M_get_node() (stl_list.h:334)
+==31680==    by 0x406F68: std::_List_node<unsigned int>* std::list<unsigned int, std::allocator<unsigned int> >::_M_create_node<unsigned int const&>(unsigned int const&) (stl_list.h:502)
+==31680==    by 0x405A4B: void std::list<unsigned int, std::allocator<unsigned int> >::_M_insert<unsigned int const&>(std::_List_iterator<unsigned int>, unsigned int const&) (stl_list.h:1561)
+==31680==    by 0x406F44: void std::list<unsigned int, std::allocator<unsigned int> >::emplace_back<unsigned int const&>(unsigned int const&) (stl_list.h:1026)
+==31680==    by 0x4059E5: void std::list<unsigned int, std::allocator<unsigned int> >::_M_initialize_dispatch<std::_List_const_iterator<unsigned int> >(std::_List_const_iterator<unsigned int>, std::_List_const_iterator<unsigned int>, std::__false_type) (stl_list.h:1491)
+==31680==    by 0x404AD8: std::list<unsigned int, std::allocator<unsigned int> >::list(std::list<unsigned int, std::allocator<unsigned int> > const&) (stl_list.h:584)
+==31680==    by 0x402C7E: Table::seek_links(unsigned int, unsigned int) (table.h:146)
+==31680==    by 0x40239E: Table::printPath(std::string, std::string) (table.h:73)
+==31680==    by 0x403DDC: main (table_test.cpp:20)
+==31680== 
+==31680== 171,152,232 (22,746,624 direct, 148,405,608 indirect) bytes in 1,421,664 blocks are definitely lost in loss record 11 of 11
+==31680==    at 0x4C2B0E0: operator new(unsigned long) (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==31680==    by 0x402C6C: Table::seek_links(unsigned int, unsigned int) (table.h:146)
+==31680==    by 0x40239E: Table::printPath(std::string, std::string) (table.h:73)
+==31680==    by 0x403DDC: main (table_test.cpp:20)
+==31680== 
+==31680== LEAK SUMMARY:
+==31680==    definitely lost: 26,843,608 bytes in 1,592,391 blocks
+==31680==    indirectly lost: 167,134,400 bytes in 7,020,841 blocks
+==31680==      possibly lost: 112 bytes in 5 blocks
+==31680==    still reachable: 0 bytes in 0 blocks
+==31680==         suppressed: 0 bytes in 0 blocks
+==31680== 
+==31680== For counts of detected and suppressed errors, rerun with: -v
+==31680== ERROR SUMMARY: 7 errors from 7 contexts (suppressed: 0 from 0)
