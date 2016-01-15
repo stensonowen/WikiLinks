@@ -22,55 +22,20 @@ class Table{
     private:
         std::tr1::hash<std::string> str_hash;
         Entry ** table;             //array itself
+        unsigned int entries;       //number of entries
+        unsigned int size;          //number of entries and blanks
         std::mutex mtx[NUM_MUTEX];
         long collisions;
         long max_iters;
         void populate(std::vector<std::string> files);        //multithread master
         void read(std::string file);    //multithread slave
     public:
-        unsigned int entries;       //number of entries
-        unsigned int size;          //number of entries and blanks
         Table(char *input_file);
         ~Table();
         unsigned int resolve_collisions(const std::string &title, int = -1);
+        void details();
         void printPath(std::string src, std::string dst);
-        std::string htmlPath(std::string src, std::string dst);
-        //std::pair<bool, unsigned int> contains(std::string s);
 };
-
-std::string Table::htmlPath(std::string src, std::string dst){
-    if(src.empty() && dst.empty()) return "Invalid source and destination";
-    else if(src.empty()) return "Invalid source";
-    else if(dst.empty()) return "Invalid destination";
-
-    transform(src.begin(), src.end(), src.begin(), ::toupper);
-    transform(dst.begin(), dst.end(), dst.begin(), ::toupper);
-    unsigned int src_ = resolve_collisions(src);
-    unsigned int dst_ = resolve_collisions(dst);
-    if(!table[src_] && !table[dst_]) return "Couldn't find either source or destination";
-    else if(!table[src_]) return "Couldn't find source";
-    else if(!table[dst_]) return "Couldn't find destination";
-
-    BFS *bfs = new BFS(table, src_, dst_);
-    std::pair<Path, int> results = bfs->SHP();
-    delete bfs;
-
-    if(results.second == -1) return "No such path exists";
-    else if(results.second == 0){
-        return "No path found after " + std::to_string(MAX_DEPTH) + "iterations";
-    } else {
-        std::string directions = "";
-        for(unsigned int i=0; i<results.first.size(); i++)
-            directions += "&nbsp;" + table[results.first[i]]->title + "<br>";
-        return directions;
-    }
-}
-
-/*std::pair<bool, unsigned int> Table::contains(std::string s){
-    unsigned int hash = resolve_collisions(s);
-    if(table[hash]) return std::pair<bool, unsigned int>(true, hash);
-    else return std::pair<bool, unsigned int>(false, 0);
-}*/
 
 void Table::printPath(std::string src, std::string dst){
     clock_t t = clock();
