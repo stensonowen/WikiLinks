@@ -12,7 +12,10 @@ int main(int argc, char* argv[]){
     }
     Table t(argv[1]);
 <<<<<<< HEAD
+<<<<<<< HEAD
     t.details();
+=======
+>>>>>>> parent of bb738a2... restructuring
 =======
 >>>>>>> parent of bb738a2... restructuring
     std::string src, dst;

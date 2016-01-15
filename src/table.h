@@ -35,6 +35,7 @@ class Table{
         unsigned int resolve_collisions(const std::string &title, int = -1);
         void printPath(std::string src, std::string dst);
 <<<<<<< HEAD
+<<<<<<< HEAD
         void details();
 };
 
@@ -53,6 +54,12 @@ void Table::details(){
         //std::pair<bool, unsigned int> contains(std::string s);
 };
 
+=======
+        std::string htmlPath(std::string src, std::string dst);
+        //std::pair<bool, unsigned int> contains(std::string s);
+};
+
+>>>>>>> parent of bb738a2... restructuring
 std::string Table::htmlPath(std::string src, std::string dst){
     if(src.empty() && dst.empty()) return "Invalid source and destination";
     else if(src.empty()) return "Invalid source";
@@ -87,6 +94,9 @@ std::string Table::htmlPath(std::string src, std::string dst){
     else return std::pair<bool, unsigned int>(false, 0);
 }*/
 
+<<<<<<< HEAD
+>>>>>>> parent of bb738a2... restructuring
+=======
 >>>>>>> parent of bb738a2... restructuring
 void Table::printPath(std::string src, std::string dst){
     clock_t t = clock();
