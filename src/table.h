@@ -34,9 +34,7 @@ class Table{
         ~Table();
         unsigned int resolve_collisions(const std::string &title, int = -1);
         void printPath(std::string src, std::string dst);
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
+        std::string htmlPath(std::string src, std::string dst);
         void details();
 };
 
@@ -46,23 +44,12 @@ void Table::details(){
     unsigned int l = 0;
     for(unsigned int i=0; i<size; i++)
         if(table[i])
-            l += table[i]->links.size()
+            l += table[i]->links.size();
     std::cout << "Total number of links: " << l;
 }
 
-=======
-        std::string htmlPath(std::string src, std::string dst);
-        //std::pair<bool, unsigned int> contains(std::string s);
-};
-
-=======
-        std::string htmlPath(std::string src, std::string dst);
-        //std::pair<bool, unsigned int> contains(std::string s);
-};
-
->>>>>>> parent of bb738a2... restructuring
 std::string Table::htmlPath(std::string src, std::string dst){
-    if(src.empty() && dst.empty()) return "Invalid source and destination";
+    if(src.empty() && dst.empty()) return "";
     else if(src.empty()) return "Invalid source";
     else if(dst.empty()) return "Invalid destination";
 
@@ -89,20 +76,6 @@ std::string Table::htmlPath(std::string src, std::string dst){
     }
 }
 
-/*std::pair<bool, unsigned int> Table::contains(std::string s){
-    unsigned int hash = resolve_collisions(s);
-    if(table[hash]) return std::pair<bool, unsigned int>(true, hash);
-    else return std::pair<bool, unsigned int>(false, 0);
-}*/
-
-<<<<<<< HEAD
->>>>>>> parent of bb738a2... restructuring
-=======
->>>>>>> parent of bb738a2... restructuring
-=======
-};
-
->>>>>>> parent of 6bff561... commenting so I can revert
 void Table::printPath(std::string src, std::string dst){
     clock_t t = clock();
     //capitalize
