@@ -14,6 +14,7 @@
 #include<pthread.h>
 #include<unistd.h>
 #include<vector>
+#include<thread>
 using namespace std;
 
 void *readAllInOne(void *f_){
@@ -34,6 +35,19 @@ void *readAllInOne(void *f_){
     }
     printf("%d unique of %d (%2.0f%%)\n", (int)seen.size(), lines, (float)seen.size()/lines*100);
     pthread_exit(NULL);
+}
+
+void read2(char* f){
+    ifstream input(f);
+    set<string> seen;
+    int lines = 0;
+    string tmp;
+    while(getline(input, tmp)){
+        lines++;
+        seen.insert(tmp);
+    }
+    printf("%d unique of %d (%2.0f%%)\n", (int)seen.size(), lines, (float)seen.size()/lines*100);
+
 }
 
 void readInThread(vector<string> files){
@@ -59,15 +73,16 @@ void readInThread(vector<string> files){
     vector<pthread_t> threads;
     threads.resize(files.size());
 
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+    //pthread_attr_t attr;
+    //pthread_attr_init(&attr);
+    //pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     for(int i=0; i<files.size(); i++){
         char *c = (char*)files[i].c_str();
+        //printf(" %d: %d\n", i, pthread_create(&threads[i], NULL, readAllInOne, NULL));
         printf(" %d: %d\n", i, pthread_create(&threads[i], NULL, readAllInOne, (void*)c));
     }
-    pthread_attr_destroy(&attr);
+    //pthread_attr_destroy(&attr);
     void *status;
     for(int i=0; i<files.size(); i++){
         pthread_join(threads[i], &status);
@@ -82,12 +97,19 @@ int main(){
     string s = "data_2M";
     //readAllInOne(&c);
     vector<string> files;
+    char c1[] = "data_2M_1";
+    char c2[] = "data_2M_2";
 //    files.push_back("data_2M_1");
 //    files.push_back("data_2M_2");
-    files.push_back("data_2M");
-    files.push_back("data_2M");
-    files.push_back("data_2M");
-    files.push_back("data_2M");
-    readInThread(files);
+    //files.push_back("data_2M");
+    //files.push_back("data_2M");
+    //files.push_back("data_2M");
+    //files.push_back("data_2M");
+    //readInThread(files);
+    //read2(c);
+    thread a(read2,c1);
+    thread b(read2,c2);
+    a.join();
+    b.join();
     return 0;
 }
