@@ -1,7 +1,7 @@
 #include<iostream>
 #include "table.h"
 //python parsr8_1.py misc_data/simplewiki-20151226-pages-articles
-//g++ -std=c++11 main.cpp -pthread -Wall -Wextra -m64
+//g++ -std=c++11 main.cpp -pthread -Wall -Wextra -m64 -O2
 //./a.out ../misc_data/simplewiki-20151226-pages-articles_out0
 
 int main(int argc, char* argv[]){
@@ -11,7 +11,6 @@ int main(int argc, char* argv[]){
         exit(1);
     }
     Table t(argv[1]);
-    t.details();
     std::string src, dst;
     while(true){
         std::cout << "Enter src: \t";
