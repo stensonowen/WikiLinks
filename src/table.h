@@ -36,6 +36,7 @@ class Table{
         void printPath(std::string src, std::string dst);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         void details();
 };
 
@@ -98,6 +99,10 @@ std::string Table::htmlPath(std::string src, std::string dst){
 >>>>>>> parent of bb738a2... restructuring
 =======
 >>>>>>> parent of bb738a2... restructuring
+=======
+};
+
+>>>>>>> parent of 6bff561... commenting so I can revert
 void Table::printPath(std::string src, std::string dst){
     clock_t t = clock();
     //capitalize

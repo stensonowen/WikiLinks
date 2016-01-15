@@ -13,11 +13,15 @@ int main(int argc, char* argv[]){
     Table t(argv[1]);
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     t.details();
 =======
 >>>>>>> parent of bb738a2... restructuring
 =======
 >>>>>>> parent of bb738a2... restructuring
+=======
+    //t.details();
+>>>>>>> parent of 6bff561... commenting so I can revert
     std::string src, dst;
     while(true){
         std::cout << "Enter src: \t";
