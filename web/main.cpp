@@ -49,10 +49,10 @@ int main(int argc, char* argv[]){
          ctx["src"] = src;
          ctx["dst"] = dst;
          ctx["path"] = t.htmlPath(src, dst);
-         return crow::mustache::load("templates/bfs.html").render(ctx);
+         return crow::mustache::load("bfs.html").render(ctx);
          });
 
-    app.port(8000).multithreaded().run();
+    app.port(80).multithreaded().run();
 
     
     return 0;

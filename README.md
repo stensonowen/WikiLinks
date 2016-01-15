@@ -1,4 +1,4 @@
-# WikiLinkr
+# WikiLinks
 ## Store the structure of links of the entire English Wikipedia in a hash table and finds the shortest path from one to another.
 
 ### Background / Overview
