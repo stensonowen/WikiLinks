@@ -4,39 +4,89 @@
 		<title>WikiLinks</title>
 		<center><h1>WikiLinks</h1></center>
 		
+		<!--[if lt IE 9]>
+		  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
 		<meta name="keywords" content="Wikipedia, shortest path, wikipedia game" />
 		<meta name="description" content="Finding the shortest path between Wikipedia articles" />
 		<meta name="revised" content="1/14/2016" />
 		<!-- <meta http-equiv="refresh" content="5; url=http://google.com" /> -->
 		<meta name="author" content="qjkxkcd" />
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta charset="utf-8">
 		
-		<div id="links" align="middle" valign="top" >
-		<a href="/index.html">HOME</a> |
-		<a href="/about.html">ABOUT</a> |
-		<a href="https://github.com/stensonowen/WikiLinkr">CODE</a>
-		</div>
+		<!-- <nav>
+			<div id="links" align="middle" valign="top" >
+			<a href="/index.html">HOME</a> |
+			<a href="/about.html">ABOUT</a> |
+			<a href="https://github.com/stensonowen/WikiLinks">CODE</a>
+			</div>
+		</nav> -->
 	</head>
 
-	<body>
-	<!--<center><h3>This is a project.</h3></center>-->
-	<hr />
-	<tt>
-	<!-- <form action="/x.asp" method="get"> -->
-	<form>
-		en.wikipedia.org/wiki/ <input type="text" name="src" />
-		<br>
-		en.wikipedia.org/wiki/ <input type="text" name="dst" />
-		<br>
-		<input type="submit" name="submit" value="Submit" />
-	</form>
-	</tt>
+	<body> 
+	 
 	
-	<hr />
-	<center>
-	Path from <tt>"{{src}}"</tt> to <tt>"{{dst}}"</tt>:<br>{{{path}}}
-	</center>
+	<article id="about" >
+		<strong> Navigate from any given Wikipedia article to another in the fewest number of steps.</strong> <br>
+		The program will search through all articles that are one iteration away from the source, then two, and so on through ten articles or untli the destination is found. The number of articles that need to be checked increases exponentially, so longer searches can be quite slow (from several seconds to several minutes). Because so much much information has to be processed, searching is done based on a dump of the English Wikipedia, meaning that if a page was modified in the last few weeks the results might be outdated.
+		Article titles are case insensitive, but must otherwise be exact (the program will follow redirects but will not search; if you're unsure, just pull up the page and copy the title). 
+		More information including code and instructions to run locally can be found on <a href="https://github.com/stensonowen/WikiLinks">github</a>.
+	</article>
+	
+	<aside id="links">
+		<header> 
+			<h3> History </h3> 
+		</header>
+		Common/recent searches are cached, and viewing them is faster than doing a long search (particularly for long paths).
+	</aside>
+	
+	<!--<center><h3>This is a project.</h3></center>-->
+	<section id="search">
+		<!-- <hr /> -->
+		<header> 
+			<h3>Search</h1> 
+		</header>
+
+		<!-- <form action="/x.asp" method="get"> -->
+		<tt><form>
+			source <br>
+			<!-- en.wikipedia.org/wiki/ -->
+			<input type="text" name="src" id="input" size="30" autofocus /> <br><br>
+			destination <br>
+			<!-- en.wikipedia.org/wiki/ -->
+			<input type="text" name="dst" id="input" size="30" /> <br><br>
+			<input type="submit" name="submit" value="Submit" />
+		</form></tt>
+		<h3>Results</h3> 
+		Path from <tt>"{{src}}"</tt> to <tt>"{{dst}}"</tt>:<br>{{{path}}}
+	</section>
+	
+	<!-- <hr /> -->
+	
+	<section id="results">
+		
+	</section>
 	
 	</body>
 	
 </html>
+<style>
+	article#about {
+		padding:10px;
+	}
+	aside#links {
+		float: right;
+		width: 50%;
+		color: green;
+		padding:10px;
+	}
+	section#search {
+		<!-- text-align: center; -->
+		float: left;
+		width: 50%;
+		padding:10px;
+	}
+	input#input {
+		width: 40%;
+	}
+</style>

@@ -15,7 +15,7 @@ class Path{
         ~Path(){};
         Path(const unsigned int n){ nodes.push_back(n); }
         //Path(const vector<unsigned int> n) : nodes(n) {}
-        //void add(unsigned int child){ nodes.push_back(child); }
+        void add(unsigned int child){ nodes.push_back(child); }
         unsigned int get_destination(){
             assert(nodes.size() > 0);
             return nodes[nodes.size()-1];
