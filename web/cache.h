@@ -6,6 +6,8 @@
 #include "abs_path.h"
 //#include "../src/BFS.h"
 using namespace std;
+        
+enum sort_by { recent, popular, length };
 
 class Cache{
     //wrapper for SQL database of searches
@@ -23,6 +25,7 @@ class Cache{
         Abs_path* contains(const string &src, const string &dst);
         void insert(const string &src, const string &dst, Path path, unsigned int time);
         void update(const Abs_path &ap);
+        vector<Abs_path> retrieve(unsigned int n, sort_by category);
         //should BFS be called within this? probably not
         Cache(const string &file);
         ~Cache(){ sqlite3_close(db); }
@@ -116,6 +119,25 @@ void Cache::insert(const string &src, const string &dst, Path path, unsigned int
     string query(query1 + query2);
     rc = sqlite3_exec(db, query.c_str(), select_callback, 0, &err);
     verify("Insert element");
+}
+
+vector<Abs_path> Cache::retrieve(unsigned int n, sort_by category){
+    //retrieve the first n rows sorted by 'category' and return as vector
+    vector<Abs_path> results;
+    string cmd("SELECT * FROM CACHE ORDER BY ");
+    if(category == recent){ //length popular
+        cmd += "LAST DESC "; //ASC?
+    } else if(category == popular){
+        cmd += "COUNT DESC ";
+    } else if(category == length){
+        for(unsigned int i=9; i>0; i--)
+            cmd += "P" + to_string(i) + " DESC,";
+        cmd += "P0 DESC ";
+    }
+    cmd += "LIMIT " + to_string(n) + ";";
+    rc = sqlite3_exec(db, cmd.c_str(), select_callback, (void*)&results, &err);
+    verify("Retrieve rows");
+    return results;
 }
 
 Abs_path* Cache::contains(const string &src, const string &dst){
