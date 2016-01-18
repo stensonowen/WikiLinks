@@ -28,8 +28,8 @@ class Path{
             nodes = other.nodes;
             return *this;
         }
-        unsigned int size(){ return nodes.size(); }
-        unsigned int operator[](unsigned int n){ return nodes[n]; }
+        const unsigned int size() const{ return nodes.size(); }
+        unsigned int operator[](unsigned int n) const{ return nodes[n]; }
 };
 
 

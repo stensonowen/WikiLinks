@@ -38,8 +38,16 @@ class Table{
         void details();
         std::string htmlPath(const Path &path);
         std::string contains(const std::string &src, const std::string &dst, 
-                unsigned int &src_, unsigned int &dst_);
+            unsigned int &src_, unsigned int &dst_);
+        Path search(unsigned int src, unsigned int dst) const;
 };
+
+Path Table::search(unsigned int src, unsigned int dst) const{
+    BFS *bfs = new BFS(table, src, dst);
+    std::pair<Path, int> results = bfs->SHP();
+    delete bfs;
+    return results.first;
+}
 
 std::string Table::contains(const std::string &src, const std::string &dst,
         unsigned int &src_, unsigned int &dst_){
@@ -53,7 +61,7 @@ std::string Table::contains(const std::string &src, const std::string &dst,
 
     transform(src.begin(), src.end(), src.begin(), ::toupper);
     transform(dst.begin(), dst.end(), dst.begin(), ::toupper);
-    unsigned int _src_ = resolve_collisions(src);
+    unsigned int _src = resolve_collisions(src);
     unsigned int _dst = resolve_collisions(dst);
     if(!table[_src] && !table[_dst]) return "Couldn't find either source or destination";
     else if(!table[_src]) return "Couldn't find source";
