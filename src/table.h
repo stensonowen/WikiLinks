@@ -36,7 +36,43 @@ class Table{
         void printPath(std::string src, std::string dst);
         std::string htmlPath(std::string src, std::string dst);
         void details();
+        std::string htmlPath(const Path &path);
+        std::string contains(const std::string &src, const std::string &dst, 
+                unsigned int &src_, unsigned int &dst_);
 };
+
+std::string Table::contains(const std::string &src, const std::string &dst,
+        unsigned int &src_, unsigned int &dst_){
+    //returns string indicating results of a lookup of src and dst strings
+    //if there is a problem with the lookup, then a description is returned
+    //if the lookup completes successfully, src_ and dst_ are updated 
+    // and an empty string is returned.
+    if(src.empty() && dst.empty()) return "";
+    else if(src.empty()) return "Invalid source";
+    else if(dst.empty()) return "Invalid destination";
+
+    transform(src.begin(), src.end(), src.begin(), ::toupper);
+    transform(dst.begin(), dst.end(), dst.begin(), ::toupper);
+    unsigned int _src_ = resolve_collisions(src);
+    unsigned int _dst = resolve_collisions(dst);
+    if(!table[_src] && !table[_dst]) return "Couldn't find either source or destination";
+    else if(!table[_src]) return "Couldn't find source";
+    else if(!table[_dst]) return "Couldn't find destination";
+    else{
+        //hash values are valid; update inputs and return nothing
+        src_ = _src;
+        dst_ = _dst;
+        return "";
+    }
+}
+
+std::string Table::htmlPath(const Path &path){
+    //convert a vector of hashes into a formatted string
+    std::string directions;
+    for(unsigned int i=0; i<path.size(); i++)
+        directions += "&nbsp;" + table[path[i]]->title + "<br>";
+    return directions;
+}
 
 void Table::details(){
     std::cout << "Table details:" << std::endl;
@@ -67,7 +103,7 @@ std::string Table::htmlPath(std::string src, std::string dst){
 
     if(results.second == -1) return "No such path exists";
     else if(results.second == 0){
-        return "No path found after " + std::to_string(MAX_DEPTH) + "iterations";
+        return "No path found after " + std::to_string(MAX_DEPTH) + " iterations";
     } else {
         std::string directions = "\n";
         for(unsigned int i=0; i<results.first.size(); i++)
