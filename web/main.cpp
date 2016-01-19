@@ -1,4 +1,5 @@
 //g++ main.cpp -std=c++11 -lboost_system -pthread -lsqlite3
+//sudo apt-get install libsqlite3-dev
 //#include<iostream>
 //crow
 #include "../include/crow.h"
@@ -63,20 +64,22 @@ void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache,
     else {
         //valid input
         Abs_path *ap = cache.contains(src, dst);
-        if(ap) ctx["path"] = t.htmlPath(ap->path);
-        else {
+        if(ap){
+            cout << "2: src = " << ap->src << ";  dst = " << ap->dst << endl;
+            ctx["path"] = t.htmlPath(ap->path);
+        } else {
             //need to generate path
             Path path = t.search(src_, dst_);
             cache.insert(src, dst, path, -1);
             ctx["path"] = t.htmlPath(path);
         }
     }
-    vector<Abs_path> aps = cache.retrieve(20, Cache::sort_by::popular);
+    /*vector<Abs_path> aps = cache.retrieve(20, Cache::sort_by::popular);
     std::string history;
     for(unsigned int i=0; i<aps.size(); i++){
         history += format_link(aps[i]);
     }
-    ctx["cache"] = history;
+    ctx["cache"] = history;*/
 }
 
 std::string format_link(const Abs_path &ap){

@@ -146,12 +146,21 @@ Abs_path* Cache::contains(const string &src, const string &dst){
     //check for presence of a path from src to dst;
     //theoretically there should only be one, but the first will be returned
     //if none are found, should return NULL pointer 
-    string cmd("SELECT * FROM CACHE where SRC='" + src + "' and DST='" + dst + "'");
+    string cmd("SELECT * FROM CACHE where SRC='" + src + "' and DST='" + dst + "';");
     vector<Abs_path> results;
     rc = sqlite3_exec(db, cmd.c_str(), select_callback, (void*)&results, &err);
     verify("Contains");
+    if(results.size() > 0){
+        cout << "1: src = " << results[0].src << ";  dst = " << results[0].dst << endl;
+    }
     if(results.size() == 0) return NULL;
-    else return &results[0];
+    //else return &(results[0]);
+    else{
+        Abs_path *ap;
+        ap = &results[0];
+        cout << "1.5: src = " << ap->src << "; dst = " << ap->dst << endl; 
+        return ap;
+    }
 }
 
 void Cache::update(const Abs_path &ap){
