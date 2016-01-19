@@ -13,18 +13,9 @@
 		<!-- <meta http-equiv="refresh" content="5; url=http://google.com" /> -->
 		<meta name="author" content="qjkxkcd" />
 		<meta charset="utf-8">
-		
-		<!-- <nav>
-			<div id="links" align="middle" valign="top" >
-			<a href="/index.html">HOME</a> |
-			<a href="/about.html">ABOUT</a> |
-			<a href="https://github.com/stensonowen/WikiLinks">CODE</a>
-			</div>
-		</nav> -->
 	</head>
 
 	<body> 
-	 
 	
 	<article id="about" >
 		<strong> Navigate from any given Wikipedia article to another in the fewest number of steps.</strong> <br>
@@ -37,34 +28,24 @@
 		<header> 
 			<h3> History </h3> 
 		</header>
-		Common/recent searches are cached, and viewing them is faster than doing a long search (particularly for long paths).
+		Common/recent searches are cached, and viewing them is faster than doing a long search (particularly for long paths). <br>
+		{{{cache}}}
 	</aside>
 	
-	<!--<center><h3>This is a project.</h3></center>-->
 	<section id="search">
-		<!-- <hr /> -->
 		<header> 
 			<h3>Search</h1> 
 		</header>
 
-		<!-- <form action="/x.asp" method="get"> -->
 		<tt><form>
 			source <br>
-			<!-- en.wikipedia.org/wiki/ -->
 			<input type="text" name="src" id="input" size="30" autofocus /> <br><br>
 			destination <br>
-			<!-- en.wikipedia.org/wiki/ -->
 			<input type="text" name="dst" id="input" size="30" /> <br><br>
 			<input type="submit" name="submit" value="Submit" />
 		</form></tt>
 		<h3>Results</h3> 
 		Path from <tt>"{{src}}"</tt> to <tt>"{{dst}}"</tt>:<br>{{{path}}}
-	</section>
-	
-	<!-- <hr /> -->
-	
-	<section id="results">
-		
 	</section>
 	
 	</body>
@@ -74,19 +55,18 @@
 	article#about {
 		padding:10px;
 	}
-	aside#links {
-		float: right;
-		width: 50%;
-		color: green;
-		padding:10px;
-	}
 	section#search {
 		<!-- text-align: center; -->
 		float: left;
 		width: 50%;
 		padding:10px;
 	}
+	aside#links {
+		float: right;
+		width: 50%;
+		padding: 10px;
+	}
 	input#input {
-		width: 40%;
+		width: 60%;
 	}
 </style>

@@ -7,7 +7,6 @@
 //#include "../src/BFS.h"
 using namespace std;
         
-enum sort_by { recent, popular, length };
 
 class Cache{
     //wrapper for SQL database of searches
@@ -25,6 +24,7 @@ class Cache{
         Abs_path* contains(const string &src, const string &dst);
         void insert(const string &src, const string &dst, Path path, unsigned int time);
         void update(const Abs_path &ap);
+        enum sort_by { recent, popular, length };
         vector<Abs_path> retrieve(unsigned int n, sort_by category);
         //should BFS be called within this? probably not
         Cache(const string &file);
@@ -111,17 +111,19 @@ void Cache::insert(const string &src, const string &dst, Path path, unsigned int
     string query2 = "VALUES (" + to_string(size) + ",'" 
         + string(src) + "','" + string(dst) + "',";
     for(unsigned int i=0; i<path.size(); i++){
-        query1 += "DST,";
-        query2 += to_string(path[i]);
+        query1 += "P" + to_string(i) + ",";
+        query2 += to_string(path[i]) + ",";
     }
     query1 += "LAST,TIME) ";
     query2 += "'" + datetime() + "'," + to_string(t) + ");";
     string query(query1 + query2);
+    cout << query << endl;
     rc = sqlite3_exec(db, query.c_str(), select_callback, 0, &err);
     verify("Insert element");
+    size++;
 }
 
-vector<Abs_path> Cache::retrieve(unsigned int n, sort_by category){
+vector<Abs_path> Cache::retrieve(unsigned int n, Cache::sort_by category){
     //retrieve the first n rows sorted by 'category' and return as vector
     vector<Abs_path> results;
     string cmd("SELECT * FROM CACHE ORDER BY ");

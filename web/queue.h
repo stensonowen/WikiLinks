@@ -123,9 +123,3 @@ Path Queue::emplace(const unsigned int s, const unsigned int d){
 }
 
 
-
-
-int main(int argc, char* argv[]){
-    cout << "hw" << endl;
-    return 0;
-}

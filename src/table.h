@@ -37,8 +37,7 @@ class Table{
         std::string htmlPath(std::string src, std::string dst);
         void details();
         std::string htmlPath(const Path &path);
-        std::string contains(const std::string &src, const std::string &dst, 
-            unsigned int &src_, unsigned int &dst_);
+        std::string contains(std::string src,std::string dst,unsigned int &src_,unsigned int &dst_);
         Path search(unsigned int src, unsigned int dst) const;
 };
 
@@ -49,13 +48,13 @@ Path Table::search(unsigned int src, unsigned int dst) const{
     return results.first;
 }
 
-std::string Table::contains(const std::string &src, const std::string &dst,
+std::string Table::contains(std::string src, std::string dst,
         unsigned int &src_, unsigned int &dst_){
     //returns string indicating results of a lookup of src and dst strings
     //if there is a problem with the lookup, then a description is returned
     //if the lookup completes successfully, src_ and dst_ are updated 
     // and an empty string is returned.
-    if(src.empty() && dst.empty()) return "";
+    if(src.empty() && dst.empty()) return "Invalid source and destination";
     else if(src.empty()) return "Invalid source";
     else if(dst.empty()) return "Invalid destination";
 
