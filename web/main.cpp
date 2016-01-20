@@ -48,7 +48,7 @@ int main(int argc, char* argv[]){
          res.end();
          });
 
-    app.port(8080).multithreaded().run();
+    app.port(80).multithreaded().run();
 
     
     return 0;
@@ -56,6 +56,10 @@ int main(int argc, char* argv[]){
 
 void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache, 
         std::string src, std::string dst){
+    //replace underscores with spaces
+    //should be sufficient to convert article urls to titles (right?)
+    std::replace(src.begin(), src.end(), '_', ' ');
+    std::replace(dst.begin(), dst.end(), '_', ' ');
     ctx["src"] = src;
     ctx["dst"] = dst;
     unsigned int src_, dst_;
