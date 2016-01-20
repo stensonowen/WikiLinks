@@ -19,11 +19,11 @@
 	
 	<article id="about" >
 		<strong> Navigate from any given Wikipedia article to another in the fewest number of steps.</strong> <br>
-        <p>The program will search through all articles that are one iteration away from the source, then two, and so on through ten articles or untli the destination is found. The number of articles that need to be checked increases exponentially, so longer searches can be quite slow (from several seconds to several minutes). Because so much much information has to be processed, searching is done based on a dump of the English Wikipedia, meaning that if a page was modified in the last few weeks the results might be outdated.
-        <p>Article titles are case insensitive, but must otherwise be exact (the program will follow redirects but will not search). The easiest way to enter the correct values is to pull up the Wikipedia page and copy the article title or last part of the url (i.e. everything after the "en.wikipedia.org/wiki/"). 
-        <p>A path will be found faster if the destination article is somewhat popular. Additionally, only a path resulting in the exact destination will be returned; a path to the article "USA" will probably take longer than a path to the article "United States" because the latter is more popular to link to.
-        <p>Path urls can also be easily saved and shared by using the form wikilinks.xyz/bfs/src_title/dst_title. 
-        <p>More information including code and instructions to run locally can be found on <a href="https://github.com/stensonowen/WikiLinks">github</a>.
+        <p><strong>How it Works: </strong>The program will search through all articles that are one iteration away from the source, then two, and so on through ten articles or untli the destination is found. The number of articles that need to be checked increases exponentially, so longer searches can be quite slow (from several seconds to several minutes). Because so much much information has to be processed, searching is done based on a dump of the English Wikipedia, meaning that if a page was modified in the last few weeks the results might be outdated.</p>
+        <p><strong>How to Search: </strong>Article titles are case insensitive, but must otherwise be exact (the program will follow redirects but will not search for you). The easiest way to enter the correct values is to pull up the Wikipedia page and copy the article title or last part of the url (after the "en.wikipedia.org/wiki/"). 
+        A path will be found faster if the destination article is somewhat popular. Additionally, only a path resulting in the exact destination will be returned; a path to the article "USA" will probably take longer than a path to the article "United States" because the latter is more often linked to.
+        <p><strong>More: </strong>Path urls can also be easily saved and shared by using the form wikilinks.xyz/bfs/src_title/dst_title. 
+        More information including code and instructions to run locally can be found on <a href="https://github.com/stensonowen/WikiLinks">github</a>.
 	</article>
 	
 	<aside id="links">
