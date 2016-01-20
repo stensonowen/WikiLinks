@@ -65,8 +65,9 @@ void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache,
         //valid input
         Abs_path *ap = cache.contains(src, dst);
         if(ap){
-            cout << "2: src = " << ap->src << ";  dst = " << ap->dst << endl;
+            //cout << "2: src = " << ap->src << ";  dst = " << ap->dst << endl;
             ctx["path"] = t.htmlPath(ap->path);
+            delete ap;
         } else {
             //need to generate path
             Path path = t.search(src_, dst_);
@@ -74,19 +75,21 @@ void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache,
             ctx["path"] = t.htmlPath(path);
         }
     }
-    /*vector<Abs_path> aps = cache.retrieve(20, Cache::sort_by::popular);
+    vector<Abs_path> aps = cache.retrieve(20, Cache::sort_by::popular);
     std::string history;
     for(unsigned int i=0; i<aps.size(); i++){
         history += format_link(aps[i]);
     }
-    ctx["cache"] = history;*/
+    ctx["cache"] = history;
 }
 
 std::string format_link(const Abs_path &ap){
     //format to be selectable option
-    std::string result = "<form><input name=\"src\" value=\"" + ap.src + "\" readonly />";
+    std::string result = "\t\t<form action=\"/\" >";
+    result += "<input name=\"src\" value=\"" + ap.src + "\" readonly />";
     result += "&rarr; " + to_string(ap.path.size()) + " &rarr; ";   //subtract? 2?
     result += "<input name=\"dst\" value=\"" + ap.dst + "\" readonly /> &nbsp;";
-    result += "<input type=\"submit\" name=\"submit\" value=\"Submit\"/></form>\n";
+    result += "<input type=\"submit\" name=\"submit\" value=\"Submit\"/>";
+    result += "</form>\n";
     return result;
 }
