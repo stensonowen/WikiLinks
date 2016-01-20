@@ -144,23 +144,25 @@ vector<Abs_path> Cache::retrieve(unsigned int n, Cache::sort_by category){
 
 Abs_path* Cache::contains(const string &src, const string &dst){
     //check for presence of a path from src to dst;
-    //theoretically there should only be one, but the first will be returned
+    //theoretically there should only be one, but the first will be returned (on HEAP)
     //if none are found, should return NULL pointer 
     string cmd("SELECT * FROM CACHE where SRC='" + src + "' and DST='" + dst + "';");
     vector<Abs_path> results;
     rc = sqlite3_exec(db, cmd.c_str(), select_callback, (void*)&results, &err);
     verify("Contains");
-    if(results.size() > 0){
-        cout << "1: src = " << results[0].src << ";  dst = " << results[0].dst << endl;
-    }
     if(results.size() == 0) return NULL;
     //else return &(results[0]);
-    else{
+    /*else{
+        * returning pointer on stack results in data corruption;
+        * going out of scope I guess?
+        cout << "1: src = " << results[0].src << ";  dst = " << results[0].dst << endl;
         Abs_path *ap;
         ap = &results[0];
         cout << "1.5: src = " << ap->src << "; dst = " << ap->dst << endl; 
         return ap;
-    }
+        return new Abs_path(results[0]);
+    }*/
+    else return new Abs_path(results[0]);
 }
 
 void Cache::update(const Abs_path &ap){
