@@ -13,6 +13,7 @@
 #include<iostream>
 #include<map>
 #include<thread>
+#include<future>
 #include "../src/table.h"
 
 using namespace std;
@@ -51,11 +52,14 @@ class Queue{ //rename due to stl conflict?
         //Path emplace(const unsigned int s, const unsigned int d);
         //void update();
         Path enqueue(const unsigned int src, const unsigned int dst){
+            Path path;
             //first try to use all threads, as empty threads should be used first
             for(unsigned int i=0; i<SEARCH_THREADS; i++){
                 if(mtx[i].try_lock()){
                     //found an empty mutex
-                    Path path = table->search(src, dst);
+                    //silly functor workaround to get return value
+                    std::thread thread([&] {path = table->search(src, dst);} );
+                    thread.join();
                     mtx[i].unlock();
                     return path;
                 }
@@ -64,7 +68,8 @@ class Queue{ //rename due to stl conflict?
             //commit to wait for one of them
             int i = (src + dst) % SEARCH_THREADS;   //don't think overflow will matter
             mtx[i].lock();
-            Path path = table->search(src, dst);
+            std::thread thread([&] {path = table->search(src, dst);} );
+            thread.join();
             mtx[i].unlock();
             return path;
         }
