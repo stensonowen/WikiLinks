@@ -58,8 +58,9 @@ class Queue{ //rename due to stl conflict?
                 if(mtx[i].try_lock()){
                     //found an empty mutex
                     //silly functor workaround to get return value
-                    std::thread thread([&] {path = table->search(src, dst);} );
-                    thread.join();
+                    //std::thread thread([&] {path = table->search(src, dst);} );
+                    //thread.join();
+                    path = table->search(src, dst);
                     mtx[i].unlock();
                     return path;
                 }
@@ -68,8 +69,9 @@ class Queue{ //rename due to stl conflict?
             //commit to wait for one of them
             int i = (src + dst) % SEARCH_THREADS;   //don't think overflow will matter
             mtx[i].lock();
-            std::thread thread([&] {path = table->search(src, dst);} );
-            thread.join();
+            //std::thread thread([&] {path = table->search(src, dst);} );
+            //thread.join();
+            path = table->search(src, dst);
             mtx[i].unlock();
             return path;
         }

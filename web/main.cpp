@@ -78,7 +78,10 @@ void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache, Queue &q
         } else {
             //need to generate path
             //Path path = t.search(src_, dst_);
-            Path path = queue.enqueue(src_, dst_);
+            Path path;
+            std::thread thread([&] {path = queue.enqueue(src_, dst_); });
+            thread.join();
+            //Path path = queue.enqueue(src_, dst_);
             cache.insert(src, dst, path, -1);
             ctx["path"] = t.htmlPath(path);
         }
