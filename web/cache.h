@@ -117,7 +117,6 @@ void Cache::insert(const string &src, const string &dst, Path path, unsigned int
     query1 += "LAST,TIME) ";
     query2 += "'" + datetime() + "'," + to_string(t) + ");";
     string query(query1 + query2);
-    cout << query << endl;
     rc = sqlite3_exec(db, query.c_str(), select_callback, 0, &err);
     verify("Insert element");
     size++;

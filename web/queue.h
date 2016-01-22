@@ -1,125 +1,71 @@
 /*REQUIREMENTS
- * hold complex object: essentially a bunch of threads
- * searchable: determine if request is already being processed
- * a request should be popped after it finishes: FI?O (a list?)
- * custom object, I guess? must contain a thread object
- * additional set to keep track of src/dst values
+ * Should take src and dst hash as input
+ * Should perform t.search() on them and return a Path
+ * Should limit searches to a few threads at a time
+ *
+ * Optional TODO
+ *  Request object with public mutex member
+ *      Directory of processes could point to object: duplicate requests could join in-progress
+ *      Requests could use previous requests's mutexes as a line
+ *          This would actually be a queue rather than this thread-safe race condition
  */
 
 #include<iostream>
-#include<set>
-#include<list>
+#include<map>
 #include<thread>
 #include "../src/table.h"
+
 using namespace std;
 
 #define SEARCH_THREADS 2
 
+//request class
+//  have mutex and path pointer: can be used when duplicate finishes
+//
+/*
 class Request{
     private:
         unsigned int src, dst;
-        const Table *table;
+
     public:
-        std::thread proc;
+        mutex mtx;
         Path *path;
-        bool running;
-        Request(){};
-        Request(const Table *t, const unsigned int s, const unsigned int d){
+        pair<unsigned int,unsigned int> value(){return pair<unsigned int,unsigned int>(src,dst);}
+        Request(const unsigned int s, const unsigned int d){
             src = s;
             dst = d;
-            running = false;
             path = NULL;
-            table = t;
         }
-        bool equals(const unsigned int s, const unsigned int d){
-            return src == s && dst == d;
-        }
-        void search(){
-            running = true;
-            *path = table->search(src, dst);
-            running = false;
-        }
-        void start(){
-            proc = thread(&Request::search);
-        }
-        pair<unsigned int, unsigned int> value(){
-            return pair<unsigned int, unsigned int>(src,dst);
-        }
-};
+};*/
+
 
 class Queue{ //rename due to stl conflict?
     private:
-        //need quickly searchable list of in-progress elements
-        //will have to O(n) search through to actually find the right one,
-        // but this will make eliminating options fast
-        set<pair<unsigned int, unsigned int>> directory;
-        //structure to actually store in-progress requests
-        //must be fast/efficient/safe to pop nodes from anywhere
-        list<Request> requests;
-        //needs handle to table to pass on to request
+        //map from src/dst pairs to 
+        //map<pair<unsigned int,unsigned int>, *Request> in_progress;
+        mutex mtx[SEARCH_THREADS];
         const Table *table;
-        //not sure if this is necessary 
-        mutex mtx;
-        int live;
     public:
         Queue(const Table *t){ table = t; }
-        Path push_back(Request &request);
-        Path emplace(const unsigned int s, const unsigned int d);
-        void update();
+        //Path push_back(Request &request);
+        //Path emplace(const unsigned int s, const unsigned int d);
+        //void update();
+        Path enqueue(const unsigned int src, const unsigned int dst){
+            //first try to use all threads, as empty threads should be used first
+            for(unsigned int i=0; i<SEARCH_THREADS; i++){
+                if(mtx[i].try_lock()){
+                    //found an empty mutex
+                    Path path = table->search(src, dst);
+                    mtx[i].unlock();
+                    return path;
+                }
+            }
+            //all mutexes are full
+            //commit to wait for one of them
+            int i = (src + dst) % SEARCH_THREADS;   //don't think overflow will matter
+            mtx[i].lock();
+            Path path = table->search(src, dst);
+            mtx[i].unlock();
+            return path;
+        }
 };
-        
-void Queue::update(){
-    //remove all finished jobs;
-    for(list<Request>::iterator itr = requests.begin(); itr != requests.end(); itr++){
-        if(!itr->running){
-            if(itr->path){
-                //finished
-                mtx.lock();
-                requests.erase(itr);
-                live--;
-                mtx.unlock();
-            } else if(live < SEARCH_THREADS){
-                //not yet started and not at quota
-                mtx.lock();
-                itr->start();
-                live++;
-                mtx.unlock();
-            }
-        }
-        //if it's running leave it alone
-    }
-}
-
-Path Queue::push_back(Request &request){
-    if(directory.find(request.value()) == directory.end()){
-        //a process with the same return value already exists
-        //find it:
-        for(list<Request>::iterator itr = requests.begin(); itr != requests.end(); itr++){
-            if(itr->value() == request.value()){
-                //presumably if a thread is finished then .join() won't hurt
-                itr->proc.join(); 
-                return *(itr->path);
-            }
-        }
-    }
-    //else omitted intentionally: either way the right thread was not found
-    //create new entry
-    mtx.lock();
-    directory.insert(request.value());
-    requests.push_back(request);
-    mtx.unlock();
-    //start process if necessary
-    update();
-    //now wait
-    request.proc.join();    //problem joining an unstarted thread?
-    return *(request.path); //problem joining to param and not vector element?
-}
-
-Path Queue::emplace(const unsigned int s, const unsigned int d){
-    Request request(table, s, d);
-    push_back(request);
-    //push_back called .join()
-    return *(request.path);
-}
-
-

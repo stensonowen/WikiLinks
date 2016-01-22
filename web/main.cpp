@@ -9,9 +9,10 @@
 #include<iostream>
 #include "../src/table.h"
 #include "cache.h"
+#include "queue.h"
 
 using namespace std;
-void populate_ctx(crow::mustache::context&, Table&, Cache&, std::string, std::string);
+void populate_ctx(crow::mustache::context&, Table&, Cache&, Queue&, std::string, std::string);
 std::string format_link(const Abs_path &ap);
 
 int main(int argc, char* argv[]){
@@ -23,6 +24,7 @@ int main(int argc, char* argv[]){
     //construct data objects
     Table t(argv[1]);
     Cache cache("cache1.db");
+    Queue queue(&t);
 
     //construct web fw
     crow::SimpleApp app;
@@ -30,20 +32,20 @@ int main(int argc, char* argv[]){
 
     //define locations a la flask
     CROW_ROUTE(app, "/")
-        ([&t, &cache](const crow::request& req){
+        ([&t, &cache, &queue](const crow::request& req){
         std::string src, dst;
         crow::mustache::context ctx;
         src = (req.url_params.get("src") == nullptr ? "" : req.url_params.get("src"));
         dst = (req.url_params.get("dst") == nullptr ? "" : req.url_params.get("dst"));
-        populate_ctx(ctx, t, cache, src, dst);
+        populate_ctx(ctx, t, cache, queue, src, dst);
         return crow::mustache::load("bfs.html").render(ctx);
         });
 
     //search via url 
     CROW_ROUTE(app, "/bfs/<string>/<string>")
-        ([&t, &cache](const crow::request& req, crow::response& res, string src, string dst){
+        ([&t, &cache, &queue](const crow::request& req, crow::response& res, string src, string dst){
          crow::mustache::context ctx;
-         populate_ctx(ctx, t, cache, src, dst);
+         populate_ctx(ctx, t, cache, queue, src, dst);
          res.write(crow::mustache::load("bfs.html").render(ctx));
          res.end();
          });
@@ -54,10 +56,11 @@ int main(int argc, char* argv[]){
     return 0;
 }
 
-void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache, 
+void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache, Queue &queue,
         std::string src, std::string dst){
     //replace underscores with spaces
     //should be sufficient to convert article urls to titles (right?)
+    //TODO: url decode (+encode?)
     std::replace(src.begin(), src.end(), '_', ' ');
     std::replace(dst.begin(), dst.end(), '_', ' ');
     ctx["src"] = src;
@@ -74,7 +77,8 @@ void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache,
             delete ap;
         } else {
             //need to generate path
-            Path path = t.search(src_, dst_);
+            //Path path = t.search(src_, dst_);
+            Path path = queue.enqueue(src_, dst_);
             cache.insert(src, dst, path, -1);
             ctx["path"] = t.htmlPath(path);
         }

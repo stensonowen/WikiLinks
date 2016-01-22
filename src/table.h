@@ -75,6 +75,7 @@ std::string Table::contains(std::string src, std::string dst,
 
 std::string Table::htmlPath(const Path &path){
     //convert a vector of hashes into a formatted string
+    //TODO: corner case: no viable path: path.empty() <=> \neg\exists path ?
     std::string directions;
     for(unsigned int i=0; i<path.size(); i++)
         directions += "&nbsp;" + table[path[i]]->title + "<br>";
