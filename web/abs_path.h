@@ -11,7 +11,7 @@ class Abs_path{
     public:
         std::string src, dst, last;
         Path path;
-        int id, time, count;
+        int id, code, count;
         Abs_path(){ id=-1; };
         //~Abs_path();
         void add(unsigned int x){ 
@@ -30,12 +30,12 @@ class Abs_path{
                 }
             }
             last = data[13];
-            time = atoi(data[14]);
+            code = atoi(data[14]);
             count = atoi(data[15]);
         }
         Abs_path(const Abs_path &o):src(o.src), dst(o.dst), path(o.path), last(o.last) {
             id = o.id;
-            time = o.time;
+            code = o.code;
             count = o.count;
         }
         Abs_path& operator=(const Abs_path &other){
@@ -44,7 +44,7 @@ class Abs_path{
             dst = other.dst;
             path = other.path;
             last = other.last;
-            time = other.time;
+            code = other.code;
             count = other.count;
         }
 };
