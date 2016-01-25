@@ -78,6 +78,7 @@ void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache, Queue &q
         Abs_path *ap = cache.contains(src, dst);
         if(ap){
             //cout << "2: src = " << ap->src << ";  dst = " << ap->dst << endl;
+            cache.update(*ap);
             ctx["path"] = t.htmlPath(ap->path, ap->code);
             delete ap;
         } else {
@@ -98,8 +99,10 @@ void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache, Queue &q
     }
     vector<Abs_path> aps = cache.retrieve(20, Cache::sort_by::popular);
     std::string history;
-    for(unsigned int i=0; i<aps.size(); i++){
-        history += format_link(aps[i]);
+    //for(unsigned int i=0; i<aps.size(); i++){
+    for(auto itr = aps.rbegin(); itr != aps.rend(); itr++){
+        //should go backwards I guess
+        history += format_link(*itr);
     }
     ctx["cache"] = history;
 }
