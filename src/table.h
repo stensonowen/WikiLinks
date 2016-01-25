@@ -33,19 +33,19 @@ class Table{
         Table(char *input_file);
         ~Table();
         unsigned int resolve_collisions(const std::string &title, int = -1);
-        void printPath(std::string src, std::string dst);
-        std::string htmlPath(std::string src, std::string dst);
+        //void printPath(std::string src, std::string dst);
+        //std::string htmlPath(std::string src, std::string dst);
         void details();
-        std::string htmlPath(const Path &path);
+        std::string htmlPath(const Path &path, int code);
         std::string contains(std::string src,std::string dst,unsigned int &src_,unsigned int &dst_);
-        Path search(unsigned int src, unsigned int dst) const;
+        std::pair<Path,int> search(unsigned int src, unsigned int dst) const;
 };
 
-Path Table::search(unsigned int src, unsigned int dst) const{
+std::pair<Path,int> Table::search(unsigned int src, unsigned int dst) const{
     BFS *bfs = new BFS(table, src, dst);
     std::pair<Path, int> results = bfs->SHP();
     delete bfs;
-    return results.first;
+    return results;
 }
 
 std::string Table::contains(std::string src, std::string dst,
@@ -73,12 +73,20 @@ std::string Table::contains(std::string src, std::string dst,
     }
 }
 
-std::string Table::htmlPath(const Path &path){
+std::string Table::htmlPath(const Path &path, int code){
     //convert a vector of hashes into a formatted string
     //TODO: corner case: no viable path: path.empty() <=> \neg\exists path ?
     std::string directions;
-    for(unsigned int i=0; i<path.size(); i++)
-        directions += "&nbsp;" + table[path[i]]->title + "<br>";
+    if(code == -2) directions = "&nbsp;There is no path from the source article to the destination.";
+    else if(code > 0) directions = "&nbsp;The search was terminated after " 
+        + std::to_string(code) + " iterations"; 
+    else {
+        if(path.size() == 0)
+            directions += "&nbsp;The source and destination articles were the same";
+        else
+            for(unsigned int i=0; i<path.size(); i++)
+                directions += "&nbsp;" + table[path[i]]->title + "<br>";
+    }
     return directions;
 }
 
@@ -92,7 +100,7 @@ void Table::details(){
     std::cout << "Total number of links: " << l << std::endl;
 }
 
-std::string Table::htmlPath(std::string src, std::string dst){
+/*std::string Table::htmlPath(std::string src, std::string dst){
     if(src.empty() && dst.empty()) return "";
     else if(src.empty()) return "Invalid source";
     else if(dst.empty()) return "Invalid destination";
@@ -118,9 +126,9 @@ std::string Table::htmlPath(std::string src, std::string dst){
             directions += "\t\t&nbsp;" + table[results.first[i]]->title + "<br>\n";
         return directions;
     }
-}
+}*/
 
-void Table::printPath(std::string src, std::string dst){
+/*void Table::printPath(std::string src, std::string dst){
     clock_t t = clock();
     //capitalize
     transform(src.begin(), src.end(), src.begin(), ::toupper);
@@ -159,7 +167,7 @@ void Table::printPath(std::string src, std::string dst){
         t = clock() - t;
         std::cout << " Search time: " << (float)t / CLOCKS_PER_SEC << " seconds.\n";
     }
-}
+}*/
 
 void Table::read(std::string file){
     //format should be <page> \n title \n #_links \n links...

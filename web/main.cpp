@@ -14,6 +14,7 @@
 using namespace std;
 void populate_ctx(crow::mustache::context&, Table&, Cache&, Queue&, std::string, std::string);
 std::string format_link(const Abs_path &ap);
+void thread_test(){ for(long i=0; i<10000000000; i++) {} }
 
 int main(int argc, char* argv[]){
     //construct table:
@@ -26,6 +27,10 @@ int main(int argc, char* argv[]){
     Cache cache("cache1.db");
     Queue queue(&t);
 
+    //cout << "Starting test" << endl;
+    //thread_test();
+    //cout << "Done with test" << endl;
+    
     //construct web fw
     crow::SimpleApp app;
     crow::mustache::set_base("./templates/");
@@ -73,17 +78,22 @@ void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache, Queue &q
         Abs_path *ap = cache.contains(src, dst);
         if(ap){
             //cout << "2: src = " << ap->src << ";  dst = " << ap->dst << endl;
-            ctx["path"] = t.htmlPath(ap->path);
+            ctx["path"] = t.htmlPath(ap->path, ap->code);
             delete ap;
         } else {
             //need to generate path
             //Path path = t.search(src_, dst_);
-            Path path;
+            
+            //cout << "Starting test" << endl;
+            //thread_test();
+            //cout << "Done with test" << endl;
+            
+            std::pair<Path,int> path;
             std::thread thread([&] {path = queue.enqueue(src_, dst_); });
             thread.join();
             //Path path = queue.enqueue(src_, dst_);
-            cache.insert(src, dst, path, -1);
-            ctx["path"] = t.htmlPath(path);
+            cache.insert(src, dst, path.first, path.second);
+            ctx["path"] = t.htmlPath(path.first, path.second);
         }
     }
     vector<Abs_path> aps = cache.retrieve(20, Cache::sort_by::popular);
@@ -104,3 +114,4 @@ std::string format_link(const Abs_path &ap){
     result += "</form>\n";
     return result;
 }
+

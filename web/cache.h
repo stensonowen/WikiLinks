@@ -22,7 +22,7 @@ class Cache{
         string datetime();
     public:
         Abs_path* contains(const string &src, const string &dst);
-        void insert(const string &src, const string &dst, Path path, unsigned int time);
+        void insert(const string &src, const string &dst, Path path, unsigned int code);
         void update(const Abs_path &ap);
         enum sort_by { recent, popular, length };
         vector<Abs_path> retrieve(unsigned int n, sort_by category);
@@ -91,7 +91,7 @@ Cache::Cache(const string &file){
         "P8     INT     DEFAULT -1,"
         "P9     INT     DEFAULT -1,"
         "LAST   DATETIME NOT NULL,"
-        "TIME   INT     DEFAULT 0,"
+        "CODE   INT     DEFAULT 0,"
         "COUNT  INT     DEFAULT 1);";
     rc = sqlite3_exec(db, cmd, select_callback, 0, &err);
     verify("Create table"); 
@@ -102,7 +102,7 @@ Cache::Cache(const string &file){
     verify("Count");
 }
 
-void Cache::insert(const string &src, const string &dst, Path path, unsigned int t){
+void Cache::insert(const string &src, const string &dst, Path path, unsigned int code){
     //construct row object from src/dst/path/time and insert it into the
     //user request should never get to this point unless both src and dst are valid articles
     //if someone can pull off an sql injection/XSS using only valid wikipedia article titles, 
@@ -114,8 +114,8 @@ void Cache::insert(const string &src, const string &dst, Path path, unsigned int
         query1 += "P" + to_string(i) + ",";
         query2 += to_string(path[i]) + ",";
     }
-    query1 += "LAST,TIME) ";
-    query2 += "'" + datetime() + "'," + to_string(t) + ");";
+    query1 += "LAST,CODE) ";
+    query2 += "'" + datetime() + "'," + to_string(code) + ");";
     string query(query1 + query2);
     rc = sqlite3_exec(db, query.c_str(), select_callback, 0, &err);
     verify("Insert element");
@@ -127,12 +127,12 @@ vector<Abs_path> Cache::retrieve(unsigned int n, Cache::sort_by category){
     vector<Abs_path> results;
     string cmd("SELECT * FROM CACHE ORDER BY ");
     if(category == recent){ //length popular
-        cmd += "LAST DESC "; //ASC?
+        cmd += "LAST ASC "; //ASC?
     } else if(category == popular){
-        cmd += "COUNT DESC ";
+        cmd += "COUNT ASC ";
     } else if(category == length){
         for(unsigned int i=9; i>0; i--)
-            cmd += "P" + to_string(i) + " DESC,";
+            cmd += "P" + to_string(i) + " ASC,";
         cmd += "P0 DESC ";
     }
     cmd += "LIMIT " + to_string(n) + ";";

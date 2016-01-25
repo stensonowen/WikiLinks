@@ -51,8 +51,8 @@ class Queue{ //rename due to stl conflict?
         //Path push_back(Request &request);
         //Path emplace(const unsigned int s, const unsigned int d);
         //void update();
-        Path enqueue(const unsigned int src, const unsigned int dst){
-            Path path;
+        std::pair<Path,int> enqueue(const unsigned int src, const unsigned int dst){
+            std::pair<Path,int> path;
             //first try to use all threads, as empty threads should be used first
             for(unsigned int i=0; i<SEARCH_THREADS; i++){
                 if(mtx[i].try_lock()){
