@@ -97,7 +97,8 @@ void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache, Queue &q
             ctx["path"] = t.htmlPath(path.first, path.second);
         }
     }
-    vector<Abs_path> aps = cache.retrieve(20, Cache::sort_by::popular);
+    //vector<Abs_path> aps = cache.retrieve(20, Cache::sort_by::popular);
+    vector<Abs_path> aps = cache.retrieve(20, Cache::sort_by::length);
     std::string history;
     //for(unsigned int i=0; i<aps.size(); i++){
     for(auto itr = aps.rbegin(); itr != aps.rend(); itr++){

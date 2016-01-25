@@ -4,7 +4,7 @@
 #include<iostream>
 #include<vector>
 
-#define MAX_DEPTH 10
+#define MAX_DEPTH 10 
 #define MAX_ITERS 100
 #define NUM_MUTEX 50
 #define UNIT 10

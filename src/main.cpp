@@ -19,7 +19,11 @@ int main(int argc, char* argv[]){
         std::cout << "Enter dst: \t";
         getline(std::cin, dst);
         if(dst.empty()) break;
-        t.printPath(src, dst);
+        //t.printPath(src, dst);
+        unsigned int src_, dst_;
+        std::string result = t.contains(src, dst, src_, dst_);
+        std::pair<Path,int> p = t.search(src_, dst_);
+        std::cout << t.htmlPath(p.first, p.second) << std::endl;
     }
     return 0;
 }
