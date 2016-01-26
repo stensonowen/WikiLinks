@@ -78,8 +78,8 @@ std::string Table::htmlPath(const Path &path, int code){
     //TODO: corner case: no viable path: path.empty() <=> \neg\exists path ?
     std::string directions;
     if(code == -2) directions = "&nbsp;There is no path from the source article to the destination.";
-    else if(code > 0) directions = "&nbsp;The search was terminated after " 
-        + std::to_string(code) + " iterations"; 
+    else if(code < -2) directions = "&nbsp;The search was terminated after " 
+        + std::to_string(-1*code) + " iterations"; 
     else {
         if(path.size() == 0)
             directions += "&nbsp;The source and destination articles were the same";

@@ -86,10 +86,11 @@ void BFS::iterate(){
 
 std::pair<Path,int> BFS::SHP(){
     /*code
+     * <-2  terminated after n iterations
      * -2   provably impossible
      * -1   in progress
      *  0   success
-     * n>0  terminated after n iterations
+     * >0   succeeded after n iterations
      *
      */
     code = -1;  //in progress
@@ -102,7 +103,8 @@ std::pair<Path,int> BFS::SHP(){
         if(code != -1)      break;
         iterate();
     }
-    if(code == -1) code = i;
+    if(code == -1) code = -1*i;
+    else if(code == 0) code = i;
     clear();
     //TODO
     //for(int i=0; i<path.size(); i++) std::cout << "  " << path[i];
