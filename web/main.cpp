@@ -112,7 +112,13 @@ std::string format_link(const Abs_path &ap){
     //format to be selectable option
     std::string result = "\t\t<form action=\"/\" >";
     result += "<input name=\"src\" value=\"" + ap.src + "\" readonly />";
-    result += "&rarr; " + to_string(ap.path.size()) + " &rarr; ";   //subtract? 2?
+    //result += "&rarr; " + to_string(ap.path.size()) + " &rarr; ";   //subtract? 2?
+    result += "&rarr; ";
+    if(ap.path.size() == 0){
+        if(ap.src == ap.dst) result += "0";
+        else result += "?";
+    } else result += to_string(ap.path.size()-1);
+    result += " &rarr; ";
     result += "<input name=\"dst\" value=\"" + ap.dst + "\" readonly /> &nbsp;";
     result += "<input type=\"submit\" name=\"submit\" value=\"Submit\"/>";
     result += "</form>\n";

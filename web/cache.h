@@ -22,7 +22,7 @@ class Cache{
         string datetime();
     public:
         Abs_path* contains(const string &src, const string &dst);
-        void insert(const string &src, const string &dst, Path path, unsigned int code);
+        void insert(const string &src, const string &dst, Path path, int code);
         void update(const Abs_path &ap);
         enum sort_by { recent, popular, length };
         vector<Abs_path> retrieve(unsigned int n, sort_by category);
@@ -91,7 +91,7 @@ Cache::Cache(const string &file){
         "P8     INT     DEFAULT -1,"
         "P9     INT     DEFAULT -1,"
         "LAST   DATETIME NOT NULL,"
-        "CODE   INT     DEFAULT 0,"
+        "CODE   INTEGER DEFAULT 0,"
         "COUNT  INT     DEFAULT 1);";
     rc = sqlite3_exec(db, cmd, select_callback, 0, &err);
     verify("Create table"); 
@@ -102,7 +102,7 @@ Cache::Cache(const string &file){
     verify("Count");
 }
 
-void Cache::insert(const string &src, const string &dst, Path path, unsigned int code){
+void Cache::insert(const string &src, const string &dst, Path path, int code){
     //construct row object from src/dst/path/time and insert it into the
     //user request should never get to this point unless both src and dst are valid articles
     //if someone can pull off an sql injection/XSS using only valid wikipedia article titles, 
@@ -134,6 +134,7 @@ vector<Abs_path> Cache::retrieve(unsigned int n, Cache::sort_by category){
         for(unsigned int i=9; i>0; i--)
             cmd += "P" + to_string(i) + " ASC,";
         cmd += "P0 DESC ";
+
     }
     cmd += "LIMIT " + to_string(n) + ";";
     rc = sqlite3_exec(db, cmd.c_str(), select_callback, (void*)&results, &err);
