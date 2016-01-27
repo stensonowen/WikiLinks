@@ -77,22 +77,18 @@ void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache, Queue &q
         //valid input
         Abs_path *ap = cache.contains(src, dst);
         if(ap){
-            //cout << "2: src = " << ap->src << ";  dst = " << ap->dst << endl;
             cache.update(*ap);
             ctx["path"] = t.htmlPath(ap->path, ap->code);
             delete ap;
         } else {
-            //need to generate path
-            //Path path = t.search(src_, dst_);
-            
-            //cout << "Starting test" << endl;
-            //thread_test();
-            //cout << "Done with test" << endl;
-            
-            std::pair<Path,int> path;
-            std::thread thread([&] {path = queue.enqueue(src_, dst_); });
-            thread.join();
+            //need to generate path because it's not cached
+            std::pair<Path,int> path = t.search(src_, dst_);
+            //std::pair<Path,int> path;
+            //std::thread thread([&] {path = queue.enqueue(src_, dst_); });
+            //thread.join();
             //Path path = queue.enqueue(src_, dst_);
+            //should check again that search not in cache? One might have been done at the same time,
+            // which would look kinda ugly in 'history' pane
             cache.insert(src, dst, path.first, path.second);
             ctx["path"] = t.htmlPath(path.first, path.second);
         }
