@@ -101,7 +101,8 @@ void populate_ctx(crow::mustache::context &ctx, Table &t, Cache &cache, Queue &q
     vector<Abs_path> aps = cache.retrieve(20, Cache::sort_by::length);
     std::string history;
     //for(unsigned int i=0; i<aps.size(); i++){
-    for(auto itr = aps.rbegin(); itr != aps.rend(); itr++){
+    //for(auto itr = aps.rbegin(); itr != aps.rend(); itr++){
+    for(auto itr = aps.begin(); itr != aps.end(); itr++){
         //should go backwards I guess
         history += format_link(*itr);
     }

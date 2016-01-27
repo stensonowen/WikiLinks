@@ -131,10 +131,10 @@ vector<Abs_path> Cache::retrieve(unsigned int n, Cache::sort_by category){
     } else if(category == popular){
         cmd += "COUNT ASC ";
     } else if(category == length){
-        for(unsigned int i=9; i>0; i--)
+        /*for(unsigned int i=9; i>0; i--)
             cmd += "P" + to_string(i) + " ASC,";
-        cmd += "P0 DESC ";
-
+        cmd += "P0 DESC ";*/
+        cmd += "CODE DESC ";
     }
     cmd += "LIMIT " + to_string(n) + ";";
     rc = sqlite3_exec(db, cmd.c_str(), select_callback, (void*)&results, &err);
