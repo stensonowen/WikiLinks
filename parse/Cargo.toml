@@ -1,0 +1,11 @@
+[package]
+name = "parse"
+version = "0.1.0"
+authors = ["Owen Stenson <stensonowen@gmail.com>"]
+description = "Extract important information from Wikimedia SQL dumps for static lookup tables"
+
+[dependencies]
+phf = "0.7.20"
+regex = "0.1.80"
+mysql = "7.1.2"
+
