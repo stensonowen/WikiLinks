@@ -1,18 +1,39 @@
-extern crate regex;
-use regex::Regex;
-
-#[macro_use]
-extern crate mysql;
-use mysql::OptsBuilder;
-
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 
-
 #[cfg(test)]
 mod tests {
+    use std::io::{BufRead, BufReader, Read};
+    use std::fs::File;
+
     #[test]
     fn it_works() {
+        // `wc -L`: 1,036,792 bytes after 8 minutes
+        let filepath = "/home/qj/wikidata/enwiki-20161201-pagelinks.sql";
+        let f = File::open(filepath).unwrap();
+        let r = BufReader::new(f);
+        for s in r.split(b',').take(5) {
+            println!("\t`{}`", String::from_utf8(s.unwrap()).unwrap());
+        }
+    }
+
+    #[test]
+    fn read_and_do_nothing() {
+        //line by line BR w/ printing every 1k: 82.5 minutes, 37468 lines
+        //byte by byte BR w/ no printing: 
+        let filepath = "/home/qj/wikidata/enwiki-20161201-pagelinks.sql";
+        let f = File::open(filepath).unwrap();
+        let r = BufReader::new(f);
+        //let mut v = Vec<u8>::with_capacity(10_000);
+        //for (i,_) in r.lines().enumerate() {
+            //if i%1000 == 0 {
+            //    println!("\t{}", i);
+            //}
+        let mut bytes = 0u64;    
+        for b in r.bytes() {
+            bytes += 1;
+        }
+        println!("bytes: {}", bytes);
     }
 }
 
@@ -23,6 +44,7 @@ fn parse_pagelinks() {
     let r = BufReader::new(f);
 }
 
+/*
 
 fn parse_pagelinks_regex(r: BufReader<File>) {
     //regex: match mysql entry of the form (int,int,'string (don\'t forget escapes)',int)
@@ -42,6 +64,8 @@ fn parse_pagelinks_regex(r: BufReader<File>) {
     //   the larger full English dump in ~30 minutes in 1 thread, so this shouldn't take so
     //   long. Maybe the long lines are also major caching problems? Anyway, the next step
     //   is probably to write a new Regex with Cursors or something. And maybe multithread it.
+    extern crate regex;
+    use regex::Regex;
     let re = Regex::new(r"\((\d)+,-?\d+,'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)").unwrap();
     let mut count = 0;
 
@@ -71,6 +95,9 @@ fn parse_pagelinks_mysql(r: BufReader<File>) {
     //      (it was maxing out IO not always using much CPU or memory)
     //      ((it was in a spruced up VM, but maybe the hard drive should have been 'fixed'?
 
+    #[macro_use]
+    extern crate mysql;
+    use mysql::OptsBuilder;
     let mut builder = OptsBuilder::new();
     builder.user(Some("root")).pass(Some("yoursql")).db_name(Some("smp_pagelinks"));
     let pool = mysql::Pool::new(builder).unwrap();
@@ -83,3 +110,4 @@ fn parse_pagelinks_mysql(r: BufReader<File>) {
     }
     println!("Count: {}", count);
 }
+*/

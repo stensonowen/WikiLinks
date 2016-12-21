@@ -7,5 +7,5 @@ description = "Extract important information from Wikimedia SQL dumps for static
 [dependencies]
 phf = "0.7.20"
 regex = "0.1.80"
-mysql = "7.1.2"
+#mysql = "7.1.2"
 
