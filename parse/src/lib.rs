@@ -31,6 +31,17 @@ fn parse_pagelinks_regex(r: BufReader<File>) {
     //  parses mysql dump directly; only preparation is downloading / gunzipping data
     // It seems this finds all entries that parse_pagelinks_mysql does. 
     //  However, this remains to be proven.
+    // This finds every result that parse_pagelinks_mysql does on the simple wiki.
+    //  However, that can't be tested on the full english wiki: the mysql parser
+    //   requires days to load everything into memory (and requires tons of it),
+    //   and this ran for ~60 hours before returning: ```thread 'main' panicked at 'called
+    //      `Result::unwrap()` on an `Err` value: Error { repr: Custom(Custom { kind: 
+    //      InvalidData, error: StringError("stream did not contain valid UTF-8") }) }',
+    //      ../src/libcore/result.rs:788`, and returning error code 101
+    //  Supposedly this is because of the subgroup matching. A python parser can go through
+    //   the larger full English dump in ~30 minutes in 1 thread, so this shouldn't take so
+    //   long. Maybe the long lines are also major caching problems? Anyway, the next step
+    //   is probably to write a new Regex with Cursors or something. And maybe multithread it.
     let re = Regex::new(r"\((\d)+,-?\d+,'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)").unwrap();
     let mut count = 0;
 
