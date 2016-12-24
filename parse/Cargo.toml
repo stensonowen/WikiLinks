@@ -8,4 +8,5 @@ description = "Extract important information from Wikimedia SQL dumps for static
 phf = "0.7.20"
 regex = "0.1.80"
 #mysql = "7.1.2"
+nom = "2.0.1"
 
