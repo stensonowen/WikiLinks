@@ -2,74 +2,21 @@
 
 use std::io::{BufRead, BufReader};
 use std::fs::File;
+
 extern crate test;
 extern crate regex;
-
 #[macro_use] extern crate nom;
+
+/* Process:
+ *  0   run ./retrieve.sh to download/gunzip everything
+ *  1   read through *page.sql to map every page_id to an article object
+ *  2   read through *redirect.sql to mark redirects
+ *  3   read through *pagelinks.sql to make note of every child link (in both directions?)
+ *  4   output the entire thing into a format that `phc` likes
+ */
 
 #[cfg(test)]
 mod tests {
-    use regex::Regex;
-    use std::io::{BufRead, BufReader, Read};
-    use std::fs::File;
-    use test::Bencher;
-
-    #[test]
-    fn it_works() {
-        // `wc -L`: 1,036,792 bytes after 8 minutes
-        let filepath = "/home/qj/wikidata/enwiki-20161201-pagelinks.sql";
-        let f = File::open(filepath).unwrap();
-        let r = BufReader::new(f);
-        for s in r.split(b',').take(5) {
-            println!("\t`{}`", String::from_utf8(s.unwrap()).unwrap());
-        }
-    }
-
-    #[bench]
-    fn line_regex(b: &mut Bencher) {
-        let filepath = "/home/owen/shared/code/rust/wikilinks/one_line";
-        let mut f = File::open(filepath).unwrap();
-        let re = Regex::new(r"\((\d)+,-?\d+,'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)").unwrap();
-        b.iter(|| {
-            let mut s = String::new();
-            f.read_to_string(&mut s);
-            let mut count = 0;
-            let m = re.captures_iter(&s);
-            for c in m {
-                let _dst = c.at(2).unwrap();
-                let _src: u32 = c.at(1).unwrap().parse().unwrap();
-                count += 1;
-            }
-            println!("Count: {}", count);
-            //29465
-        })
-    }
-
-    #[test]
-    fn read_and_do_nothing() {
-        // English  Wiki Pagelinks: 37k lines, 38G bytes, qj-deb-serv
-        //line by line BR w/ printing every 1k: 82.5 minutes, 37468 lines
-        //byte by byte BR w/ no printing: 182 minutes, 38,132,820,826 bytes
-        //
-        // Simple Wiki Pagelinks: 314 lines, 264M bytes, stenso-deb-laptop
-        //
-        //byte by byte BR: 70 seconds
-        //
-        //let filepath = "/home/qj/wikidata/enwiki-20161201-pagelinks.sql";
-        let filepath = "/home/owen/shared/code/rust/wikilinks/simplewiki-20161201-pagelinks.sql";
-        let f = File::open(filepath).unwrap();
-        let r = BufReader::new(f);
-        //let mut v = Vec<u8>::with_capacity(10_000);
-        //for (i,_) in r.lines().enumerate() {
-            //if i%1000 == 0 {
-            //    println!("\t{}", i);
-            //}
-        let mut bytes = 0u64;
-        for b in r.bytes() {
-            bytes += 1;
-        }
-        println!("bytes: {}", bytes);
-    }
 }
 
 fn parse_pagelinks() {
@@ -186,3 +133,32 @@ fn parse_pagelinks_nom(r: BufReader<File>) {
 }
 
 
+fn parse_pagelinks_regex_lossy(mut r: BufReader<File>) {
+    //like parse_pagelinks_regex but can tolerate occasional utf-16 characters
+    // which are extremely uncommon but not non-existant in the pagelinks dump
+    //Also I think this should be faster
+    //When built in release mode we find 1022340437 links from 38GB in 90 
+    
+    //our buffer size is ~20% greater than the longest line we've found
+    let mut buffer = Vec::<u8>::with_capacity(1_250_000);
+	
+    //keep track of all the matching links we find
+    let mut count = 0u64;
+    let re = regex::Regex::new(r"\((\d)+,-?\d+,'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)").unwrap();
+
+    while r.read_until(b'\n', &mut buffer).unwrap() > 0 {
+        {
+            let s: Cow<str> = String::from_utf8_lossy(&buffer);
+            let m = re.captures_iter(&s);
+            for c in m {
+                let dst: &str = c.at(2).unwrap();
+                let src: u32  = c.at(1).unwrap().parse().unwrap();
+                count += 1;
+            }
+        }
+        buffer.clear();
+    }
+    println!("count: {}", count);
+}
+
+    
