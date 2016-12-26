@@ -2,10 +2,9 @@
 
 use std::io::{BufRead, BufReader};
 use std::fs::File;
+use std::borrow::Cow;
 
-extern crate test;
 extern crate regex;
-#[macro_use] extern crate nom;
 
 /* Process:
  *  0   run ./retrieve.sh to download/gunzip everything
@@ -15,123 +14,12 @@ extern crate regex;
  *  4   output the entire thing into a format that `phc` likes
  */
 
-#[cfg(test)]
-mod tests {
-}
-
 fn parse_pagelinks() {
     let filename = "simplewiki-20161201-pagelinks.sql";
     println!("Opening `{}`...", filename);
     let f = File::open(filename).unwrap();
     let r = BufReader::new(f);
 }
-
-/*
-
-fn parse_pagelinks_regex(r: BufReader<File>) {
-    //regex: match mysql entry of the form (int,int,'string (don\'t forget escapes)',int)
-    //  only first int (src page_id) and str (dst article title) are important to us
-    //      the other integers are namespaces
-    //  parses mysql dump directly; only preparation is downloading / gunzipping data
-    // It seems this finds all entries that parse_pagelinks_mysql does. 
-    //  However, this remains to be proven.
-    // This finds every result that parse_pagelinks_mysql does on the simple wiki.
-    //  However, that can't be tested on the full english wiki: the mysql parser
-    //   requires days to load everything into memory (and requires tons of it),
-    //   and this ran for ~60 hours before returning: ```thread 'main' panicked at 'called
-    //      `Result::unwrap()` on an `Err` value: Error { repr: Custom(Custom { kind: 
-    //      InvalidData, error: StringError("stream did not contain valid UTF-8") }) }',
-    //      ../src/libcore/result.rs:788`, and returning error code 101
-    //  Supposedly this is because of the subgroup matching. A python parser can go through
-    //   the larger full English dump in ~30 minutes in 1 thread, so this shouldn't take so
-    //   long. Maybe the long lines are also major caching problems? Anyway, the next step
-    //   is probably to write a new Regex with Cursors or something. And maybe multithread it.
-    extern crate regex;
-    use regex::Regex;
-    let re = Regex::new(r"\((\d)+,-?\d+,'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)").unwrap();
-    let mut count = 0;
-
-    for line in r.lines() {
-        let l = line.unwrap();
-        let m = re.captures_iter(&l);
-        for c in m {
-            let dst = c.at(2).unwrap();
-            let src: u32 = c.at(1).unwrap().parse().unwrap();
-            println!("Found match: `{}`", c.at(0).unwrap());
-            println!("	src page_id: \t`{}`", src);
-            println!("  dst title: \t`{}`", dst);
-            count += 1;
-        }
-    }
-    println!("Count: {}", count);
-}
-
-fn parse_pagelinks_mysql(r: BufReader<File>) {
-    //mysql: iterate through entries of mysql dump 
-    //  (iterating is slightly faster this was than with regex but requires more setup)
-    // must be preceded by:
-    //      mysql> CREATE DATABASE en_pagelinks;
-    //      $ mysql -p smp_pagelinks < simplewiki-20161201-pagelinks.sql
-    //  which takes a long time for large-ish dumps
-    //  I terminated the enwiki-*-pagelinks.sql loading after ~48 hours
-    //      (it was maxing out IO not always using much CPU or memory)
-    //      ((it was in a spruced up VM, but maybe the hard drive should have been 'fixed'?
-
-    #[macro_use]
-    extern crate mysql;
-    use mysql::OptsBuilder;
-    let mut builder = OptsBuilder::new();
-    builder.user(Some("root")).pass(Some("yoursql")).db_name(Some("smp_pagelinks"));
-    let pool = mysql::Pool::new(builder).unwrap();
-    let mut count = 0;
-    for i in pool.prep_exec(r"SELECT * FROM pagelinks", ()).unwrap() {
-        let row = i.unwrap();
-        let (from, _, title, _): (u32,u32,String,u32) = mysql::from_row(row);
-        println!("`{}` \t->\t`{}`", from, title);
-        count += 1;
-    }
-    println!("Count: {}", count);
-}
-*/
-
-use std::borrow::Cow;
-
-#[derive(Debug)]
-struct Link<'a> {
-    src: u32,
-    dst: Cow<'a, str>,
-}
-
-pub fn str_to_u32(b: &[u8]) -> u32 {
-    //only accepts [0-9] (no commas, no negatives)
-    use std::str::from_utf8;
-    let s = from_utf8(b).unwrap();
-    u32::from_str_radix(s, 10).unwrap()
-}
-
-fn parse_pagelinks_nom(r: BufReader<File>) {
-    use nom::{IResult, digit};
-
-    named!(title, escaped!(is_not!("\\'"), '\\', is_a!("\"n\\")));
-    named!(pos_num <&[u8], u32>, map!(recognize!(digit), str_to_u32));
-    named!(link(&[u8]) -> Link, do_parse!(
-            tag!("(")   >>
-            recognize!(digit) >>
-            tag!(",")   >>
-            x: pos_num  >>
-            tag!(",")   >>
-            y: title    >>
-            tag!(",")  >>
-            recognize!(digit) >>
-            tag!(")")   >>
-            ( Link{ src:x, dst: String::from_utf8_lossy(y) } )
-            ));
-
-    for line in r.lines() {
-        let l = line.unwrap();
-    }
-}
-
 
 fn parse_pagelinks_regex_lossy(mut r: BufReader<File>) {
     //like parse_pagelinks_regex but can tolerate occasional utf-16 characters
@@ -161,4 +49,56 @@ fn parse_pagelinks_regex_lossy(mut r: BufReader<File>) {
     println!("count: {}", count);
 }
 
+fn parse_pages_regex_lossy(mut r: BufReader<File>, is_simple: bool) {
+    //successfully locates all 408784 entries in the simple and 40966811 in the english
+    //      simple  = 408739 + 45 = 408784
+    //      english = 40962071 + 4740 = 40966811 == 40966811
+
+	// we make a few assumptions here; matches everything in the english page.sql dump
+    let page_id     = r"(\d+)";     //captured, positive non-null number
+    let page_nmsp   = r"(\d+)";     //captured; should never be negative (0-15 ∪ 1000-2**31)
+    let page_title  = r"'([^'\\]*(?:\\.[^'\\]*)*)'"; //surrounded by `'`s, which can be escaped
+    let page_restrs = r"'.*?'"; 	//not always empty, but never has escaped quotes
+    let page_counter= r"\d+";       //non-captured positive number; count will be wrong 
+    let page_is_redr= r"(0|1)";     // 0 or 1, to indicate binary value; capture? usefulness?
+    let page_is_new = r"(?:0|1)";   // 0 or 1; info is useless to us
+    let page_random = r"[\d\.]+";   //random(?) unsigned double
+    let page_tchd   = r"'\d+'";     //timestamp; irrelevant; cannot contain `\'`s (?)
+    let page_ln_upd = r"(?:'\d+'|NULL)"; //another irrelevant timestamp, but it can be null
+    let page_latest = r"\d+";       //unsigned int: latest revision number
+    let page_len    = r"\d+";       //unsigned int: page len (or weird value)
+    let page_ntc    = r"(?:0|1)";   //not sure what it is. should be commented in the English wiki
+    let page_cont_md= r"(?:'.*?'|NULL)"; //probably never contains escaped quotes?
+    let page_lang   = r"NULL";  	//think it'll always be null?
     
+    let mut re_body = vec![page_id, page_nmsp, page_title, 
+        page_restrs, page_counter,  page_is_redr, 
+        page_is_new, page_random,   page_tchd, 
+        page_ln_upd, page_latest,   page_len, 
+       /*page_ntc,*/ page_cont_md,  page_lang
+    ];
+    if is_simple {
+        re_body.insert(12, page_ntc);
+    }
+
+    let re_query = format!(r"\({}\)", re_body.join(","));
+    let re = regex::Regex::new(&re_query).unwrap();
+
+    let mut buffer = Vec::<u8>::with_capacity(1_250_000);
+	
+    //keep track of all the matching links we find
+    let mut count = 0u64;
+
+    while r.read_until(b'\n', &mut buffer).unwrap() > 0 {
+        {
+            let s: Cow<str> = String::from_utf8_lossy(&buffer);
+            let m = re.captures_iter(&s);
+            for c in m {
+                count += 1;
+            }
+        }
+        buffer.clear();
+    }
+    println!("count: {}", count);
+
+}
