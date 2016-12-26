@@ -1,5 +1,3 @@
-#![feature(test)]
-
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 use std::borrow::Cow;
@@ -14,11 +12,36 @@ extern crate regex;
  *  4   output the entire thing into a format that `phc` likes
  */
 
-fn parse_pagelinks() {
-    let filename = "simplewiki-20161201-pagelinks.sql";
+fn parse_file() {
+    let filename = "/home/owen/shared/code/rust/wikilinks/data/simplewiki-20161201-page.sql";
     println!("Opening `{}`...", filename);
     let f = File::open(filename).unwrap();
     let r = BufReader::new(f);
+}
+
+fn parse_redirects_regex_lossy(mut r: BufReader<File>) {
+    //matches all 9278254 english wiki entries
+    let page_id     = r"(\d+)";
+    let page_nmsp   = r"(-?\d+)";   //namespace can be negative?
+    let page_title  = r"'([^'\\]*(?:\\.[^'\\]*)*)'"; 
+    let page_iw     = r"('.*?')|NULL";  //can be but never has been NULL (slowdown: ~30%)
+    let page_frag   = r"('.*?')|NULL";
+    let re_body = vec![page_id, page_nmsp, page_title, page_iw, page_frag];
+    let re_query = format!(r"\({}\)", re_body.join(","));
+    let re = regex::Regex::new(&re_query).unwrap();
+    let mut buffer = Vec::<u8>::with_capacity(1_250_000);
+    let mut count = 0usize;
+    while r.read_until(b'\n', &mut buffer).unwrap() > 0 {
+        {
+            let s: Cow<str> = String::from_utf8_lossy(&buffer);
+            let m = re.captures_iter(&s);
+            count += m.count();
+        }
+        buffer.clear();
+    }
+    println!("CoUnT: {}", count);
+
+
 }
 
 fn parse_pagelinks_regex_lossy(mut r: BufReader<File>) {
@@ -87,15 +110,13 @@ fn parse_pages_regex_lossy(mut r: BufReader<File>, is_simple: bool) {
     let mut buffer = Vec::<u8>::with_capacity(1_250_000);
 	
     //keep track of all the matching links we find
-    let mut count = 0u64;
+    let mut count = 0usize;
 
     while r.read_until(b'\n', &mut buffer).unwrap() > 0 {
         {
             let s: Cow<str> = String::from_utf8_lossy(&buffer);
             let m = re.captures_iter(&s);
-            for c in m {
-                count += 1;
-            }
+            count += m.count();
         }
         buffer.clear();
     }
