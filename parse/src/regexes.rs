@@ -1,15 +1,26 @@
 
 const IS_SIMPLE: bool = true;   //small parsing differences between simple and English wikis
 
+/* NOTE about namespaces:
+ *  Namespaces complicate things. The 0 namespace (i.e. Main, "real" articles) is the
+ *  overwhelmingly most relevant one; others represent User pages, help pages, etc.
+ *  Using namespaces poses two major difficulties:
+ *  1. They double the length of an address (they're only i16s but they need padding)
+ *  2. They introduce ambiguity because two articles in different namespaces can share a name.
+ *  These are not insurmountable challenges, but I'm not sure they're worth solving.
+ */
+
 pub fn pagelinks_regex() -> String {
-    String::from(r"\((\d)+,(-?\d+),'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)")
+    //String::from(r"\((\d)+,(-?\d+),'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)")
+    String::from(r"\((\d)+,0,'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)")
 }
 
 pub fn redirect_regex() -> String {
     //matches all 9278254 english wiki entries
     //matches all   58130  simple wiki entries
     let page_id     = r"(\d+)";
-    let page_nmsp   = r"(-?\d+)";   //namespace can be negative?
+    //let page_nmsp   = r"(-?\d+)";   //namespace can be negative?
+    let page_nmsp   = r"0";
     let page_title  = r"'([^'\\]*(?:\\.[^'\\]*)*)'"; 
     let page_iw     = r"(?:'.*?'|NULL)";  //can be but never has been NULL (slowdown: ~30%)
     let page_frag   = r"(?:'.*?'|NULL)";
@@ -20,7 +31,8 @@ pub fn redirect_regex() -> String {
 pub fn pages_regex() -> String {
 	// we make a few assumptions here; matches everything in the english page.sql dump
     let page_id     = r"(\d+)";     //captured, positive non-null number
-    let page_nmsp   = r"(-?\d+)";   //captured; should never be negative(?) (0-15 ∪ 1000-2**31)
+    //let page_nmsp   = r"(-?\d+)"; //captured; should never be negative(?) (0-15 ∪ 1000-2**31)
+    let page_nmsp   = r"0";   //captured; should never be negative(?) (0-15 ∪ 1000-2**31)
     let page_title  = r"'([^'\\]*(?:\\.[^'\\]*)*)'"; //surrounded by `'`s, which can be escaped
     let page_restrs = r"'.*?'"; 	//not always empty, but never has escaped quotes
     let page_counter= r"\d+";       //non-captured positive number; count will be wrong 
