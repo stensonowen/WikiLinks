@@ -3,6 +3,9 @@ use std::fs::File;
 use std::borrow::Cow;
 
 extern crate regex;
+mod regexes;
+mod database;
+use database::*;
 
 /* Parsing Note:
  *  Most of the [u8] -> &str conversions involve potential errors in which the source
@@ -26,116 +29,62 @@ extern crate regex;
 const BUFFER_SIZE: usize = 1_250_000;
 
 
+pub fn parse() -> Database {
+    let dir = String::from("/home/owen/shared/code/rust/wikilinks/data/");
+    //let redir_f = dir.clone() + "simplewiki-20161201-redirect.sql";
+    let pages_f = dir.clone() + "simplewiki-20161201-page.sql";
+    //let links_f = dir + "simplewiki-20161201-pagelinks.sql";
 
-fn _parse_file() {
-    let filename = "/home/owen/shared/code/rust/wikilinks/data/simplewiki-20161201-page.sql";
-    println!("Opening `{}`...", filename);
+    let mut db = Database::new();
+    //let redirects = parse_generic(&redir_f, &regexes::redirect_regex(), &mut db, 
+    //                              |db: &mut Database, data: regex::Captures| { 
+    //                                  db.add_redirect(&data); 
+    //                              });
+    //println!("Number of redirects: {}", redirects);
+    let pages = parse_generic(&pages_f, &regexes::pages_regex(), &mut db, 
+                              |db: &mut Database, data: regex::Captures| { 
+                                  db.add_page(&data); 
+                              });
+    println!("Number of page entries: {}", pages);
+    //let links = parse_generic(&links_f, &regexes::pagelinks_regex(), &mut db, 
+    //                          |db: &mut Database, data: regex::Captures| { 
+    //                              db.add_pagelink(&data); 
+    //                          });
+    //println!("Number of pagelinks: {}", links);
+    println!("Number of elements: {}", db.len());
+    db
+}
+
+pub fn parse_generic<F>(filename: &str, re: &str, db: &mut Database, action: F) -> u64
+    where F: Fn(&mut Database, regex::Captures) -> ()
+{
+    //parse a mysql dump from a custom regex
+    //use a closure to define how the database uses the results
+    
     let f = File::open(filename).unwrap();
-    let r = BufReader::new(f);
-    parse_redirects_regex_lossy(r);
-}
-
-pub fn parse_redirects_regex_lossy(mut r: BufReader<File>) {
-    //matches all 9278254 english wiki entries
-    //matches all   58130  simple wiki entries
-    let page_id     = r"(\d+)";
-    let page_nmsp   = r"(-?\d+)";   //namespace can be negative?
-    let page_title  = r"'([^'\\]*(?:\\.[^'\\]*)*)'"; 
-    let page_iw     = r"(?:'.*?'|NULL)";  //can be but never has been NULL (slowdown: ~30%)
-    let page_frag   = r"(?:'.*?'|NULL)";
-    let re_body = vec![page_id, page_nmsp, page_title, page_iw, page_frag];
-    let re_query = format!(r"\({}\)", re_body.join(","));
-    let re = regex::Regex::new(&re_query).unwrap();
+    let mut reader = BufReader::new(f);
+    let re = regex::Regex::new(re).unwrap();
     let mut buffer = Vec::<u8>::with_capacity(BUFFER_SIZE);
-    let mut count = 0usize;
-    while r.read_until(b'\n', &mut buffer).unwrap() > 0 {
-        {
-            let s: Cow<str> = String::from_utf8_lossy(&buffer);
-            let m = re.captures_iter(&s);
-            for c in m {
-                let _src_id: u32 = c.at(1).unwrap().parse().unwrap();
-                let _src_ns: i16 = c.at(2).unwrap().parse().unwrap();
-                let _dst = c.at(3).unwrap();
-                count += 1;
-            }
-        }
-        buffer.clear();
-    }
-    println!("CoUnT: {}", count);
-
-
-}
-
-pub fn parse_pagelinks_regex_lossy(mut r: BufReader<File>) {
-    //finds all 1022340437 pagelinks in english wiki in 90 mins (38GB)
-    //finds all    8730859 pagelinks in  simple wiki
-    
-    let mut buffer = Vec::<u8>::with_capacity(BUFFER_SIZE);
-	
     let mut count = 0u64;
-    let re = regex::Regex::new(r"\((\d)+,(-?\d+),'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)").unwrap();
 
-    while r.read_until(b'\n', &mut buffer).unwrap() > 0 {
-        {
+    loop {
+        let len = reader.read_until(b'\n', &mut buffer).unwrap(); 
+        if len == 0 {
+            //done (empty line has a length of 1)
+            break;
+        } else if len == BUFFER_SIZE {
+            //crash/complain w/ error message
+            panic!(format!("Input db line was longer than your buffer size; increase BUFFER_SIZE to at least {}.", len));
+        } else {
             let s: Cow<str> = String::from_utf8_lossy(&buffer);
-            let m = re.captures_iter(&s);
-            for c in m {
-                let _src_id: u32 = c.at(1).unwrap().parse().unwrap();
-                let _src_ns: i16 = c.at(2).unwrap().parse().unwrap();
-                let _dst: &str = c.at(3).unwrap();
+            for entry in re.captures_iter(&s) {
+                action(db, entry);
                 count += 1;
             }
         }
         buffer.clear();
     }
-    println!("count: {}", count);
+    count
 }
 
-pub fn parse_pages_regex_lossy(mut r: BufReader<File>, is_simple: bool) {
-    //successfully locates all 408784 entries in the simple and 40966811 in the english
 
-	// we make a few assumptions here; matches everything in the english page.sql dump
-    let page_id     = r"(\d+)";     //captured, positive non-null number
-    let page_nmsp   = r"(-?\d+)";   //captured; should never be negative(?) (0-15 ∪ 1000-2**31)
-    let page_title  = r"'([^'\\]*(?:\\.[^'\\]*)*)'"; //surrounded by `'`s, which can be escaped
-    let page_restrs = r"'.*?'"; 	//not always empty, but never has escaped quotes
-    let page_counter= r"\d+";       //non-captured positive number; count will be wrong 
-    let page_is_redr= r"(0|1)";     // 0 or 1, to indicate binary value; capture? usefulness?
-    let page_is_new = r"(?:0|1)";   // 0 or 1; info is useless to us
-    let page_random = r"[\d\.]+";   //random(?) unsigned double
-    let page_tchd   = r"'\d+'";     //timestamp; irrelevant; cannot contain `\'`s (?)
-    let page_ln_upd = r"(?:'\d+'|NULL)"; //another irrelevant timestamp, but it can be null
-    let page_latest = r"\d+";       //unsigned int: latest revision number
-    let page_len    = r"\d+";       //unsigned int: page len (or weird value)
-    let page_ntc    = r"(?:0|1)";   //what is this? it's only in the Simple wiki dump
-    let page_cont_md= r"(?:'.*?'|NULL)"; //probably never contains escaped quotes?
-    let page_lang   = r"NULL";  	//think it'll always be null?
-    
-    let mut re_body = vec![page_id, page_nmsp, page_title, 
-        page_restrs, page_counter,  page_is_redr, 
-        page_is_new, page_random,   page_tchd, 
-        page_ln_upd, page_latest,   page_len, 
-       /*page_ntc,*/ page_cont_md,  page_lang
-    ];
-    if is_simple { re_body.insert(12, page_ntc); }
-
-    let re_query = format!(r"\({}\)", re_body.join(","));
-    let re = regex::Regex::new(&re_query).unwrap();
-    let mut buffer = Vec::<u8>::with_capacity(BUFFER_SIZE);
-    let mut count = 0usize;
-    while r.read_until(b'\n', &mut buffer).unwrap() > 0 {
-        {
-            let s: Cow<str> = String::from_utf8_lossy(&buffer);
-            let m = re.captures_iter(&s);
-            for c in m {
-                let _src_id: u32 = c.at(1).unwrap().parse().unwrap();
-                let _src_ns: i16 = c.at(2).unwrap().parse().unwrap();
-                let _dst = c.at(3).unwrap();
-                let _redr = c.at(4).unwrap() == "1";
-                count += 1;
-            }
-        }
-        buffer.clear();
-    }
-    println!("count: {}", count);
-}
