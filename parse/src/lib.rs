@@ -4,6 +4,14 @@ use std::borrow::Cow;
 
 extern crate regex;
 
+/* Parsing Note:
+ *  Most of the [u8] -> &str conversions involve potential errors in which the source
+ *  might not be valid u8. This is not common but the case must be handled.
+ *  I'm not sure how utf-16 works with rust regexes, and it might mean lots more memory.
+ *  We handle this with String::from_utf8_lossy(), which replaces bad utf8 with '�'
+ *  It also returns a Cow, which suits our purposes well.
+ */
+
 /* Process:
  *  0   run ./retrieve.sh to download/gunzip everything
  *  1   read through *page.sql to map every page_id to an article object
@@ -17,9 +25,10 @@ fn parse_file() {
     println!("Opening `{}`...", filename);
     let f = File::open(filename).unwrap();
     let r = BufReader::new(f);
+    parse_redirects_regex_lossy(r);
 }
 
-fn parse_redirects_regex_lossy(mut r: BufReader<File>) {
+pub fn parse_redirects_regex_lossy(mut r: BufReader<File>) {
     //matches all 9278254 english wiki entries
     let page_id     = r"(\d+)";
     let page_nmsp   = r"(-?\d+)";   //namespace can be negative?
@@ -44,7 +53,7 @@ fn parse_redirects_regex_lossy(mut r: BufReader<File>) {
 
 }
 
-fn parse_pagelinks_regex_lossy(mut r: BufReader<File>) {
+pub fn parse_pagelinks_regex_lossy(mut r: BufReader<File>) {
     //like parse_pagelinks_regex but can tolerate occasional utf-16 characters
     // which are extremely uncommon but not non-existant in the pagelinks dump
     //Also I think this should be faster
@@ -61,9 +70,9 @@ fn parse_pagelinks_regex_lossy(mut r: BufReader<File>) {
         {
             let s: Cow<str> = String::from_utf8_lossy(&buffer);
             let m = re.captures_iter(&s);
-            for c in m {
-                let dst: &str = c.at(2).unwrap();
-                let src: u32  = c.at(1).unwrap().parse().unwrap();
+            for _c in m {
+                //let dst: &str = c.at(2).unwrap();
+                //let src: u32  = c.at(1).unwrap().parse().unwrap();
                 count += 1;
             }
         }
@@ -72,7 +81,7 @@ fn parse_pagelinks_regex_lossy(mut r: BufReader<File>) {
     println!("count: {}", count);
 }
 
-fn parse_pages_regex_lossy(mut r: BufReader<File>, is_simple: bool) {
+pub fn parse_pages_regex_lossy(mut r: BufReader<File>, is_simple: bool) {
     //successfully locates all 408784 entries in the simple and 40966811 in the english
     //      simple  = 408739 + 45 = 408784
     //      english = 40962071 + 4740 = 40966811 == 40966811
@@ -90,7 +99,7 @@ fn parse_pages_regex_lossy(mut r: BufReader<File>, is_simple: bool) {
     let page_ln_upd = r"(?:'\d+'|NULL)"; //another irrelevant timestamp, but it can be null
     let page_latest = r"\d+";       //unsigned int: latest revision number
     let page_len    = r"\d+";       //unsigned int: page len (or weird value)
-    let page_ntc    = r"(?:0|1)";   //not sure what it is. should be commented in the English wiki
+    let page_ntc    = r"(?:0|1)";   //what is this? it's only in the Simple wiki dump
     let page_cont_md= r"(?:'.*?'|NULL)"; //probably never contains escaped quotes?
     let page_lang   = r"NULL";  	//think it'll always be null?
     
@@ -121,5 +130,7 @@ fn parse_pages_regex_lossy(mut r: BufReader<File>, is_simple: bool) {
         buffer.clear();
     }
     println!("count: {}", count);
-
 }
+
+
+
