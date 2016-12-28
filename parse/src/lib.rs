@@ -23,24 +23,23 @@ use database::*;
  *  4   output the entire thing into a format that `phc` likes
  */
 
+/* Used to be: addresses = entries = 172,350    / 408,784
+ *
+ */
+
 //bytes in the buffer for reading one line at a time
 //problems may arise if this buffer fills up all the way: some data will not be read
 //to be safe, it is ~20% larger than the longest line in a dump ( 1,025,987 - 1,039,069 )
 const BUFFER_SIZE: usize = 1_250_000;
 
 
-pub fn parse() -> Database {
+pub fn populate_db() -> Database {
     let dir = String::from("/home/owen/shared/code/rust/wikilinks/data/");
-    //let redir_f = dir.clone() + "simplewiki-20161201-redirect.sql";
     let pages_f = dir.clone() + "simplewiki-20161201-page.sql";
-    //let links_f = dir + "simplewiki-20161201-pagelinks.sql";
+    let links_f = dir.clone() + "simplewiki-20161201-pagelinks.sql";
+    let redir_f = dir + "simplewiki-20161201-redirect.sql";
 
     let mut db = Database::new();
-    //let redirects = parse_generic(&redir_f, &regexes::redirect_regex(), &mut db, 
-    //                              |db: &mut Database, data: regex::Captures| { 
-    //                                  db.add_redirect(&data); 
-    //                              });
-    //println!("Number of redirects: {}", redirects);
     let pages = parse_generic(&pages_f, &regexes::pages_regex(), &mut db, 
                               |db: &mut Database, data: regex::Captures| { 
                                   db.add_page(&data); 
@@ -51,7 +50,13 @@ pub fn parse() -> Database {
     //                              db.add_pagelink(&data); 
     //                          });
     //println!("Number of pagelinks: {}", links);
-    println!("Number of elements: {}", db.len());
+    //let redirects = parse_generic(&redir_f, &regexes::redirect_regex(), &mut db, 
+    //                              |db: &mut Database, data: regex::Captures| { 
+    //                                  db.add_redirect(&data); 
+    //                              });
+    //println!("Number of redirects: {}", redirects);
+    
+    //println!("Number of elements: {}", db.len());
     db
 }
 

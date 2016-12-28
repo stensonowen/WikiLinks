@@ -11,15 +11,14 @@ const IS_SIMPLE: bool = true;   //small parsing differences between simple and E
  */
 
 pub fn pagelinks_regex() -> String {
-    //String::from(r"\((\d)+,(-?\d+),'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)")
-    String::from(r"\((\d)+,0,'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)")
+    //String::from(r"\((\d)+,0,'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)")
+    String::from(r"\((\d)+,0,'([^'\\]*(?:\\.[^'\\]*)*)',0\)")
 }
 
 pub fn redirect_regex() -> String {
     //matches all 9278254 english wiki entries
     //matches all   58130  simple wiki entries
     let page_id     = r"(\d+)";
-    //let page_nmsp   = r"(-?\d+)";   //namespace can be negative?
     let page_nmsp   = r"0";
     let page_title  = r"'([^'\\]*(?:\\.[^'\\]*)*)'"; 
     let page_iw     = r"(?:'.*?'|NULL)";  //can be but never has been NULL (slowdown: ~30%)
@@ -31,7 +30,6 @@ pub fn redirect_regex() -> String {
 pub fn pages_regex() -> String {
 	// we make a few assumptions here; matches everything in the english page.sql dump
     let page_id     = r"(\d+)";     //captured, positive non-null number
-    //let page_nmsp   = r"(-?\d+)"; //captured; should never be negative(?) (0-15 ∪ 1000-2**31)
     let page_nmsp   = r"0";   //captured; should never be negative(?) (0-15 ∪ 1000-2**31)
     let page_title  = r"'([^'\\]*(?:\\.[^'\\]*)*)'"; //surrounded by `'`s, which can be escaped
     let page_restrs = r"'.*?'"; 	//not always empty, but never has escaped quotes
