@@ -96,39 +96,36 @@ impl Database {
             self.entries.insert(page_id, Entry::new_page(title));
         }
     }
-    // pub fn add_redirect(&mut self, data: &regex::Captures) {
-    // panic!("TODO: get rid of this code segment (I think)");
-    // let src_id: u32 = data.at(1).unwrap().parse().unwrap();
-    // let dst: &str = data.at(2).unwrap();
-    // if let Some(dst_id) = self.addresses.get(dst) {
-    //    //redirects to something we care about
-    //    self.redirects.insert(src_id, Some(*dst_id));
-    //
-    // }
-    //
     pub fn add_pagelink(&mut self, data: &regex::Captures) {
-        let src_id: u32 = data.at(1).unwrap().parse().unwrap();
+        // must occur after all pages have been added
+        let mut src_id: u32 = data.at(1).unwrap().parse().unwrap();
         let dst: &str = data.at(2).unwrap();
 
         if let Some(&Address::PageId(dst_id)) = self.addresses.get(dst) {
-            // it is not uncommon (>20%) for the destination title to be absent
-            // I think this means there are broken links / links to other wikis / namespaces
-            // pretty sure they should just be discarded
-
-            if let Some(&mut Entry::Page { children: ref mut c, .. }) =
-                self.entries.get_mut(&src_id) {
-                // add parent-to-child link
-                c.push(dst_id);
-            } else {
-                // src id was not found, then there's nothing left to do
-                return;
+            //if the source address is a redirect, use the proper one instead
+            if let Some(&Entry::Redirect(Some(redir_id))) = self.entries.get(&src_id) {
+                src_id = redir_id;
             }
-            if let Some(&mut Entry::Page { parents: ref mut p, .. }) =
-                self.entries.get_mut(&dst_id) {
-                // add child-to-parent link
+            //add dst_id to the list of src_id's children
+            if let Some(&mut Entry::Page{ children: ref mut c, .. }) = 
+                    self.entries.get_mut(&src_id) {
+                c.push(dst_id);
+            } /*else {
+                panic!("Src ID was absent OR a redirect pointed to the wrong thing");
+            }*/
+            //add src_id to the list of dst_id's parents
+            if let Some(&mut Entry::Page{ parents: ref mut p, .. }) = 
+                    self.entries.get_mut(&dst_id) {
                 p.push(src_id);
+            } else {
+                panic!("Dest ID didn't point to a true page, but a redirect or a none");
             }
         }
+        /*
+        else {
+            assert!(self.addresses.get(dst).is_none(),
+                    "Looking up a destination by its title pointed to a redirect :O");
+        }*/
     }
     pub fn print(&self) {
         let mut children = 0;
@@ -136,7 +133,7 @@ impl Database {
         let mut redir_some = 0;
         let mut redir_none = 0;
         for (_, entry) in &self.entries {
-            if let &Entry::Page { children: ref c, parents: ref p, .. } = entry {
+            if let &Entry::Page { children: ref c, .. } = entry {
                 children += c.len();
                 originals += 1;
             } else if let &Entry::Redirect(r) = entry {
@@ -154,9 +151,49 @@ impl Database {
         println!("Number of Real Entries: {}", originals);
         println!("Number of Redirects: {}", redir_some + redir_none);
         println!(" Number of redirects with no destination: {}", redir_none);
-        // println!(" Entries: `{:?}`", self.entries);
-        // println!(" Addresses: `{:?}`", self.addresses);
         println!("=============================================");
 
+    }
+    pub fn verify(&self) {
+        //make sure everything is following the rules
+        for (addr, entry) in &self.entries {
+            if let &Entry::Page{ title: ref f, .. } = entry {
+                //make sure the title lookup works the other way
+                if let Some(a) = self.addresses.get(f) {
+                    if let &Address::Redirects(_) = a {
+                        panic!("{} points to `{}` in the entries, which points to a redirect",
+                               addr, f);
+                    }
+                } else {
+                    panic!("{} points to `{}` in the entries, but `{}` isn't in the addresses",
+                           addr, f, f);
+                }
+            } else if let &Entry::Redirect(Some(page_id)) = entry {
+                if let Some(x) = self.entries.get(&page_id) { 
+                    if let &Entry::Redirect(_) = x {
+                        panic!("A redirect ({}) pointed to another redirect ({})", 
+                               addr, page_id);
+                    }
+                } else {
+                    panic!("A redirect ({}) pointed to an id ({}) that was absent", 
+                           addr, page_id); 
+
+                }
+            }
+        }
+        for (title, addr) in &self.addresses {
+            //if an addr is 
+            if let &Address::PageId(page_id) = addr {
+                if let Some(&Entry::Page{ title: ref t, .. }) = self.entries.get(&page_id) {
+                    assert!(t == title);
+                //assert!(self.entries.get(&page_id).unwrap().title == title);
+                } else if self.entries.get(&page_id).is_none() {
+                    panic!("PageID must point to something"); //right?
+                }
+            }
+        }
+
+
+        println!("I PASSED! :)");
     }
 }

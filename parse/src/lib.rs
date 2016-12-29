@@ -25,7 +25,6 @@ use database::*;
 
 // Used to be: addresses = entries = 172,350    / 408,784
 //
-//
 
 // bytes in the buffer for reading one line at a time
 // problems may arise if this buffer fills up all the way: some data will not be read
@@ -35,31 +34,26 @@ const BUFFER_SIZE: usize = 1_250_000;
 
 pub fn populate_db() -> Database {
     let dir = String::from("/home/owen/shared/code/rust/wikilinks/data/");
-    // let pages_f = dir.clone() + "simplewiki-20161201-page.sql";
-    let pages_f = dir.clone() + "test-page.sql";
-    let links_f = dir.clone() + "simplewiki-20161201-pagelinks.sql";
-    let redir_f = dir + "simplewiki-20161201-redirect.sql";
+    let _pages_f = dir.clone() + "simplewiki-20161201-page.sql";
+    //let _pages_f = dir.clone() + "test-page.sql";
+    let _links_f = dir.clone() + "simplewiki-20161201-pagelinks.sql";
+    // let _redir_f = dir + "simplewiki-20161201-redirect.sql";
 
     let mut db = Database::new();
-    let pages = parse_generic(&pages_f,
+    let pages = parse_generic(&_pages_f,
                               &regexes::pages_regex(),
                               &mut db,
                               |db: &mut Database, data: regex::Captures| {
                                   db.add_page(&data);
                               });
     println!("Number of page entries: {}", pages);
-    // let links = parse_generic(&links_f, &regexes::pagelinks_regex(), &mut db,
-    //                          |db: &mut Database, data: regex::Captures| {
-    //                              db.add_pagelink(&data);
-    //                          });
-    // println!("Number of pagelinks: {}", links);
-    // let redirects = parse_generic(&redir_f, &regexes::redirect_regex(), &mut db,
-    //                              |db: &mut Database, data: regex::Captures| {
-    //                                  db.add_redirect(&data);
-    //                              });
-    // println!("Number of redirects: {}", redirects);
-
-    // println!("Number of elements: {}", db.len());
+    let links = parse_generic(&_links_f,
+                              &regexes::pagelinks_regex(),
+                              &mut db,
+                              |db: &mut Database, data: regex::Captures| {
+                                  db.add_pagelink(&data);
+                              });
+    println!("Number of pagelinks: {}", links);
     db
 }
 
