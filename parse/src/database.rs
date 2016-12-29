@@ -4,6 +4,7 @@ use std::collections::HashMap;
 //helpers
 
 //Anything a page_id can represent
+#[derive(Debug)]
 enum Entry {
     //either a unique page and its link data
     Page { title: String, children: Vec<u32>, parents: Vec<u32> },
@@ -18,6 +19,7 @@ impl Entry {
 }
 
 //The id numbers associated with an article title
+#[derive(Debug)]
 enum Address {
     //Can be its true page_id
     PageId(u32),
@@ -53,8 +55,8 @@ impl Database {
             //get a handle to the address this title points to
             //if it's not already in our db, add it and make note of this redirect
             let addr = self.addresses.entry(String::from(title))
-                                     .or_insert(Address::Redirects(vec![page_id]));
-            //if it was already accounted for:
+                                     .or_insert(Address::Redirects(vec![]));
+            //assuming it was already accounted for:
             // if we know its address, point page_id's entry at it
             // otherwise, add page_id to its list of redirects that must be updated
 
@@ -65,14 +67,9 @@ impl Database {
                 // other pages pages have already tried to redirect to `title`
                 v.push(page_id);
             } else {
-                //this is the first time we've seen `title`, so we added addrs[title] = Redir([id])
+                //we've never seen `title` before, so we added addrs[title] = Redir([id])
                 self.entries.insert(page_id, Entry::Redirect(None));
             }
-
-            //make a note that this title has been seen
-            //self.addresses.insert(String::from(title), Address::Redirects(vec![page_id]));
-            //point this address at a redirect
-            //self.entries.insert(page_id, Entry::Redirect(None));
         } else {
             //this is not a redirect; it's a real article
             //check if we've already seen any redirects that point to this title
@@ -123,14 +120,12 @@ impl Database {
     }
     pub fn print(&self) {
         let mut children = 0;
-        let mut parents = 0;
         let mut originals = 0;
         let mut redir_some = 0;
         let mut redir_none = 0;
         for (_,entry) in &self.entries {
             if let &Entry::Page{ children: ref c, parents: ref p, ..} = entry {
                 children += c.len();
-                parents += p.len();
                 originals += 1;
             } else if let &Entry::Redirect(r) = entry {
                 if r.is_some() {
@@ -143,11 +138,12 @@ impl Database {
         println!("=============================================");
         println!("Number of addresses: {}", self.addresses.len());
         println!("Number of entries:   {}", self.entries.len());
-        println!("Number of parents:  {}", parents);
         println!("Number of children: {}", children);
         println!("Number of Real Entries: {}", originals);
         println!("Number of Redirects: {}", redir_some + redir_none);
-        println!(" Number of redirects destination: {}", redir_none);
+        println!(" Number of redirects with no destination: {}", redir_none);
+        //println!(" Entries: `{:?}`", self.entries);
+        //println!(" Addresses: `{:?}`", self.addresses);
         println!("=============================================");
 
     }

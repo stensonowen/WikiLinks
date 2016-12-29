@@ -35,7 +35,8 @@ const BUFFER_SIZE: usize = 1_250_000;
 
 pub fn populate_db() -> Database {
     let dir = String::from("/home/owen/shared/code/rust/wikilinks/data/");
-    let pages_f = dir.clone() + "simplewiki-20161201-page.sql";
+    //let pages_f = dir.clone() + "simplewiki-20161201-page.sql";
+    let pages_f = dir.clone() + "test-page.sql";
     let links_f = dir.clone() + "simplewiki-20161201-pagelinks.sql";
     let redir_f = dir + "simplewiki-20161201-redirect.sql";
 
