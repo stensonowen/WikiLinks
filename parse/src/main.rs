@@ -1,7 +1,11 @@
 extern crate parse;
 
 fn main() {
-    let db = parse::populate_db();
+    let mut db = parse::populate_db();
     db.verify();
+    db.print();
+    println!();
+    db.clean_up();
+    println!();
     db.print();
 }

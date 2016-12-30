@@ -1,5 +1,5 @@
 extern crate regex;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 // helpers
 
@@ -110,7 +110,11 @@ impl Database {
             if let Some(&mut Entry::Page{ children: ref mut c, .. }) = 
                     self.entries.get_mut(&src_id) {
                 c.push(dst_id);
-            } /*else {
+            } else {
+                println!("Source ID `{}` was not a true page (was a dredirect or None)", 
+                         src_id);
+            }
+            /*else {
                 panic!("Src ID was absent OR a redirect pointed to the wrong thing");
             }*/
             //add src_id to the list of dst_id's parents
@@ -120,12 +124,47 @@ impl Database {
             } else {
                 panic!("Dest ID didn't point to a true page, but a redirect or a none");
             }
+        } else {
+            println!("Could not find destination `{}`", dst);
         }
         /*
         else {
             assert!(self.addresses.get(dst).is_none(),
                     "Looking up a destination by its title pointed to a redirect :O");
         }*/
+    }
+    pub fn clean_up(&mut self) {
+        //clear memory that we can't use
+        
+        //delete all Entry::Redirect(None) from self.entries
+        let mut chopping_block_e: HashSet<u32> = HashSet::new();
+        let mut chopping_block_a: HashSet<String> = HashSet::new();
+        for (id,entry) in &self.entries {
+            if let &Entry::Redirect(None) = entry {
+                chopping_block_e.insert(*id);
+            }
+        }
+        //delete all addresses which are only pointed to by redirects (and the redirects)
+        for (title,addr) in &self.addresses {
+            if let &Address::Redirects(ref v) = addr {
+                for i in v {
+                    chopping_block_e.insert(*i);
+                }
+                chopping_block_a.insert(title.clone()); //can be fixed w/ lifetimes?
+            }
+        }
+        println!("Removing {} entries and {} addresses", 
+                 chopping_block_e.len(), chopping_block_a.len());
+        //perform the actual deletions
+        for e in chopping_block_e {
+            self.entries.remove(&e);
+        }
+        for a in chopping_block_a {
+            self.addresses.remove(&a);
+        }
+        //recapture any memory we can
+        self.entries.shrink_to_fit();
+        self.addresses.shrink_to_fit();
     }
     pub fn print(&self) {
         let mut children = 0;
