@@ -3,6 +3,9 @@ use std::fs::File;
 use std::borrow::Cow;
 
 extern crate regex;
+#[macro_use]
+extern crate slog;
+
 mod regexes;
 mod database;
 use database::*;
@@ -32,22 +35,31 @@ use database::*;
 const BUFFER_SIZE: usize = 1_250_000;
 
 
-pub fn populate_db() -> Database {
-    let dir = String::from("/home/owen/shared/code/rust/wikilinks/data/");
-    let _pages_f = dir.clone() + "simplewiki-20161201-page.sql";
-    //let _pages_f = dir.clone() + "test-page.sql";
-    let _links_f = dir.clone() + "simplewiki-20161201-pagelinks.sql";
-    // let _redir_f = dir + "simplewiki-20161201-redirect.sql";
+pub fn populate_db(page_sql:   &'static str,    //will this be problematic?
+                   redirs_sql: &'static str, 
+                   links_sql:  &'static str, 
+                   log: &slog::Logger) -> Database {
 
-    let mut db = Database::new();
-    let pages = parse_generic(&_pages_f,
+    let db_log = log.new(o!("page.sql"      => page_sql,
+                            "redirect.sql"  => redirs_sql,
+                            "pagelinks.sql" => links_sql));
+
+    let mut db = Database::new(db_log);
+    let pages = parse_generic(&page_sql,
                               &regexes::pages_regex(),
                               &mut db,
                               |db: &mut Database, data: regex::Captures| {
                                   db.add_page(&data);
                               });
     println!("Number of page entries: {}", pages);
-    let links = parse_generic(&_links_f,
+    let redirs = parse_generic(&redirs_sql,
+                              &regexes::redirect_regex(),
+                              &mut db,
+                              |db: &mut Database, data: regex::Captures| {
+                                  db.add_redirect(&data);
+                              });
+    println!("Number of redirects: {}", redirs);
+    let links = parse_generic(&links_sql,
                               &regexes::pagelinks_regex(),
                               &mut db,
                               |db: &mut Database, data: regex::Captures| {

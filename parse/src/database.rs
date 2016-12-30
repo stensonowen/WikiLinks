@@ -1,9 +1,17 @@
 extern crate regex;
 use std::collections::{HashMap, HashSet};
 
-// helpers
+use slog;
+//pub type PAGE_ID = u32;
 
-// Anything a page_id can represent
+// helpers
+/*
+ * If a Entry::Redirect only contains its destination (and no parents/children),
+ *  and a BFS that touches it just touches its children in 0 steps, 
+ *  will there be errors caused by the dst searching "up" for the src through it?
+ */
+
+// An Entry is anything a page_id can represent
 #[derive(Debug)]
 enum Entry {
     // either a unique page and its link data
@@ -12,8 +20,12 @@ enum Entry {
         children: Vec<u32>,
         parents: Vec<u32>,
     },
-    // or the page_id of what it redirects to (which might not be known yet)
-    Redirect(Option<u32>),
+    // or the redirect page and its address
+    // these will eventually be taken out of db::entries
+    Redirect {
+        title: String,
+        target: Option<u32>,
+    }
 }
 
 impl Entry {
@@ -24,18 +36,33 @@ impl Entry {
             parents: Vec::new(),
         }
     }
+    fn new_redir(n: &str) -> Entry {
+        Entry::Redirect {
+            title: String::from(n),
+            target: None,
+        }
+    }
 }
 
-// The id numbers associated with an article title
+// An Address can point to either a real page or a redirect
 #[derive(Debug)]
 enum Address {
-    // Can be its true page_id
-    PageId(u32),
-    // Or can be a list of redirects
-    // Once the true page_id is known, though, all redirects (and this) must be updated
-    Redirects(Vec<u32>),
+    Page(u32),
+    Redirect(u32),
 }
 
+//what phase the database is in 
+//TODO should I get rid of the numbers? They don't matter except that without 
+// them it might not be clear that the order of the values is what determines
+// their inequality; here concrete values make it clearer
+#[derive(PartialEq, PartialOrd, Debug)]
+enum State {
+    Begin           = 0,
+    AddPages        = 1,
+    AddRedirects    = 2,
+    AddLinks        = 3,
+    Done            = 4,
+}
 
 // The actual data storing the internal link structure
 pub struct Database {
@@ -46,62 +73,105 @@ pub struct Database {
     entries: HashMap<u32, Entry>,
     //  Title   →  Address
     addresses: HashMap<String, Address>,
+    //internal state
+    state: State,
+    //logging
+    log: slog::Logger,
 }
 
 impl Database {
-    pub fn new() -> Database {
+    pub fn new(log: slog::Logger) -> Database {
         Database {
             entries: HashMap::new(),
             addresses: HashMap::new(),
+            state: State::Begin,
+            log: log,
         }
     }
     pub fn add_page(&mut self, data: &regex::Captures) {
+        //must finish before links/redirects start
+        assert!(self.state <= State::AddPages, 
+                "Tried to add page in the wrong stage: `{:?}`", self.state);
+        if self.state == State::Begin {
+            info!(self.log, "Entering the `AddPages` phase");
+            self.state = State::AddPages;
+        }
+
         let page_id: u32 = data.at(1).unwrap().parse().unwrap();
         let title = data.at(2).unwrap();
-        let is_redr = data.at(3).unwrap();
-        if is_redr == "1" {
-            // get a handle to the address this title points to
-            // if it's not already in our db, add it and make note of this redirect
-            let addr = self.addresses
-                .entry(String::from(title))
-                .or_insert(Address::Redirects(vec![]));
-            // assuming it was already accounted for:
-            // if we know its address, point page_id's entry at it
-            // otherwise, add page_id to its list of redirects that must be updated
+        let is_redr = data.at(3).unwrap() == "1";
 
-            if let &mut Address::PageId(true_id) = addr {
-                // `true_id -> title` is already in the database
-                self.entries.insert(page_id, Entry::Redirect(Some(true_id)));
-            } else if let &mut Address::Redirects(ref mut v) = addr {
-                // other pages pages have already tried to redirect to `title`
-                v.push(page_id);
-            } else {
-                // we've never seen `title` before, so we added addrs[title] = Redir([id])
-                self.entries.insert(page_id, Entry::Redirect(None));
-            }
+        assert!(self.entries.contains_key(&page_id) == false,
+                "Tried to add an entry at a claimed location: {}",
+                page_id);
+
+        let (entry, addr) = if is_redr {
+            (Entry::new_redir(title), Address::Redirect(page_id))
         } else {
-            // this is not a redirect; it's a real article
-            // check if we've already seen any redirects that point to this title
-            // if we've never seen it before, just add the page_id and be done
-            if let Some(&Address::Redirects(ref v)) = self.addresses.get(title) {
-                //entry had redirects we have to deal with; set their destinations.
-                //`v` is a list of addresses which are of type Entry::Redirect(None)
-                //they need to be set to Entry::Redirect(page_id)
-                for redirect in v {
-                    self.entries.insert(*redirect, Entry::Redirect(Some(page_id)));
-                }
-            }
-            // now insert this valid address/article into the tables
-            self.addresses.insert(String::from(title), Address::PageId(page_id));
-            self.entries.insert(page_id, Entry::new_page(title));
-        }
+            (Entry::new_page(title), Address::Page(page_id))
+        };
+        self.entries.insert(page_id, entry);
+        self.addresses.insert(String::from(title), addr);
     }
-    pub fn add_pagelink(&mut self, data: &regex::Captures) {
-        // must occur after all pages have been added
-        let mut src_id: u32 = data.at(1).unwrap().parse().unwrap();
+    pub fn add_redirect(&mut self, data: &regex::Captures) {
+        // must occur after all pages have been added and before any links
+        assert!(self.state == State::AddPages || self.state == State::AddRedirects, 
+                "Tried to add a redirect in the `{:?}` stage", self.state);
+        if self.state == State::AddPages {
+            info!(self.log, "Entering the `AddRedirects` stage");
+            self.state = State::AddRedirects;
+        }
+
+        let src_id: u32 = data.at(1).unwrap().parse().unwrap();
         let dst: &str = data.at(2).unwrap();
 
-        if let Some(&Address::PageId(dst_id)) = self.addresses.get(dst) {
+        //the redirect's target title *should* already be in self.addresses
+        //if it is, its address should be of type Redirect(None), 
+        // which we can update to Redirect(true_page_id)
+        // The Redirect
+        //We can get the redirect's target title from self.entries and its 
+        
+        // will be:
+        //  entries[redir_u32] = Entries::Redirect( redir_title, target=None )
+        //  entries[ true_u32] = Entries::Page( true_title, p=[], c=[] )
+        //  addresses[redir_title] = Addresses::Redirect( ??? )
+        //  addresses[ true_title] = Addresses::Page(true_u32)
+        //
+        // should be: 
+        //  entries[redir_u32] = Entries::Redirect( redir_title, target=Some(true_u32) )
+        //  entries[ true_u32] = Entries::Page( true_title, p=[], c=[] )
+        //  addresses[redir_title] = Addresses::Redirect(redir_u32)
+        //  addresses[ true_title] = Addresses::Page(true_u32)
+        //
+        //  What if addresses[redir_title] = Addresses::Page(true_u32) ?
+        //  then we couldn't get a handle to the redirect_u32
+        //  So I'm pretty sure we never actually need an Address::Redirect
+
+
+
+
+        if let Some(&mut Address::Page(dst_id)) = self.addresses.get_mut(dst) {
+            if let Some(&mut Entry::Redirect{ target: ref mut t, .. }) 
+                    = self.entries.get_mut(&dst_id) {
+                if let &mut Some(id) = t {
+                    warn!(self.log, "A redirect's page_id already pointed to something");
+                } else {
+                    *t = Some(src_id);
+                }
+            } else {
+                warn!(self.log, "A redirect's page_id was not marked as such");
+            }
+        } else {
+            warn!(self.log, "Redirect to `{}` from `{}` could not be found", dst, src_id); 
+        }
+
+    }
+    pub fn add_pagelink(&mut self, data: &regex::Captures) {
+        let src_id: u32 = data.at(1).unwrap().parse().unwrap();
+        let dst: &str = data.at(2).unwrap();
+        /*
+
+        if let Some(&Address::Page(dst_id)) = self.addresses.get(dst) {
             //if the source address is a redirect, use the proper one instead
             if let Some(&Entry::Redirect(Some(redir_id))) = self.entries.get(&src_id) {
                 src_id = redir_id;
@@ -127,12 +197,14 @@ impl Database {
         } else {
             println!("Could not find destination `{}`", dst);
         }
+    */
         /*
         else {
             assert!(self.addresses.get(dst).is_none(),
                     "Looking up a destination by its title pointed to a redirect :O");
         }*/
     }
+    /*
     pub fn clean_up(&mut self) {
         //clear memory that we can't use
         
@@ -165,7 +237,8 @@ impl Database {
         //recapture any memory we can
         self.entries.shrink_to_fit();
         self.addresses.shrink_to_fit();
-    }
+    }*/
+    /*
     pub fn print(&self) {
         let mut children = 0;
         let mut originals = 0;
@@ -193,6 +266,8 @@ impl Database {
         println!("=============================================");
 
     }
+    */
+    /*
     pub fn verify(&self) {
         //make sure everything is following the rules
         for (addr, entry) in &self.entries {
@@ -222,7 +297,7 @@ impl Database {
         }
         for (title, addr) in &self.addresses {
             //if an addr is 
-            if let &Address::PageId(page_id) = addr {
+            if let &Address::Page(page_id) = addr {
                 if let Some(&Entry::Page{ title: ref t, .. }) = self.entries.get(&page_id) {
                     assert!(t == title);
                 //assert!(self.entries.get(&page_id).unwrap().title == title);
@@ -235,4 +310,5 @@ impl Database {
 
         println!("I PASSED! :)");
     }
+    */
 }

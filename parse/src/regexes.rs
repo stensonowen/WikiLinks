@@ -15,18 +15,18 @@ pub fn pagelinks_regex() -> String {
     String::from(r"\((\d)+,0,'([^'\\]*(?:\\.[^'\\]*)*)',0\)")
 }
 
-// pub fn redirect_regex() -> String {
-// matches all 9278254 english wiki entries
-// matches all   58130  simple wiki entries
-// let page_id = r"(\d+)";
-// let page_nmsp = r"0";
-// let page_title = r"'([^'\\]*(?:\\.[^'\\]*)*)'";
-// let page_iw = r"(?:'.*?'|NULL)";  //can be but never has been NULL (slowdown: ~30%)
-// let page_frag = r"(?:'.*?'|NULL)";
-// let re_body = vec![page_id, page_nmsp, page_title, page_iw, page_frag];
-// format!(r"\({}\)", re_body.join(","))
-// }
-//
+pub fn redirect_regex() -> String {
+    // matches all 9278254 english wiki entries
+    // matches all   58130  simple wiki entries
+    let page_id = r"(\d+)";
+    let page_nmsp = r"0";
+    let page_title = r"'([^'\\]*(?:\\.[^'\\]*)*)'";
+    let page_iw = r"(?:'.*?'|NULL)";  //can be but never has been NULL (slowdown: ~30%)
+    let page_frag = r"(?:'.*?'|NULL)";
+    let re_body = vec![page_id, page_nmsp, page_title, page_iw, page_frag];
+    format!(r"\({}\)", re_body.join(","))
+}
+
 
 pub fn pages_regex() -> String {
     // we make a few assumptions here; matches everything in the english page.sql dump
