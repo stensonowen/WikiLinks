@@ -15,11 +15,11 @@ fn main() {
     let redirs = "/home/owen/shared/code/rust/wikilinks/data/simplewiki-20161201-redirect.sql";
     let links  = "/home/owen/shared/code/rust/wikilinks/data/simplewiki-20161201-pagelinks.sql";
 
-    let db = parse::populate_db(pages, redirs, links, &root_log);
+    let mut db = parse::populate_db(pages, redirs, links, &root_log);
     //db.verify();
-    //db.print();
+    db.print();
     println!();
-    //db.clean_up();
+    db.clean_up();
     println!();
-    //db.print();
+    db.print();
 }
