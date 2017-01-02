@@ -200,11 +200,18 @@ impl Database {
         // it can also give a redirect's page title as its destination 
         // so we might need to follow a page_id through Redirects until we find a valid page
         let mut cur_id = start_id;
+        let mut seen: HashSet<u32> = HashSet::new();    //avoid repetitions
         loop {
             let entry = self.entries.get(&cur_id);
             if let Some(&Entry::Redirect{ target: t, .. }) = entry {
                 if let Some(target) = t {
-                    cur_id = target;
+                    if seen.contains(&target) {
+                        //avoid loops
+                        return Err(());
+                    } else {
+                        seen.insert(target);
+                        cur_id = target;
+                    }
                 } else {
                     error!(self.log, 
                            "Couldn't follow redirects from {}: got None-target Redirect ({})",
@@ -294,7 +301,7 @@ impl Database {
         println!("Number of addresses: {}", self.addresses.len());
         println!(" Number of total true pages: {}", true_pages);
         println!(" Number of redirect pages:   {}", redirects);
-        println!(" Number of blank page slots: {}", self.entries.len()-true_pages-redirects);
+        println!(" Number of blank page slots: {}",self.entries.capacity()-self.entries.len());
         println!(" Number of children: {}", children);
         println!("=======================================");
     }
