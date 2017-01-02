@@ -18,8 +18,8 @@ fn main() {
     let mut db = parse::populate_db(pages, redirs, links, &root_log);
     //db.verify();
     db.print();
-    println!();
-    db.clean_up();
-    println!();
-    db.print();
+    //println!();
+    //db.clean_up();
+    //println!();
+    //db.print();
 }

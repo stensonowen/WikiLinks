@@ -49,28 +49,30 @@ pub fn populate_db(page_sql:   &'static str,    //will this be problematic?
                               &regexes::pages_regex(),
                               &mut db,
                               |db: &mut Database, data: regex::Captures| {
-                                  db.add_page(&data);
+                                  db.add_page(&data)
                               });
-    println!("Number of page entries: {}", pages);
+    info!(log, "Number of page entries: {} / {}", pages.0, pages.1);
     let redirs = parse_generic(&redirs_sql,
                               &regexes::redirect_regex(),
                               &mut db,
                               |db: &mut Database, data: regex::Captures| {
-                                  db.add_redirect(&data);
+                                  db.add_redirect(&data)
                               });
-    println!("Number of redirects: {}", redirs);
+    info!(log, "Number of redirects: {} / {}", redirs.0, redirs.1);
+    //db.tidy_entries();
+    //return db;
     let links = parse_generic(&links_sql,
                               &regexes::pagelinks_regex(),
                               &mut db,
                               |db: &mut Database, data: regex::Captures| {
-                                  db.add_pagelink(&data);
+                                  db.add_pagelink(&data)
                               });
-    println!("Number of pagelinks: {}", links);
+    info!(log, "Number of pagelinks: {} / {}", links.0, links.1);
     db
 }
 
-pub fn parse_generic<F>(filename: &str, re: &str, db: &mut Database, action: F) -> u64
-    where F: Fn(&mut Database, regex::Captures) -> ()
+pub fn parse_generic<F>(filename: &str, re: &str, db: &mut Database, action: F) -> (u64,u64)
+    where F: Fn(&mut Database, regex::Captures) -> bool 
 {
     // parse a mysql dump from a custom regex
     // use a closure to define how the database uses the results
@@ -79,7 +81,8 @@ pub fn parse_generic<F>(filename: &str, re: &str, db: &mut Database, action: F) 
     let mut reader = BufReader::new(f);
     let re = regex::Regex::new(re).unwrap();
     let mut buffer = Vec::<u8>::with_capacity(BUFFER_SIZE);
-    let mut count = 0u64;
+    let mut success = 0u64;
+    let mut attempts = 0u64;
 
     loop {
         let len = reader.read_until(b'\n', &mut buffer).unwrap();
@@ -94,11 +97,13 @@ pub fn parse_generic<F>(filename: &str, re: &str, db: &mut Database, action: F) 
         } else {
             let s: Cow<str> = String::from_utf8_lossy(&buffer);
             for entry in re.captures_iter(&s) {
-                action(db, entry);
-                count += 1;
+                if action(db, entry) {
+                    success += 1;
+                }
+                attempts += 1;
             }
         }
         buffer.clear();
     }
-    count
+    (success,attempts)
 }
