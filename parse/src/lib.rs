@@ -18,16 +18,7 @@ use database::*;
 //  It also returns a Cow, which suits our purposes well.
 //
 
-// Process:
-//  0   run ./retrieve.sh to download/gunzip everything
-//  1   read through *page.sql to map every page_id to an article object (and back)
-//  2   read through *redirect.sql to mark redirects
-//  3   read through *pagelinks.sql to make note of every child link (in both directions?)
-//  4   output the entire thing into a format that `phc` likes
-//
-
 // Used to be: addresses = entries = 172,350    / 408,784
-//
 
 // bytes in the buffer for reading one line at a time
 // problems may arise if this buffer fills up all the way: some data will not be read
@@ -59,8 +50,6 @@ pub fn populate_db(page_sql:   &'static str,    //will this be problematic?
                                   db.add_redirect(&data)
                               });
     info!(log, "Number of redirects: {} / {}", redirs.0, redirs.1);
-    //db.tidy_entries();
-    //return db;
     let links = parse_generic(&links_sql,
                               &regexes::pagelinks_regex(),
                               &mut db,
@@ -68,6 +57,7 @@ pub fn populate_db(page_sql:   &'static str,    //will this be problematic?
                                   db.add_pagelink(&data)
                               });
     info!(log, "Number of pagelinks: {} / {}", links.0, links.1);
+    db.finalize();
     db
 }
 
