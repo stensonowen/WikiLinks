@@ -12,7 +12,7 @@ const IS_SIMPLE: bool = true;   //small parsing differences between simple and E
 
 pub fn pagelinks_regex() -> String {
     // String::from(r"\((\d)+,0,'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)")
-    String::from(r"\((\d)+,0,'([^'\\]*(?:\\.[^'\\]*)*)',0\)")
+    String::from(r"\((\d+),0,'([^'\\]*(?:\\.[^'\\]*)*)',0\)")
 }
 
 pub fn redirect_regex() -> String {
