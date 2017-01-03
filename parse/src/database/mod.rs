@@ -1,8 +1,16 @@
 use std::collections::{HashMap, HashSet};
 use {slog, regex};
+use std::io::{Write, BufWriter};
+use std::fs::File;
+use std::path::Path;
 
 mod helpers;
 use self::helpers::*;
+use phf_codegen;
+
+const FILE_LINK_CG:     &'static str = "codegen_links.rs";
+const FILE_ENTRIES_CG:  &'static str = "codegen_entries.rs";
+const FILE_ADDRS_CG:    &'static str = "codegen_addresses.rs";
 
 // The actual data storing the internal link structure
 pub struct Database {
@@ -335,5 +343,54 @@ impl Database {
         }
         println!();
         
+    }
+    // Codegen:
+    // data crate should include `#![allow(dead_code)]
+    fn codegen_links(&self, path: &Path) {
+        let mut file = BufWriter::new(File::create(&path).unwrap());
+        //copy all page links into static vars
+        for (&addr,entry) in &self.entries {
+            if let Some(s) = entry.codegen_links(addr) {
+            //let s = entry.codegen_links(addr);
+            //file.write_all(s.as_bytes()).unwrap();
+                file.write_all(s.as_bytes()).unwrap();
+            }
+        }
+    }
+    fn codegen_entries(&self, path: &Path) {
+        let mut file = BufWriter::new(File::create(&path).unwrap());
+        //copy the Entry type:
+        /* struct Entry {
+         *      title:      &'static str,
+         *      children:   &'static [u32],
+         *      parents:    &'static [u32],
+		 *  } */
+		write!(&mut file, "pub static ENTRIES: phf::Map<u32, Page> = ").unwrap();
+        let mut builder = phf_codegen::Map::new();
+		for (&addr,entry) in &self.entries {
+            if let Some(s) = entry.codegen_page(addr) {
+                //builder.entry(addr,&entry.codegen_page(addr));
+                builder.entry(addr,&s);
+            }
+        }
+        builder.build(&mut file).unwrap();
+        write!(&mut file, ";\n").unwrap();
+    }
+    fn codegen_addresses(&self, path: &Path) {
+        let mut file = BufWriter::new(File::create(&path).unwrap());
+        //copy the addresses type: map Strings to u32
+		write!(&mut file, "pub static ADDRESSES: phf::Map<&'static str, u32> = ").unwrap();
+        let mut builder = phf_codegen::Map::new();
+        for (title,&addr) in &self.addresses {
+            builder.entry(title.to_owned(), &addr.to_string());
+        }
+        builder.build(&mut file).unwrap();
+        write!(&mut file, ";\n").unwrap();
+    }
+    pub fn codegen(&self, dir: &Path) {
+        //should be ../../wikidata/src or something
+        self.codegen_links(&dir.join(FILE_LINK_CG));
+        self.codegen_entries(&dir.join(FILE_ENTRIES_CG));
+        self.codegen_addresses(&dir.join(FILE_ADDRS_CG));
     }
 }

@@ -5,6 +5,7 @@ use std::borrow::Cow;
 extern crate regex;
 #[macro_use]
 extern crate slog;
+extern crate phf_codegen;
 
 mod regexes;
 mod database;
