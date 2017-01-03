@@ -18,8 +18,6 @@ use database::*;
 //  It also returns a Cow, which suits our purposes well.
 //
 
-// Used to be: addresses = entries = 172,350    / 408,784
-
 // bytes in the buffer for reading one line at a time
 // problems may arise if this buffer fills up all the way: some data will not be read
 // to be safe, it is ~20% larger than the longest line in a dump ( 1,025,987 - 1,039,069 )

@@ -1,41 +1,8 @@
-extern crate regex;
 use std::collections::{HashMap, HashSet};
+use {slog, regex};
 
-use slog;
-//pub type PAGE_ID = u32;
-
-// helpers
-
-// An Entry is anything a page_id can represent
-#[derive(Debug)]
-enum Entry {
-    // either a unique page and its link data
-    Page {
-        title: String,
-        children: Vec<u32>,
-        parents: Vec<u32>,
-    },
-    // or the redirect page and its address
-    // these will eventually be taken out of db::entries
-    Redirect {
-        title: String,
-        target: Option<u32>,
-    }
-}
-
-//what phase the database is in 
-//TODO should I get rid of the numbers? They don't matter except that without 
-// them it might not be clear that the order of the values is what determines
-// their inequality; here concrete values make it clearer
-#[derive(PartialEq, PartialOrd, Debug)]
-enum State {
-    Begin           = 0,
-    AddPages        = 1,
-    AddRedirects    = 2,
-    TidyEntries     = 3,
-    AddLinks        = 4,
-    Done            = 5,
-}
+mod helpers;
+use self::helpers::*;
 
 // The actual data storing the internal link structure
 pub struct Database {
@@ -124,8 +91,8 @@ impl Database {
                 *t = Some(true_u32);
                 return true;
             } else {
-                warn!(self.log,
-                      "The dst_title of a redirect was not in the db: `{}`", dst_title);
+                //warn!(self.log,
+                //      "The dst_title of a redirect was not in the db: `{}`", dst_title);
             }
         } else if entry.is_none() {
             //this can happen if the source has been deleted, or is in a different namespace
@@ -311,5 +278,62 @@ impl Database {
                 "Tried to finalize in the `{:?}` stage", self.state);
         info!(self.log, "Entering the `Done` stage");
         self.state = State::Done;
+        //clean up links
+        for (_,entry) in &mut self.entries {
+            if let &mut Entry::Page{ 
+                children: ref mut c, 
+                parents: ref mut p, 
+                title: ref mut t 
+            } = entry {
+                //clean up children/parents/title
+                t.shrink_to_fit();
+                c.dedup();
+                c.shrink_to_fit();
+                p.dedup();
+                p.shrink_to_fit();
+            }
+        }
+        info!(self.log, "Finalized db");
+    }
+    pub fn fattest(&self) {
+        let mut max_addr = 0;
+        let mut max_val  = 0;
+        for (&addr,entry) in &self.entries {
+            if let &Entry::Page{ children: ref c, ..} = entry {
+                if c.len() > max_val {
+                    max_addr = addr;
+                    max_val = c.len();
+                }
+            }
+        }
+        if let Some(&Entry::Page{ title: ref t, .. }) = self.entries.get(&max_addr) {
+            println!("The address of the entry w/ the most children is {}: `{}` with {} kids", 
+                 max_addr, t, max_val);
+        } else {
+            panic!("bad");
+        }
+        if let Some(&Entry::Page{ children: ref c, parents: ref p, .. }) 
+                = self.entries.get(&max_addr) {
+            println!("CHILDREN:");
+            for (i,j) in c.iter().enumerate() {
+                if let Some(&Entry::Page{ title: ref t, .. }) = self.entries.get(j) {
+                    println!("\t{}:\t{}:\t`{}`", i, *j, t);
+                } else {
+                    println!("\t{}:\t{}:\t`{}`", i, *j, "CHILD NOT FOUND");
+                }
+            }
+            println!("PARENTS:");
+            for (i,j) in p.iter().enumerate() {
+                if let Some(&Entry::Page{ title: ref t, .. }) = self.entries.get(j) {
+                    println!("\t{}:\t{}:\t`{}`", i, *j, t);
+                } else {
+                    println!("\t{}:\t{}:\t`{}`", i, *j, "PARENT NOT FOUND");
+                }
+            }
+        } else {
+            println!("ERror");
+        }
+        println!();
+        
     }
 }

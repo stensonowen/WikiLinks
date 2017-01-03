@@ -6,6 +6,7 @@ description = "Extract important information from Wikimedia SQL dumps for static
 
 [dependencies]
 phf = "0.7.20"
+phf_codegen = "0.7.20"
 regex = "0.1.80"
 nom = "2.0.1"
 slog = "1.4.0"
