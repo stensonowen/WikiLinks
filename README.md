@@ -12,26 +12,23 @@ Rust seems like an interesting candidate for some of these new priorities: it is
 To do anything interesting with the project, you will need to download and parse the relevant wiki data into a crate that can be linked from another project.
 
 First, clone the repo: 
-```
+```sh
 mkdir /path 
 git clone https://github.com/stensonowen/wikilinks/ --branch rust /path
 ```
 
 Then download the relevant wiki dumps (the language can be adjusted via the `lang='en'` line)
-```
+```sh
 cd /path
 chmod +x retrieve.sh
 ./retrieve.sh
 ```
 
-Then data can be parsed. Adjust `/path/parse/src/lib.rs` to point to the sql dumps at `/path` and the codegen links to `/path/data`. Then the static values can be generated via `phf` by running the project (in release mode!).
-```
-mkdir /path/data
+Then data can be parsed. Adjust `/path/parse/src/lib.rs` to point to the sql dumps at `/path` and the codegen links to `/path/data`. Then the static values can be generated via `phf` by running the project (in release mode!). By default it should generate three `codegen_*.rs` files in /path/wikidata.
+```sh
+mkdir /path/wikidata
 cd /path/parse/
 cargo run --release
 ```
 
-
-
-
-This project is composed of multiple crates. 
+At this point the generated static variables are in place, but they still need to be compiled into a crate (to avoid recompilation). This can be linked via the manifest. See /path/sample (both Cargo.toml and src/lib.rs) to see an example of how the data can be accessed. The wikidata crate will have to be recompiled every time a crate that links to it is built for the first time.
