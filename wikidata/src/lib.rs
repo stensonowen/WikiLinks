@@ -12,4 +12,3 @@ pub struct Page {
     pub parents:    &'static [u32],
 }
 
-
