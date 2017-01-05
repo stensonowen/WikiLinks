@@ -1,7 +1,17 @@
-extern crate wikidata;
+//extern crate wikidata;
 //use wikidata::ENTRIES;
+extern crate pagerank;
+extern crate wikidata;
 
 fn main() {
+    let mut web = pagerank::Web::new();
+    println!("Initial Sum:  {}", web.sum());
+    println!(" i\t\tMax Diff\t\tSum");
+    for i in 0..20 {
+        let diff = web.iterate();
+        println!("{:03}:    {}, \t{}", i, diff, web.sum());
+    }
+    /*
 	println!("Length of entries: {}", wikidata::ENTRIES.len());
 	println!("Length of addresses: {}", wikidata::ADDRESSES.len());
 
@@ -33,4 +43,5 @@ fn main() {
 	} else {
 		println!("Couldn't find `Rust`");
 	}
+    */
 }
