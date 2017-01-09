@@ -31,9 +31,6 @@ pub enum State {
     Done            = 5,
 }
 
-//const LINK_C: &'static str = "PAGE_C_";     //prefix for child links
-//const LINK_P: &'static str = "PAGE_P_";     //prefix for parent links
-//const ADDR_T: &'static str = "u32";         //data type of link
 impl Entry {
     //codegen: create valid `static` copies of data for codegen.rs
     //no reason to keep Entry::Redirect in the final table

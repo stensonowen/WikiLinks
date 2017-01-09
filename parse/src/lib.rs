@@ -25,14 +25,14 @@ use database::*;
 const BUFFER_SIZE: usize = 1_250_000;
 
 
-pub fn populate_db(page_sql:   &'static str,    //will this be problematic?
-                   redirs_sql: &'static str, 
-                   links_sql:  &'static str, 
+pub fn populate_db(page_sql:   String,
+                   redirs_sql: String,
+                   links_sql:  String,
                    log: &slog::Logger) -> Database {
 
-    let db_log = log.new(o!("page.sql"      => page_sql,
-                            "redirect.sql"  => redirs_sql,
-                            "pagelinks.sql" => links_sql));
+    let db_log = log.new(o!("page.sql"      => page_sql.clone(),
+                            "redirect.sql"  => redirs_sql.clone(),
+                            "pagelinks.sql" => links_sql.clone()));
 
     let mut db = Database::new(db_log);
     let pages = parse_generic(&page_sql,

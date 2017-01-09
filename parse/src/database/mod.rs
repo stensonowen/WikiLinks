@@ -351,8 +351,6 @@ impl Database {
         //copy all page links into static vars
         for (&addr,entry) in &self.entries {
             if let Some(s) = entry.codegen_links(addr) {
-            //let s = entry.codegen_links(addr);
-            //file.write_all(s.as_bytes()).unwrap();
                 file.write_all(s.as_bytes()).unwrap();
             }
         }
@@ -368,11 +366,16 @@ impl Database {
 		write!(&mut file, "pub static ENTRIES: phf::Map<u32, Page> = ").unwrap();
         let mut builder = phf_codegen::Map::new();
 		for (&addr,entry) in &self.entries {
+            let mut i = 0;
             if let Some(s) = entry.codegen_page(addr) {
-                //builder.entry(addr,&entry.codegen_page(addr));
                 builder.entry(addr,&s);
+                i += 1;
+                if i % 1_000_000 == 0 {
+                    info!(self.log, "Entries Codegen Progress: {}  /  5 M", i);
+                }
             }
         }
+        info!(self.log, "Starting to generate ENTRIES phf table");
         builder.build(&mut file).unwrap();
         write!(&mut file, ";\n").unwrap();
     }
@@ -381,16 +384,26 @@ impl Database {
         //copy the addresses type: map Strings to u32
 		write!(&mut file, "pub static ADDRESSES: phf::Map<&'static str, u32> = ").unwrap();
         let mut builder = phf_codegen::Map::new();
+        let mut i = 0;
         for (title,&addr) in &self.addresses {
             builder.entry(title.to_owned(), &addr.to_string());
+            i += 1;
+            if i % 1_000_000 == 0 {
+                info!(self.log, "Entries Codegen Progress: {}  /  5 M", i);
+            }
         }
+        info!(self.log, "Starting to generate ADDRESS phf table");
         builder.build(&mut file).unwrap();
         write!(&mut file, ";\n").unwrap();
     }
     pub fn codegen(&self, dir: &Path) {
         //should be ../../wikidata/src or something
+        info!(self.log, "Starting LINKS codegen");
         self.codegen_links(&dir.join(FILE_LINK_CG));
+        info!(self.log, "Starting ENTRIES codegen");
         self.codegen_entries(&dir.join(FILE_ENTRIES_CG));
+        info!(self.log, "Starting ADDRS codegen");
         self.codegen_addresses(&dir.join(FILE_ADDRS_CG));
+        info!(self.log, "Finished codegen");
     }
 }
