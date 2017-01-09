@@ -1,183 +1,139 @@
+/*
+ * Calculate the pagerank of the elements in wikidata::ENTRIES
+ * Output the result to a .csv file, e.g.
+ * https://gist.github.com/stensonowen/25df4124c1509a7033c5e1553c404a47
+ *
+ */
+
 extern crate wikidata;
 extern crate phf;
+extern crate csv;
 
 use wikidata::ENTRIES as ENTRIES;
-//use wikidata::ADDRESSES as ADDRESSES;
-//use wikidata::Page;
-
 use std::collections::HashMap;
+use std::path::Path;
 
 const DAMPING_FACTOR: f64 = 0.85;
+const MAX_ERROR: f64 = std::f64::EPSILON * 10f64;
+const MAX_ITER: usize = 500;   //iterations to panic! after (usually takes ~150)
 
-/*
-struct PageRank {
-    score: f64,
-    page: &'static wikidata::Page,
+
+pub fn wikidata_pageranks(output: &str) {
+    //input: file to write results to (as csv)
+    let mut g = Graph::new();
+    g.compute_pageranks(true);  //be verbose
+    g.export(output).unwrap();
 }
 
-impl PageRank {
-    fn len_p(&self) -> usize {
-        self.page.parents.len()
-    }
-    fn len_c(&self) -> usize {
-        self.page.children.len()
-    }
-}
-*/
 
-
-/*
-struct Web2 {
-    items: HashMap<u32,PageRank>,
-    df: f64,
-}
-
-impl Web2 {
-    fn new(guess: f64) -> Web2 {
-        let mut pages = HashMap::new();
-        for (&addr,page) in ENTRIES.into_iter() {
-            pages.insert(addr, PageRank {
-                score: guess,
-                page: page
-            });
-        }
-        Web2 {
-            items: pages,
-            df: DAMPING_FACTOR,
-        }
-    }
-}
-*/
-
-
-pub struct Web {
+struct Graph {
     pages:  &'static phf::Map<u32, wikidata::Page>,
     ranks:  HashMap<u32,f64>,
-    iter:   usize,
 }
 
-impl Web {
-    pub fn new() -> Web {
+impl Graph {
+    fn new() -> Graph {
         let size = ENTRIES.len();
         let mut pageranks = HashMap::with_capacity(size);
         let guess = (size as f64).recip();  // start each pagerank at 1/N
         for &entry in ENTRIES.keys() {
             pageranks.insert(entry,guess);
         }
-        Web {
+        Graph {
             pages:  &ENTRIES,
             ranks:  pageranks,
-            iter:   0,
         }
     }
-    pub fn sum(&self) -> f64 {
+    fn sum(&self) -> f64 {
         let mut sum = 0f64;
-        for addr in self.pages.keys() {
-            sum += *self.ranks.get(addr).unwrap()
+        for &v in self.ranks.values() {
+            sum += v;
         }
         sum
     }
-    pub fn iterate(&mut self) -> f64 {
-        //all new pageranks will be calculated from the duplicated values (the old table)
-        //return the maximum change in an article's pagerank
+    fn iterate(&mut self) -> f64 {
+        // Sub-optimal solution, but easiest to understand
+        // It would be faster to just calculate the pagerank of each element one at a time
+        //  (would mean fewer cache misses), but this is easier to understand so it's 
+        //  easier to verify / debug
+        //  This also makes it less convenient/efficient to find the max_change statistic
+        // Iterate through pages and distribute pagerank as needed
+        // Every page equally distributed its rank to all of its children
+        //  Or, if it has no children, it equally distributes rank among all articles
+        let starting_val = (1.0 - DAMPING_FACTOR) / (self.pages.len() as f64);
+
         let mut new_ranks: HashMap<u32,f64> = HashMap::with_capacity(self.ranks.capacity());
-        let base_pr = (1f64 - DAMPING_FACTOR) / (self.pages.len() as f64);
-        let mut max_change = 0f64;
-        let mut sink_pr = 0f64;
-        for (addr,page) in self.pages.into_iter() {
-            if page.children.len() == 0 {
-                sink_pr += *self.ranks.get(addr).unwrap()
-            }
-        }
-        for (&addr,page) in self.pages.into_iter() {
-            //track sum of `page`'s parents's pageranks divided by their number of children
-            let mut extra_pr = 0f64;
-            for p in page.parents {
-                let parent_pr = self.ranks.get(p).unwrap();
-                let parent_num_kids = self.pages.get(p).unwrap().children.len() as f64;
-                //parent_num_kids should always be ≥1: our parent has at least 1 kid (us)
-                extra_pr += parent_pr / parent_num_kids;
-            }
-            //calculate our pagerank: (1-d)/N + d*Σ(PR(p)/L(p))
-            //let pr = base_pr + DAMPING_FACTOR * extra_pr;
-            //sink_pr = DAMPING_FACTOR * sink_pr / (self.pages.len() as f64); 
-            sink_pr = sink_pr / (self.pages.len() as f64); 
-            let pr = base_pr + DAMPING_FACTOR * (extra_pr + sink_pr);
-            //keep track of the magnitude of the changes made
-            let change = (self.ranks.get(&addr).unwrap() - pr).abs();
-            if change > max_change {
-                max_change = change;
-            }
-            //update the new database
-            new_ranks.insert(addr,pr);
-        }
-        self.ranks = new_ranks;
-        self.iter += 1;
-        max_change
-    }
-    pub fn iterate2(&mut self) -> f64 {
-        //returns the max difference
-        let mut new_ranks: HashMap<u32,f64> = HashMap::new();
-        //each page transfers its pagerank equally among its children
-        //unless it has no children, then it transfers equally among all pages
-        let mut max_change = 0.;
-        
-        for (addr,page) in self.pages.into_iter() {
-            let mut pr = 0.;
-            for p in page.parents {
-                let parent_rank = self.ranks.get(p).unwrap();
-                let num_siblings = self.pages.get(p).unwrap().children.len() as f64;
-                pr += parent_rank / num_siblings;
-            }
-            pr = 1. - DAMPING_FACTOR + DAMPING_FACTOR * pr;
-            new_ranks.insert(*addr,pr);
-            let delta = (pr - self.ranks.get(addr).unwrap()).abs();
-            if delta > max_change {
-                max_change = delta;
-            }
-        }
-        self.ranks = new_ranks;
-        max_change
-    }
-    pub fn iterate3(&mut self) -> f64 {
-        /* wtf
-         *  This simplified method is slower but seems more correct (?!)
-         *  We ignore the damping factor and square our cache misses (so it's defs slower), 
-         *   but our total sum osciallates around 1.000... and our max diff converges
-         *  But we totally ignore the concept of a damping factor so this can't be right
-         *  There should be a constant starting value for pageranks (instead of `0.`) and
-         *   the influence a page has should decrease by 15% every iteration (right???)
-         *  Why does this behave like iterate1 and iterate2 should?
-         */
-        let mut new_ranks: HashMap<u32,f64> = HashMap::with_capacity(self.ranks.capacity());
-        //each page transfers its pagerank equally among its children
-        //unless it has no children, then it transfers equally among all pages
+        //distribute pagerank
         for (addr,page) in self.pages.into_iter() {
             let pr = self.ranks.get(addr).unwrap();
             if page.children.len() == 0 {
                 //equally distribute our pagerank to every page
                 let n = self.pages.len() as f64;
                 for &a in self.pages.keys() {
-                    let mut x = new_ranks.entry(a).or_insert(0.);
-                    *x += pr / n;
+                    let mut x = new_ranks.entry(a).or_insert(starting_val);
+                    *x += DAMPING_FACTOR * (pr / n);
                 }
             } else {
                 //equally distribute our pagerank to all our children
                 let n = page.children.len() as f64;
                 for &a in page.children {
-                    let mut x = new_ranks.entry(a).or_insert(0.);
-                    *x += pr / n;
+                    let mut x = new_ranks.entry(a).or_insert(starting_val);
+                    *x += DAMPING_FACTOR * (pr / n);
                 }
             }
         }
+        //identify the greatest change that is being made to self.ranks
         let mut max_change = 0f64;
         for (addr,rank) in &self.ranks {
             let delta = (rank - new_ranks.get(addr).unwrap()).abs();
-            if delta > max_change {
-                max_change = delta;
-            }
+            max_change = max_change.max(delta);
         }
         self.ranks = new_ranks;
         max_change
     }
+    fn compute_pageranks(&mut self, verbose: bool) -> usize {
+        //run self.iterate() until the max difference is within MAX_ERROR
+        //supposedly should run ~100 - ~150 times
+        //takes 148 iterations and ~8 minutes to solve simple wiki
+        let mut diff = std::f64::MAX;
+        let mut iter = 0;
+        let every = 10; //how often to print debug output
+        if verbose {
+            println!(" i\t\tMax Diff\t\t\tSum");
+        }
+        while diff > MAX_ERROR {
+            //terminate early if (sum - 1.0).abs() > diff?
+            // that would indicate that floating point errors are getting meaningful
+            //currently takes 148 iterations for the Simple wiki (~80 seconds)
+            diff = self.iterate();
+            iter += 1;
+            if verbose && iter % every == 0 {
+                //println!("{:03}:    {:1.20}, \t{:1.20}", iter, diff, self.sum());
+                println!("{:03}:    {},\t\t{}", iter, diff, self.sum());
+            } 
+            if iter > MAX_ITER {
+                panic!("Iter got too high");
+            }
+        }
+        if verbose {
+            println!("Finished calculating pagerank after {} iterations", iter);
+            println!("The maximum change in rank since the last iteration was {}", diff);
+            println!("The final total sum is {}", self.sum());
+        }
+        iter
+    }
+    fn export(&self, filepath: &str) -> csv::Result<()> {
+        //output into a .csv
+        // page_id, pagerank, page_title
+        let path = Path::new(filepath);
+        let mut writer = csv::Writer::from_file(&path)?;
+        for (id,rank) in &self.ranks {
+            let title = self.pages.get(id).unwrap().title;
+            writer.encode((id, rank, title))?;
+        }
+        Ok(())
+    }
 }
+
+
+

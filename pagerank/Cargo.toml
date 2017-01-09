@@ -6,3 +6,5 @@ authors = ["owen <stensonowen@gmail.com>"]
 [dependencies]
 phf = "*"
 wikidata = { path = "../wikidata" }
+csv = "0.15.0"
+
