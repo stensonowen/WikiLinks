@@ -13,3 +13,5 @@ Cargo.lock
 *.sql
 codegen_*.rs
 
+#Don't add sql login data
+.env
