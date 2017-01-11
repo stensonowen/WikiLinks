@@ -7,6 +7,7 @@ extern crate lazy_static;
 use std::collections::{HashSet, HashMap};
 use wikidata::{ADDRESSES, ENTRIES};
 use std::mem::swap;
+use std::borrow::Cow;
 
 const MAX_DEPTH: usize = 10;
 const SEARCH_RESULTS: usize = 10;
@@ -38,6 +39,17 @@ lazy_static! {
         LookupTable::from_iter(i)
     };
 }
+
+pub fn preprocess<'a>(input: &'a str) -> Cow<'a, str> {
+    //preprocess a string before it can become a valid title
+    //first, replace any spaces with underscores (iff necessary)
+    if input.contains(' ') {
+        Cow::Owned(input.replace(' ', &"_"))
+    } else {
+        Cow::Borrowed(input)
+    }
+}
+
 
 pub fn search(query: &str) -> Vec<&'static str> {
     TITLES.find(query).take(SEARCH_RESULTS).map(|t| t.0).collect()
