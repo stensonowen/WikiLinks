@@ -1,1 +1,2 @@
-DROP TABLE paths
+DROP TABLE paths;
+DROP TABLE titles;

@@ -1,9 +1,17 @@
 CREATE TABLE paths (
-    id      SERIAL PRIMARY KEY,
     src     INTEGER NOT NULL,
     dst     INTEGER NOT NULL,
     result  SMALLINT NOT NULL,
-    path    INTEGER[] NOT NULL,
-    count   INTEGER NOT NULL DEFAULT 0
-)
+    path    INTEGER[] NOT NULL, 
+    count   INTEGER NOT NULL DEFAULT 0,
+    timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (src, dst)
+
+);
+
+CREATE TABLE titles (
+    title   VARCHAR PRIMARY KEY,
+    path_id INTEGER NOT NULL
+
+);
 
