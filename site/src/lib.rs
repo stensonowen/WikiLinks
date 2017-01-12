@@ -1,11 +1,11 @@
 #![feature(plugin, custom_derive, custom_attribute)]
 #![plugin(rocket_codegen)]
 
-#[macro_use]
-extern crate serde_derive;
+#[macro_use] extern crate diesel;
+#[macro_use] extern crate diesel_codegen;
+#[macro_use] extern crate serde_derive;
 extern crate rocket;
 extern crate rocket_contrib;
-extern crate diesel;
 
 extern crate wikidata;
 extern crate bfs;
@@ -18,7 +18,7 @@ use rocket::http::uri::URI; // URI::percent_decode
 
 mod helpers;
 use helpers::*;
-mod database;
+pub mod database;
 
 const LANGUAGE: &'static str = "simple";
 

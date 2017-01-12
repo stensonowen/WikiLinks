@@ -10,8 +10,15 @@ Cargo.lock
 **/*.rs.bk
 
 # Don't commit giant data files
-*.sql
 codegen_*.rs
 
 #Don't add sql login data
 .env
+
+#Don't add swap files
+.*.swp
+
+#Don't add data
+*.csv
+*.zip
+
