@@ -1,23 +1,58 @@
 use bfs;
 use wikidata;
 use rocket::http::uri::URI; // URI::percent_decode
+use std::borrow::Cow;
+
+
 // HELPERS
 
-#[derive(FromForm)]
+#[derive(FromForm, Debug)]
 pub struct Search<'a> {
     pub src: &'a str,
     pub dst: &'a str,
+    //pub submit: Option<&'a str>,
+    //pub submit: &'a str,
+}
+
+impl<'a> Search<'a> {
+    pub fn prep_src(&'a self) -> Cow<'a, str> {
+        preprocess(self.src)
+    }
+    pub fn prep_dst(&'a self) -> Cow<'a, str> {
+        preprocess(self.dst)
+    }
+    //pub fn prep_dst(&'a self) -> &'a str {
+    //    preprocess(self.dst).as_ref()
+    //}
 }
 
 #[derive(Debug, Serialize)]
-pub struct Context<'a> {
-    pub cache:      Option<&'a str>,
-    pub path:       Option<&'a str>,
-    pub src_search: Option<String>,
-    pub dst_search: Option<String>,
-    //pub src_search: Option<&'a str>,
-    //pub dst_search: Option<&'a str>,
+pub struct Context {
+    //pub cache:      Option<&'a str>,
+    pub cache:      Option<String>,
+    //pub path:       Option<&'a str>,
+    //pub path:       Option<String>,
+    //pub path:       Option<Vec<String>>,
+    pub path:       Option<Vec<(&'static str, String)>>,
+    pub src_err:    Option<String>,
+    pub dst_err:    Option<String>,
+    pub path_err:   Option<String>,
+    //pub src_err: Option<&'a str>,
+    //pub dst_err: Option<&'a str>,
 }
+
+impl Context {
+    pub fn blank() -> Context {
+        Context {
+            cache: None,
+            path: None,
+            src_err: None,
+            dst_err: None,
+            path_err: None,
+        }
+    }
+}
+
 
 #[derive(Serialize)]
 pub enum PathResult {
@@ -31,26 +66,33 @@ pub enum PathResult {
     Error(String),
 }
 
-#[derive(Serialize)]
-pub enum SearchResult {
-    PageId(u32),
-    Recommendations(Vec<&'static str>),
-    NoGuesses,
-}
-
 pub fn resolve_titles(search: &Search) -> (Option<String>, Option<String>) {
     (resolve_title(search.src, "source"), resolve_title(search.dst, "destination"))
 
 }
 
+pub fn preprocess<'a>(input: &'a str) -> Cow<'a, str> {
+    let decoded = URI::percent_decode_lossy(input.as_bytes());
+    //preprocess a string before it can become a valid title
+    //first, replace any spaces with underscores (iff necessary)
+    if decoded.contains(' ') {
+        Cow::Owned(decoded.replace(' ', &"_"))
+    } else {
+        //Cow::Borrowed(decoded)
+        decoded
+    }
+}
+
+
 fn resolve_title(query: &str, name: &str) -> Option<String> {
     //print helpful info (iff relevant)
-    let decoded = URI::percent_decode_lossy(query.as_bytes());
-    let fixed = bfs::preprocess(decoded.as_ref());
-    if let Some(_) = wikidata::ADDRESSES.get(fixed.as_ref()) {
+    let query_ = preprocess(query);
+    //let decoded = URI::percent_decode_lossy(query.as_bytes());
+    //let fixed = bfs::preprocess(decoded.as_ref());
+    if let Some(_) = wikidata::ADDRESSES.get(query_.as_ref()) {
         None
     } else {
-        let guesses = bfs::search(query);
+        let guesses = bfs::search(query_.as_ref());
         if guesses.is_empty() {
             Some(format!("<p style=\"color:#FF0000;\">No ideas found for `{}` for the {}</p>", 
                          query, name))
@@ -70,3 +112,4 @@ fn resolve_title(query: &str, name: &str) -> Option<String> {
     }
 
 }
+

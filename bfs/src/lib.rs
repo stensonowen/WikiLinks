@@ -7,7 +7,6 @@ extern crate lazy_static;
 use std::collections::{HashSet, HashMap};
 use wikidata::{ADDRESSES, ENTRIES};
 use std::mem::swap;
-use std::borrow::Cow;
 
 const MAX_DEPTH: usize = 10;
 const SEARCH_RESULTS: usize = 10;
@@ -40,16 +39,6 @@ lazy_static! {
     };
 }
 
-pub fn preprocess<'a>(input: &'a str) -> Cow<'a, str> {
-    //preprocess a string before it can become a valid title
-    //first, replace any spaces with underscores (iff necessary)
-    if input.contains(' ') {
-        Cow::Owned(input.replace(' ', &"_"))
-    } else {
-        Cow::Borrowed(input)
-    }
-}
-
 
 pub fn search(query: &str) -> Vec<&'static str> {
     TITLES.find(query).take(SEARCH_RESULTS).map(|t| t.0).collect()
@@ -62,6 +51,7 @@ pub fn load_titles() {
 
 // Find the shortest path between articles
 
+#[derive(Debug)]
 pub enum Error {
     NoSuchPath,
     Terminated(usize),
@@ -218,17 +208,25 @@ pub fn format_path(res: Result<Vec<u32>, Error>, lang: &str) -> String {
     match res {
         Ok(path) => {
             let mut s = String::new();
-            s.push_str("<body>");
+            s.push_str(r"<body>");
             for id in &path {
                 let title = ENTRIES.get(id).unwrap().title;
                 s.push_str(
-                    &format!("<p><a href=\"https://{}.wikipedia.org/?curid={}\">`{}`</a></p>",
+                    &format!(r#"<p><a href=\"https://{}.wikipedia.org/?curid={}\">`{}`</a></p>"#,
                              lang, id, title));
             }
-            s.push_str("</body>");
+            s.push_str(r"</body>");
             s
         },
-        Err(Error::Terminated(t)) => format!("The search was terminated after {} rounds", t),
-        Err(Error::NoSuchPath) => String::from("No such path of any length exists"),
+        Err(Error::Terminated(t)) => format!(r"The search was terminated after {} rounds", t),
+        Err(Error::NoSuchPath) => String::from(r"No such path of any length exists"),
     }
+}
+
+pub fn annotate_path(res: Vec<u32>, lang: &str) -> Vec<(&'static str, String)> {
+    res.iter().map(|id| (
+            ENTRIES.get(id).unwrap().title,
+            format!("https://{}.wikipedia.org/?curid={}", lang, id)
+            ))
+        .collect()
 }

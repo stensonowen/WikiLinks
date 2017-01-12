@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>WikiLinks</title>
-        <center><h1>WikiLinks</h1></center>
+        <center><h1><a href="/bfs">WikiLinks</a></h1></center>
 
         <meta name="keywords" content="Wikipedia, shortest path, wikipedia game" />
         <meta name="description" content="Finding the shortest path between Wikipedia articles" />
@@ -35,21 +35,27 @@
                 <h3>Search</h1> 
             </header>
 
-            <form action="/" >
+            <form action="/bfs" >
                 <tt>
                     source <br>
                     <input type="text" name="src" id="input" size="30" autofocus /> <br><br>
                     destination <br>
                     <input type="text" name="dst" id="input" size="30" /> <br><br>
-                    <input type="submit" name="submit" value="Submit" />
+                    <input type="submit" value="Submit" />
                 </tt> 
             </form>
-            <p>
-            {{ src_search }}
-            </p>
-            {{ dst_search }}
+            {{ src_err }}
+            {{ dst_err }}
             <h3>Results</h3> 
-            {{path}}
+            {% if path_err %}
+                <p> {{ path_err }} </p>
+            {% elif path %}
+                <ol start="0">
+                {% for p in path %}
+                    <li><a href="{{p.1}}">{{p.0}}</a></li>
+                {% endfor %}
+                </ol>
+            {% endif %}
         </section>
 
     </body>

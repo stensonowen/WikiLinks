@@ -12,6 +12,9 @@ bfs = { path = "../bfs" }
 
 rocket = "0.1.4"
 rocket_codegen = "0.1.4"
+r2d2 = "0.7.1"
+r2d2-diesel = "0.9.0"
+lazy_static = "0.2.2"
 
 serde = "0.8"
 serde_derive = "0.8"

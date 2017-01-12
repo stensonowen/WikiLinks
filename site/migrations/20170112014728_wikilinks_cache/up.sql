@@ -11,7 +11,7 @@ CREATE TABLE paths (
 
 CREATE TABLE titles (
     title   VARCHAR PRIMARY KEY,
-    path_id INTEGER NOT NULL
+    page_id INTEGER NOT NULL
 
 );
 
