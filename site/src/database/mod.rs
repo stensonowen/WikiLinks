@@ -83,22 +83,6 @@ pub fn establish_connection() -> PgConnection {
         .expect(&format!("Error connecting to {}", database_url))
 }
 
-pub fn test() {
-    let connection = establish_connection();
-    //let results = paths::dsl::paths.filter(paths::dsl::src.eq(0))
-    let results = paths.filter(paths_row::src.eq(0).and(paths_row::dst.eq(1)))
-        .limit(5)
-        .load::<Path>(&connection)
-        .expect("Error loading paths");
-
-    println!("Displaying {} paths", results.len());
-    for p in results {
-        println!("{}", p.src);
-        println!("----------\n");
-        println!("{}", p.count);
-    }
-}
-
 
 pub enum PathOption {
     Path(Vec<u32>),
@@ -171,20 +155,7 @@ pub fn populate_addrs(conn: &PgConnection,
 pub enum AddressLookup {
     Address(u32),
     Suggestions(Vec<String>),
-    //Unknown,
 }
-
-//impl AddressLookup {
-    //pub fn to_html(&self, query: &str) -> Option<String> {
-    //    match self {
-    //        &AddressLookup::Address(_) => None,
-    //        &AddressLookup::Unknown => 
-    //            Some(format!("Unknown article `{}`; no suggestions", query)),
-    //        &AddressLookup::Suggestions(ref v) => 
-    //            Some(format!("Unknown article `{}`; did you mean `{:?}`", query, v)),
-    //}
-    //}
-//}
 
 pub fn lookup_addr(conn: &PgConnection, query: &str) -> Result<AddressLookup,Error> {
     //let lookup = titles.find(titles_row::title.eq(query));//.first(conn);
@@ -201,13 +172,10 @@ pub fn lookup_addr(conn: &PgConnection, query: &str) -> Result<AddressLookup,Err
             .load::<Address>(conn)?;
         let g = guesses.into_iter().map(|i| i.title.clone()).collect();
         Ok(AddressLookup::Suggestions(g))
-        //if guesses.is_empty() {
-        //    Ok(AddressLookup::Unknown)
-        //} else {
-        //    let g = guesses.into_iter().map(|i| i.title.clone()).collect();
-        //    Ok(AddressLookup::Suggestions(g))
-        //}
     }
 }
 
-
+pub fn purge_cache(conn: &PgConnection) -> Result<usize,Error> {
+    println!("Warning: purging cache");
+    diesel::delete(paths.filter(paths_row::src.gt(i32::min_value()))).execute(conn)
+}

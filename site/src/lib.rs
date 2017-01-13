@@ -104,6 +104,8 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
     if let (Ok(src_query), Ok(dst_query)) = (src_lookup, dst_lookup) {
         //lookups didn't fail, but might return no result
         //set src|dst titles even if they're bad/guesses
+        //context.src_t = Some(src_fix.into_owned());
+        //context.dst_t = Some(dst_fix.into_owned());
         context.src_t = Some(src_fix.into_owned());
         context.dst_t = Some(dst_fix.into_owned());
         //context.src_alts = src_query.to_html(src_fix.as_ref());
@@ -117,8 +119,10 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
             context.bad_dst = false;
             let path = {
                 if let Ok(p) = database::get_path(db.conn(), src_id, dst_id) {
+                    println!("Got path from db");
                     Ok(p)
                 } else {
+                    println!("Computing path...");
                     let path = bfs::bfs(src_id, dst_id);
                     database::insert_path(db.conn(), src_id, dst_id, &path).unwrap();
                     path
@@ -149,7 +153,6 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
 
         }
     }
-    println!("src_alts: `{:?}`", context.src_alts);
     Template::render("bfs", &context)
 }
 

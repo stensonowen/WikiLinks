@@ -75,7 +75,7 @@
             <h3>Results</h3> 
 
             {% if not bad_src and not bad_dst and src_t and dst_t %}
-                Path from <tt>`{{src_t}}`</tt> to <tt>`{{dst_t}}`: <br>
+                Path from <tt>`{{src_t}}`</tt> to <tt>`{{dst_t}}`</tt>: <br>
             {% endif %}
 
             {% if path_err %}

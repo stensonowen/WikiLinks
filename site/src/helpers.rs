@@ -1,5 +1,5 @@
-use bfs;
-use wikidata;
+//use bfs;
+//use wikidata;
 use rocket::http::uri::URI; // URI::percent_decode
 use std::borrow::Cow;
 
@@ -75,49 +75,26 @@ pub enum PathResult {
     Error(String),
 }
 
-pub fn resolve_titles(search: &Search) -> (Option<String>, Option<String>) {
-    (resolve_title(search.src, "source"), resolve_title(search.dst, "destination"))
-
-}
-
 pub fn preprocess<'a>(input: &'a str) -> Cow<'a, str> {
     let decoded = URI::percent_decode_lossy(input.as_bytes());
     //preprocess a string before it can become a valid title
     //first, replace any spaces with underscores (iff necessary)
-    if decoded.contains(' ') {
-        Cow::Owned(decoded.replace(' ', &"_"))
-    } else {
-        decoded
-    }
-}
-
-
-fn resolve_title(query: &str, name: &str) -> Option<String> {
-    //print helpful info (iff relevant)
-    let query_ = preprocess(query);
-    //let decoded = URI::percent_decode_lossy(query.as_bytes());
-    //let fixed = bfs::preprocess(decoded.as_ref());
-    if let Some(_) = wikidata::ADDRESSES.get(query_.as_ref()) {
-        None
-    } else {
-        let guesses = bfs::search(query_.as_ref());
-        if guesses.is_empty() {
-            Some(format!("<p style=\"color:#FF0000;\">No ideas found for `{}` for the {}</p>", 
-                         query, name))
+    //replace spaces w/ underscores (how they are in the wiki dump)
+    //replace pluses also, which are an artifact of html forms
+    let decoded = {
+        if decoded.contains(' ') {
+            Cow::Owned(decoded.replace(' ', &"_"))
         } else {
-            let mut s = String::new();
-            s.push_str("No articles found with that name for the ");
-            s.push_str(name);
-            s.push_str(". Maybe you meant: <ul>");
-            for g in guesses {
-                s.push_str("<li>");
-                s.push_str(g);
-                s.push_str("</li>");
-            }
-            s.push_str("</ul>");
-            Some(s)
+            decoded
         }
-    }
-
+    };
+    let decoded = {
+        if decoded.contains("%2B") {
+            Cow::Owned(decoded.replace("%2B", &"+"))
+        } else {
+            decoded
+        }
+    };
+    decoded
 }
 
