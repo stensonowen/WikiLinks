@@ -87,13 +87,9 @@ fn search_api(query: &str, db: DB) -> JSON<database::AddressLookup> {
 #[get("/bfs", rank = 2)]
 fn bfs_empty<'a>() -> Template {
     // any way to make this just a part of bfs_search?
-    let context = Context {
-        cache: None,
-        path: None,
-        src_err: None,
-        dst_err: None,
-        path_err: None,
-    };
+    let mut context = Context::blank();
+    context.bad_src = false;
+    context.bad_dst = false;
     Template::render("bfs", &context)
 }
 
@@ -107,13 +103,18 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
     let dst_lookup = database::lookup_addr(db.conn(), dst_fix.as_ref());
     if let (Ok(src_query), Ok(dst_query)) = (src_lookup, dst_lookup) {
         //lookups didn't fail, but might return no result
-        context.src_err = src_query.to_html(src_fix.as_ref());
-        context.dst_err = dst_query.to_html(dst_fix.as_ref());
+        //set src|dst titles even if they're bad/guesses
+        context.src_t = Some(src_fix.into_owned());
+        context.dst_t = Some(dst_fix.into_owned());
+        //context.src_alts = src_query.to_html(src_fix.as_ref());
+        //context.dst_err = dst_query.to_html(dst_fix.as_ref());
         //TODO: populate Cache template
         use database::AddressLookup::Address;
-        if let (Address(src_id), Address(dst_id)) = (src_query, dst_query) {
+        if let (&Address(src_id), &Address(dst_id)) = (&src_query, &dst_query) {
             //bfs from src_id to dst_id
             //and insert into table
+            context.bad_src = false;
+            context.bad_dst = false;
             let path = {
                 if let Ok(p) = database::get_path(db.conn(), src_id, dst_id) {
                     Ok(p)
@@ -123,15 +124,6 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
                     path
                 }
             };
-            //if let Ok(path) = database::get_path(db.conn(), src_id, dst_id) {
-            //    match path {
-            //        Ok(p) => {
-            //            context.path = Some(bfs::annotate_path(p, LANGUAGE));
-            //        },
-            //    }
-            //} else {
-            //    let path = bfs::bfs(src_id, dst_id);
-            //    database::insert_path(db.conn(), src_id, dst_id, &path).unwrap();
             match path {
                 Ok(p) => {
                     context.path = Some(bfs::annotate_path(p, LANGUAGE));
@@ -143,20 +135,21 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
                     context.path_err = Some("No such path exists".to_owned())
                 },
             }
-            //}
-            //if let Ok(p) = path {
-            //    context.path = bfs::annotate_path(p);
-            //} else {
-            //    context.path_err = 
+        } else {
+            if let database::AddressLookup::Suggestions(v) = src_query {
+                context.src_alts = Some(v);
+            } else {
+                context.bad_src = false;
+            }
+            if let database::AddressLookup::Suggestions(v) = dst_query {
+                context.dst_alts = Some(v);
+            } else {
+                context.bad_dst = false;
+            }
 
-            //}
-
-            //let path_ = path.unwrap().iter().map(|n| (n.to_string(), 0)).collect();
-            //let path_res = bfs::format_path(path, LANGUAGE);
-            //context.path = Some(path_res);
-            //context.path = Some(path_); //path.ok();
         }
     }
+    println!("src_alts: `{:?}`", context.src_alts);
     Template::render("bfs", &context)
 }
 

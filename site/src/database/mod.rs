@@ -171,20 +171,20 @@ pub fn populate_addrs(conn: &PgConnection,
 pub enum AddressLookup {
     Address(u32),
     Suggestions(Vec<String>),
-    Unknown,
+    //Unknown,
 }
 
-impl AddressLookup {
-    pub fn to_html(&self, query: &str) -> Option<String> {
-        match self {
-            &AddressLookup::Address(_) => None,
-            &AddressLookup::Unknown => 
-                Some(format!("Unknown article `{}`; no suggestions", query)),
-            &AddressLookup::Suggestions(ref v) => 
-                Some(format!("Unknown article `{}`; did you mean `{:?}`", query, v)),
-    }
-    }
-}
+//impl AddressLookup {
+    //pub fn to_html(&self, query: &str) -> Option<String> {
+    //    match self {
+    //        &AddressLookup::Address(_) => None,
+    //        &AddressLookup::Unknown => 
+    //            Some(format!("Unknown article `{}`; no suggestions", query)),
+    //        &AddressLookup::Suggestions(ref v) => 
+    //            Some(format!("Unknown article `{}`; did you mean `{:?}`", query, v)),
+    //}
+    //}
+//}
 
 pub fn lookup_addr(conn: &PgConnection, query: &str) -> Result<AddressLookup,Error> {
     //let lookup = titles.find(titles_row::title.eq(query));//.first(conn);
@@ -199,12 +199,14 @@ pub fn lookup_addr(conn: &PgConnection, query: &str) -> Result<AddressLookup,Err
         let guesses = titles.filter(titles_row::title.like(fuzzy_query))
             .limit(10)
             .load::<Address>(conn)?;
-        if guesses.is_empty() {
-            Ok(AddressLookup::Unknown)
-        } else {
-            let g = guesses.into_iter().map(|i| i.title.clone()).collect();
-            Ok(AddressLookup::Suggestions(g))
-        }
+        let g = guesses.into_iter().map(|i| i.title.clone()).collect();
+        Ok(AddressLookup::Suggestions(g))
+        //if guesses.is_empty() {
+        //    Ok(AddressLookup::Unknown)
+        //} else {
+        //    let g = guesses.into_iter().map(|i| i.title.clone()).collect();
+        //    Ok(AddressLookup::Suggestions(g))
+        //}
     }
 }
 

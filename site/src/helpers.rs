@@ -27,27 +27,36 @@ impl<'a> Search<'a> {
 }
 
 #[derive(Debug, Serialize)]
-pub struct Context {
+pub struct Context<'a> {
     //pub cache:      Option<&'a str>,
-    pub cache:      Option<String>,
+    pub cache:      Option<&'a str>,
+    pub src_t:      Option<String>, //todo
+    pub dst_t:      Option<String>,
+    pub bad_src:    bool,
+    pub bad_dst:    bool,
     //pub path:       Option<&'a str>,
     //pub path:       Option<String>,
     //pub path:       Option<Vec<String>>,
     pub path:       Option<Vec<(&'static str, String)>>,
-    pub src_err:    Option<String>,
-    pub dst_err:    Option<String>,
+    pub src_alts:   Option<Vec<String>>,    //todo: &'a str ?
+    pub dst_alts:   Option<Vec<String>>,
+    //pub dst_err:    Option<String>,
     pub path_err:   Option<String>,
     //pub src_err: Option<&'a str>,
     //pub dst_err: Option<&'a str>,
 }
 
-impl Context {
-    pub fn blank() -> Context {
+impl<'a> Context<'a> {
+    pub fn blank() -> Context<'a> {
         Context {
             cache: None,
+            src_t: None,
+            dst_t: None,
+            bad_src: true,
+            bad_dst: true,
             path: None,
-            src_err: None,
-            dst_err: None,
+            src_alts: None,
+            dst_alts: None,
             path_err: None,
         }
     }
@@ -78,7 +87,6 @@ pub fn preprocess<'a>(input: &'a str) -> Cow<'a, str> {
     if decoded.contains(' ') {
         Cow::Owned(decoded.replace(' ', &"_"))
     } else {
-        //Cow::Borrowed(decoded)
         decoded
     }
 }
