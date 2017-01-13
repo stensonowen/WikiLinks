@@ -18,7 +18,6 @@ extern crate phf;
 use rocket_contrib::Template;
 use rocket_contrib::JSON;
 use rocket::response::Redirect;
-//use rocket::http::uri::URI; // URI::percent_decode
 
 mod helpers;
 use helpers::*;
@@ -47,6 +46,7 @@ fn index() -> Redirect {
     Redirect::to("/bfs")
 }
 
+/*
 #[get("/bfs/api/<src>/<dst>", format = "application/json")]
 fn bfs_api(src: u32, dst: u32) -> JSON<PathResult> {
     let r = match (wikidata::ENTRIES.get(&src), wikidata::ENTRIES.get(&dst)) {
@@ -82,11 +82,85 @@ fn search_api(query: &str, db: DB) -> JSON<database::AddressLookup> {
     let query_ = preprocess(query);
     JSON(database::lookup_addr(db.conn(), query_.as_ref()).unwrap())
 }
+*/
 
+#[derive(Serialize)]
+enum BfsApiRet {
+    Success {
+        ids: Vec<u32>,
+        titles: Vec<&'static str>,
+    },
+    InvalidSrc,
+    InvalidDst,
+    InvalidSrcAndDst,
+    TerminatedAfter(usize),
+    NoSuchPath,
+}
+
+#[get("/bfs_api?<api>")]
+fn api_bfs(db: DB, api: BfsApi) -> JSON<BfsApiRet> {
+    let src = lookup_id_or_title(&db, api.src_id, api.src_title);
+    let dst = lookup_id_or_title(&db, api.dst_id, api.dst_title);
+    let ret = match (src, dst) {
+        (Err(_), Err(_)) => BfsApiRet::InvalidSrcAndDst,
+        (Err(_), _) => BfsApiRet::InvalidSrc,
+        (_, Err(_)) => BfsApiRet::InvalidDst,
+        (Ok(src_id), Ok(dst_id)) => {
+            let path = match database::get_path(db.conn(), src_id, dst_id) {
+                //TODO: make these the same type?
+                Ok(database::PathOption::Path(p)) => Ok(p),
+                Ok(database::PathOption::Terminated(i)) => Err(bfs::Error::Terminated(i)),
+                Ok(database::PathOption::NoSuchPath) => Err(bfs::Error::NoSuchPath),
+                _ => {
+                    //perform the search if we never have, and save it in the db
+                    let path = bfs::bfs(src_id, dst_id);
+                    database::insert_path(db.conn(), src_id, dst_id, &path).unwrap();
+                    path
+                }
+            };
+            match path {
+                Ok(v) => BfsApiRet::Success {
+                    titles: v.iter()
+                        .map(|id| wikidata::ENTRIES.get(id).unwrap().title)
+                        .collect(),
+                    ids: v,
+                },
+                Err(bfs::Error::Terminated(i)) => BfsApiRet::TerminatedAfter(i),
+                Err(bfs::Error::NoSuchPath) => BfsApiRet::NoSuchPath,
+            }
+        }
+    };
+    JSON(ret)
+}
+
+fn lookup_id_or_title(db: &DB, id: Option<u32>, title: Option<&str>) -> Result<u32,()> {
+    //returns the address if it's valid, or an error otherwise
+    //should this just be an Option??
+    match (id, title) {
+        (Some(_), Some(_)) => Err(()),
+        (None, None) => Err(()),
+        (Some(id), None) => {
+            //make sure this address is valid? is this necessarey?
+            match wikidata::ENTRIES.contains_key(&id) {
+                true  => Ok(id),
+                false => Err(()),
+            }
+        },
+        (None, Some(t)) => {
+            let fix = preprocess(t);
+            match database::lookup_addr(db.conn(), fix.as_ref()) {
+                Ok(database::AddressLookup::Address(id)) => Ok(id),
+                _ => Err(()),
+            }
+        }
+    }
+}
 
 #[get("/bfs", rank = 2)]
 fn bfs_empty<'a>() -> Template {
     // any way to make this just a part of bfs_search?
+    // using Option-al fields in Search still requires a `?`
+    // this also catches when only one of src/dst is specified
     let mut context = Context::blank();
     context.bad_src = false;
     context.bad_dst = false;
@@ -97,32 +171,28 @@ fn bfs_empty<'a>() -> Template {
 fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
     //let src_query = database::lookup_addr(db.conn(), preprocess(search.src));
     let mut context = Context::blank();
-    let src_fix = search.prep_src();
+    //pre-process, check title validity
+    let (src_fix, dst_fix) = search.prep();
     let src_lookup = database::lookup_addr(db.conn(), src_fix.as_ref());
-    let dst_fix = search.prep_dst();
     let dst_lookup = database::lookup_addr(db.conn(), dst_fix.as_ref());
     if let (Ok(src_query), Ok(dst_query)) = (src_lookup, dst_lookup) {
         //lookups didn't fail, but might return no result
         //set src|dst titles even if they're bad/guesses
-        //context.src_t = Some(src_fix.into_owned());
-        //context.dst_t = Some(dst_fix.into_owned());
         context.src_t = Some(src_fix.into_owned());
         context.dst_t = Some(dst_fix.into_owned());
-        //context.src_alts = src_query.to_html(src_fix.as_ref());
-        //context.dst_err = dst_query.to_html(dst_fix.as_ref());
         //TODO: populate Cache template
         use database::AddressLookup::Address;
         if let (&Address(src_id), &Address(dst_id)) = (&src_query, &dst_query) {
-            //bfs from src_id to dst_id
-            //and insert into table
+            //well-formed request
             context.bad_src = false;
             context.bad_dst = false;
-            let path = {
-                if let Ok(p) = database::get_path(db.conn(), src_id, dst_id) {
-                    println!("Got path from db");
-                    Ok(p)
-                } else {
-                    println!("Computing path...");
+            //try to get this from the database
+            let path = match database::get_path(db.conn(), src_id, dst_id) {
+                Ok(database::PathOption::Path(p)) => Ok(p),
+                Ok(database::PathOption::Terminated(i)) => Err(bfs::Error::Terminated(i)),
+                Ok(database::PathOption::NoSuchPath) => Err(bfs::Error::NoSuchPath),
+                _ => {
+                    //perform the search if we never have, and save it in the db
                     let path = bfs::bfs(src_id, dst_id);
                     database::insert_path(db.conn(), src_id, dst_id, &path).unwrap();
                     path
@@ -130,16 +200,14 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
             };
             match path {
                 Ok(p) => {
-                    context.path = Some(bfs::annotate_path(p, LANGUAGE));
-                },
+                    context.path = Some(bfs::annotate_path(p, LANGUAGE)); },
                 Err(bfs::Error::Terminated(n)) => {
-                    context.path_err = Some(format!("Found no path after {} iterations",n))
-                },
+                    context.path_err = Some(format!("Found no path after {} iterations",n)) },
                 Err(bfs::Error::NoSuchPath) => {
-                    context.path_err = Some("No such path exists".to_owned())
-                },
+                    context.path_err = Some("No such path exists".to_owned()) },
             }
         } else {
+            // src or dst title was invalid; update context with suggestions/indicator
             if let database::AddressLookup::Suggestions(v) = src_query {
                 context.src_alts = Some(v);
             } else {
@@ -150,12 +218,22 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
             } else {
                 context.bad_dst = false;
             }
-
         }
     }
     Template::render("bfs", &context)
 }
 
+
+//#[derive(FromForm, Queryable, Debug)]
+//struct Test {
+//    a: String,
+//    b: Option<String>,
+//}
+
+//#[get("/foo?<t>")]
+//fn test(t: Test) -> String {
+//    format!("`{:?}`", t)
+//}
 
 pub fn deploy() {
     //bfs::load_titles(); //just for testing??
@@ -164,8 +242,10 @@ pub fn deploy() {
                routes![index,
                            bfs_search,
                            bfs_empty,
-                           bfs_api,
-                           search_api,
+                           //bfs_api,
+                           //search_api,
+                           //test
+                           api_bfs,
     ])
         .launch();
 }

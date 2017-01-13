@@ -86,11 +86,11 @@ pub fn establish_connection() -> PgConnection {
 
 pub enum PathOption {
     Path(Vec<u32>),
-    Terminated(u32),
+    Terminated(usize),
     NoSuchPath,
 }
 
-pub fn get_path(conn: &PgConnection, src: u32, dst: u32) -> Result<Vec<u32>,Error> {
+pub fn get_path(conn: &PgConnection, src: u32, dst: u32) -> Result<PathOption, Error> {
     //adjust timestamp and count
     //Error means path does not exist 
     //  (or that it wasn't updated properly, which is no biggie)
@@ -101,7 +101,12 @@ pub fn get_path(conn: &PgConnection, src: u32, dst: u32) -> Result<Vec<u32>,Erro
 
     let new_count = path.count + 1;
     diesel::update(target).set(paths_row::count.eq(new_count)).execute(conn)?;
-    Ok(path.path.into_iter().map(|i| i as u32).collect())
+    match path.result {
+        0  => Ok(PathOption::Path(path.path.into_iter().map(|i| i as u32).collect())),
+        -1 => Ok(PathOption::NoSuchPath),
+        x if x>0 => Ok(PathOption::Terminated(x as usize)),
+        _ => Err(Error::NotFound),
+    }
 }
 
 use super::bfs;

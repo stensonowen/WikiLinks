@@ -71,7 +71,7 @@ pub fn bfs(src: u32, dst: u32) -> Result<Vec<u32>, Error> {
     // TODO: there's a fair bit of redundancy: top_down_n ⊆ src_seen ⊇ top_down_o
 
     if src == dst {
-        return Ok(vec![src, dst]);
+        return Ok(vec![src]);
     }
 
     //`seen` pages: the id we've encountered and the id that linked to it (parent OR child)
@@ -86,6 +86,10 @@ pub fn bfs(src: u32, dst: u32) -> Result<Vec<u32>, Error> {
     // start from dst, follow parents
     let mut bottom_up: HashSet<u32> = HashSet::new();
     bottom_up.insert(dst);
+
+    src_seen.insert(src, src);
+    dst_seen.insert(dst, dst);
+
 
     let mut tmp: HashSet<u32> = HashSet::new();
 

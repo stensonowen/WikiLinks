@@ -15,15 +15,26 @@ pub struct Search<'a> {
 }
 
 impl<'a> Search<'a> {
-    pub fn prep_src(&'a self) -> Cow<'a, str> {
+    fn prep_src(&'a self) -> Cow<'a, str> {
         preprocess(self.src)
     }
-    pub fn prep_dst(&'a self) -> Cow<'a, str> {
+    fn prep_dst(&'a self) -> Cow<'a, str> {
         preprocess(self.dst)
+    }
+    pub fn prep(&'a self) -> (Cow<'a, str>, Cow<'a, str>) {
+        (self.prep_src(), self.prep_dst())
     }
     //pub fn prep_dst(&'a self) -> &'a str {
     //    preprocess(self.dst).as_ref()
     //}
+}
+
+#[derive(FromForm, Debug)]
+pub struct BfsApi<'a> {
+    pub src_title:  Option<&'a str>,
+    pub dst_title:  Option<&'a str>,
+    pub src_id:     Option<u32>,
+    pub dst_id:     Option<u32>,
 }
 
 #[derive(Debug, Serialize)]
