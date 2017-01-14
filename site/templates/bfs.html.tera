@@ -26,6 +26,9 @@
             </header>
             Recent searches are cached, and viewing them is faster than doing a new search (particularly for long paths). <br>
             {{cache}}
+            {% for c in cache %}
+                <p> {{c.0}}  to  {{c.1}} </p>
+            {% endfor %}
         </aside>
 
         <section id="search">

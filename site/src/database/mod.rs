@@ -11,6 +11,7 @@
 
 extern crate dotenv;
 extern crate chrono;
+use super::wikidata::ENTRIES;
 
 use diesel::{self, insert};
 use diesel::prelude::*;
@@ -102,10 +103,13 @@ pub fn get_path(conn: &PgConnection, src: u32, dst: u32) -> Result<PathOption, E
     let new_count = path.count + 1;
     diesel::update(target).set(paths_row::count.eq(new_count)).execute(conn)?;
     match path.result {
-        0  => Ok(PathOption::Path(path.path.into_iter().map(|i| i as u32).collect())),
-        -1 => Ok(PathOption::NoSuchPath),
-        x if x>0 => Ok(PathOption::Terminated(x as usize)),
-        _ => Err(Error::NotFound),
+        0 => Ok(PathOption::NoSuchPath),
+        x if x < 0 => Ok(PathOption::Terminated((x*-1) as usize)),
+        _ => Ok(PathOption::Path(path.path.into_iter().map(|i| i as u32).collect())),
+        //0  => Ok(PathOption::Path(path.path.into_iter().map(|i| i as u32).collect())),
+        //-1 => Ok(PathOption::NoSuchPath),
+        //x if x>0 => Ok(PathOption::Terminated(x as usize)),
+        //_ => Err(Error::NotFound),
     }
 }
 
@@ -120,15 +124,19 @@ pub fn insert_path(conn: &PgConnection,
     //insert a path from src to dst
     //failure is recoverable: this entry might be invalid, but 
     // it can just be calculated / inserted again next time
+    // result: 
+    //  negative x: failed after x iterations
+    //  0:  no such path for sure
+    //  positive x: path has a length of x
     let (result, path) = match path {
         //vec![] should create vector w/ 0 capacity by default
         //so needing to return an empty vec instead of None isn't too bad
         //PathOption::Path(v) => (0i16, v.into_iter().map(|i| i as i32).collect()),
         //PathOption::Terminated(i) => ((i as i16) * -1, vec![]),
         //PathOption::NoSuchPath => (-1i16, vec![]),
-        &Ok(ref v) => (0i16, v.into_iter().map(|&i| i as i32).collect()),
+        &Ok(ref v) => (v.len() as i16, v.into_iter().map(|&i| i as i32).collect()),
         &Err(bfs::Error::Terminated(i)) => ((i as i16) * -1, vec![]),
-        &Err(bfs::Error::NoSuchPath) => (-1i16, vec![]),
+        &Err(bfs::Error::NoSuchPath) => (0, vec![]),
     };
     let new_path = NewPath {
         src: src as i32,
@@ -183,4 +191,53 @@ pub fn lookup_addr(conn: &PgConnection, query: &str) -> Result<AddressLookup,Err
 pub fn purge_cache(conn: &PgConnection) -> Result<usize,Error> {
     println!("Warning: purging cache");
     diesel::delete(paths.filter(paths_row::src.gt(i32::min_value()))).execute(conn)
+}
+
+pub enum SortOptions {
+    Recent,
+    Popular,
+    Length,
+    //Random,   //how to do
+}
+
+pub fn get_cache(conn: &PgConnection, order: SortOptions, num: i64) 
+        -> Result<Vec<(&str,&str,i16)>,String> {
+    //return (src_t, dst_t) pairs for the cache history
+    //if anything goes wrong, return a description, but *should* be safe to .unwrap()
+    /* generic match statement?
+    let query = match order {
+        SortOptions::Recent  => paths_row::timestamp.desc(),
+        SortOptions::Popular => paths_row::count.desc(),
+        SortOptions::Length  => paths_row::result.desc(),
+    };
+    //let rows = match paths.order(query).limit(num).load(conn) {
+    */
+    let rows_res: Result<Vec<Path>,Error> = match order {
+        //reverse order
+        SortOptions::Recent  => paths.order(paths_row::timestamp.desc()).limit(num).load(conn),
+        SortOptions::Popular => paths.order(paths_row::count.desc()).limit(num).load(conn),
+        SortOptions::Length  => paths.order(paths_row::result.desc()).limit(num).load(conn),
+    };
+    let rows = match rows_res {
+        Ok(r) => r,
+        Err(e) => return Err(format!("Failed cache query: `{:?}`", e)),
+    };
+    let mut cache = Vec::<(&str, &str, i16)>::with_capacity(num as usize);
+    for (s,d,r) in rows.into_iter().map(|p| (p.src as u32, p.dst as u32, p.result)) {
+        let src_t = match ENTRIES.get(&s) {
+            Some(e) => e.title,
+            None => return Err(format!("No such src entry at {}", s)),
+        };
+        let dst_t = match ENTRIES.get(&d) {
+            Some(e) => e.title,
+            None => return Err(format!("No such dst entry at {}", s)),
+        };
+        //exclude results if:
+        //  there is no path
+        //  the path is too long
+        if r > 0 {
+            cache.push((src_t, dst_t, r))
+        }
+    }
+    Ok(cache)
 }

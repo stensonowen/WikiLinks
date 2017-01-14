@@ -2,6 +2,7 @@
 //use wikidata;
 use rocket::http::uri::URI; // URI::percent_decode
 use std::borrow::Cow;
+use super::database::SortOptions;
 
 
 // HELPERS
@@ -10,8 +11,8 @@ use std::borrow::Cow;
 pub struct Search<'a> {
     pub src: &'a str,
     pub dst: &'a str,
-    //pub submit: Option<&'a str>,
-    //pub submit: &'a str,
+    //pub cache: Option<Vec<(&'a str, &'a str, i16)>>,
+    pub cache_sort: Option<&'a str>,
 }
 
 impl<'a> Search<'a> {
@@ -24,9 +25,14 @@ impl<'a> Search<'a> {
     pub fn prep(&'a self) -> (Cow<'a, str>, Cow<'a, str>) {
         (self.prep_src(), self.prep_dst())
     }
-    //pub fn prep_dst(&'a self) -> &'a str {
-    //    preprocess(self.dst).as_ref()
-    //}
+    pub fn sort_option(&self) -> Option<SortOptions> {
+        match self.cache_sort {
+            Some(x) if x.to_lowercase() == "recent"  => Some(SortOptions::Recent),
+            Some(x) if x.to_lowercase() == "popular" => Some(SortOptions::Popular),
+            Some(x) if x.to_lowercase() == "length"  => Some(SortOptions::Length),
+            _ => None,
+        }
+    }
 }
 
 #[derive(FromForm, Debug)]
@@ -40,7 +46,8 @@ pub struct BfsApi<'a> {
 #[derive(Debug, Serialize)]
 pub struct Context<'a> {
     //pub cache:      Option<&'a str>,
-    pub cache:      Option<&'a str>,
+    //pub cache:      Option<&'a str>,
+    pub cache:      Option<Vec<(&'a str, &'a str, i16)>>,
     pub src_t:      Option<String>, //todo
     pub dst_t:      Option<String>,
     pub bad_src:    bool,
@@ -92,9 +99,11 @@ pub fn preprocess<'a>(input: &'a str) -> Cow<'a, str> {
     //first, replace any spaces with underscores (iff necessary)
     //replace spaces w/ underscores (how they are in the wiki dump)
     //replace pluses also, which are an artifact of html forms
+    let escaped = |c| c == ' ' || c == '+';
     let decoded = {
-        if decoded.contains(' ') {
-            Cow::Owned(decoded.replace(' ', &"_"))
+        if decoded.contains(&escaped) {
+            //urls/forms turn spaces into 
+            Cow::Owned(decoded.replace(&escaped, &"_"))
         } else {
             decoded
         }

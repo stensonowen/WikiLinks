@@ -26,6 +26,8 @@ pub mod database;
 use database::DB;
 
 const LANGUAGE: &'static str = "simple";
+const CACHE_SIZE: i64 = 15; //ew, must be signed
+const DEFAULT_CACHE_SORT: database::SortOptions = database::SortOptions::Recent;
 
 // Intented site behavior
 //
@@ -33,6 +35,8 @@ const LANGUAGE: &'static str = "simple";
 //      ( use text or page_id? )
 //      wikilinks.xyz/bfs/src/dst           data is ????, returns JSON
 //      wikilinks.xyz/bfs?src=src&dst=dst   data is text, renders a page
+//      searchability? api to fuzzy search article titles?
+//      cache, once that works
 //
 //  Todo
 //      make a favicon.ico
@@ -178,9 +182,9 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
     if let (Ok(src_query), Ok(dst_query)) = (src_lookup, dst_lookup) {
         //lookups didn't fail, but might return no result
         //set src|dst titles even if they're bad/guesses
+        println!("\tSRC = `{:?}`;\t\tDST = `{:?}`", src_fix, dst_fix);
         context.src_t = Some(src_fix.into_owned());
         context.dst_t = Some(dst_fix.into_owned());
-        //TODO: populate Cache template
         use database::AddressLookup::Address;
         if let (&Address(src_id), &Address(dst_id)) = (&src_query, &dst_query) {
             //well-formed request
@@ -219,6 +223,13 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
                 context.bad_dst = false;
             }
         }
+        //get cache after action, so it can reflect our search
+        context.cache = database::get_cache(db.conn(), 
+                                            //database::SortOptions::Recent, 
+                                            //database::SortOptions::Popular, 
+                                            //database::SortOptions::Length, 
+                                            search.sort_option().unwrap_or(DEFAULT_CACHE_SORT),
+                                            CACHE_SIZE).ok();
     }
     Template::render("bfs", &context)
 }
