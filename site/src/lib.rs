@@ -182,7 +182,6 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
     if let (Ok(src_query), Ok(dst_query)) = (src_lookup, dst_lookup) {
         //lookups didn't fail, but might return no result
         //set src|dst titles even if they're bad/guesses
-        println!("\tSRC = `{:?}`;\t\tDST = `{:?}`", src_fix, dst_fix);
         context.src_t = Some(src_fix.into_owned());
         context.dst_t = Some(dst_fix.into_owned());
         use database::AddressLookup::Address;

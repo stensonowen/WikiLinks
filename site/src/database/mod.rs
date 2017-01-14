@@ -236,7 +236,11 @@ pub fn get_cache(conn: &PgConnection, order: SortOptions, num: i64)
         //  there is no path
         //  the path is too long
         if r > 0 {
-            cache.push((src_t, dst_t, r))
+            //length is number of elements in the path vector
+            //so the distance is one less
+            //NOTE: if the max iters increases past 10, then r can be multiple digits,
+            // which wouldn't align nicely
+            cache.push((src_t, dst_t, r-1))
         }
     }
     Ok(cache)

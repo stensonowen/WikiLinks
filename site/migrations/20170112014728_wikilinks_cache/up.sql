@@ -3,7 +3,7 @@ CREATE TABLE paths (
     dst     INTEGER NOT NULL,
     result  SMALLINT NOT NULL,
     path    INTEGER[] NOT NULL, 
-    count   INTEGER NOT NULL DEFAULT 0,
+    count   INTEGER NOT NULL DEFAULT 1,
     timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY (src, dst)
 

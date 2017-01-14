@@ -25,9 +25,13 @@
                 <h3> History </h3> 
             </header>
             Recent searches are cached, and viewing them is faster than doing a new search (particularly for long paths). <br>
-            {{cache}}
             {% for c in cache %}
-                <p> {{c.0}}  to  {{c.1}} </p>
+                <form action="/bfs" >
+                    <input name="src" value="{{c.0}}" readonly />
+                    &rarr; {{c.2}} &rarr;
+                    <input name="dst" value="{{c.1}}" readonly />
+                    <input type="submit" value="Submit"/>
+                </form> 
             {% endfor %}
         </aside>
 
@@ -55,7 +59,7 @@
                         {% endif %}
                     {% endif %}
 
-                    <br><br> destination <br>
+                    <br> destination <br>
                     <input type="text" name="dst" id="input" size="30" 
                        value="{% if bad_src and not bad_dst %}{{dst_t}}{% endif %}"/> <br>
 
