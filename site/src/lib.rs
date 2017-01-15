@@ -27,7 +27,7 @@ use database::DB;
 
 const LANGUAGE: &'static str = "simple";
 const CACHE_SIZE: i64 = 15; //ew, must be signed
-const DEFAULT_CACHE_SORT: database::SortOptions = database::SortOptions::Recent;
+const DEFAULT_CACHE_SORT: SortOptions = SortOptions::Recent;
 
 // Intented site behavior
 //
@@ -160,15 +160,34 @@ fn lookup_id_or_title(db: &DB, id: Option<u32>, title: Option<&str>) -> Result<u
     }
 }
 
-#[get("/bfs", rank = 2)]
-fn bfs_empty<'a>() -> Template {
+#[get("/bfs", rank = 3)]
+fn bfs_empty<'a>(db: DB) -> Template {
     // any way to make this just a part of bfs_search?
     // using Option-al fields in Search still requires a `?`
     // this also catches when only one of src/dst is specified
     let mut context = Context::blank();
     context.bad_src = false;
     context.bad_dst = false;
+    context.cache = database::get_cache(db.conn(), 
+                                        DEFAULT_CACHE_SORT,
+                                        CACHE_SIZE).ok();
     Template::render("bfs", &context)
+}
+
+#[get("/bfs?<sort>", rank = 2)]
+fn bfs_sort<'a>(db: DB, sort: CacheSort) -> Template {
+    //request certain cache sort without making a search
+    let mut context = Context::blank();
+    context.bad_src = false;
+    context.bad_dst = false;
+    let sort_method: SortOptions = sort.cache_sort
+        .and_then(SortOptions::convert)
+        .unwrap_or(DEFAULT_CACHE_SORT);
+    context.cache = database::get_cache(db.conn(), 
+                                        sort_method,
+                                        CACHE_SIZE).ok();
+    Template::render("bfs", &context)
+
 }
 
 #[get("/bfs?<search>", rank = 1)]
@@ -222,12 +241,16 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
                 context.bad_dst = false;
             }
         }
+        //use std::str::FromStr;
         //get cache after action, so it can reflect our search
+        let sort_method: SortOptions = search.cache_sort
+            .and_then(SortOptions::convert)
+            .unwrap_or(DEFAULT_CACHE_SORT);
         context.cache = database::get_cache(db.conn(), 
-                                            //database::SortOptions::Recent, 
-                                            //database::SortOptions::Popular, 
-                                            //database::SortOptions::Length, 
-                                            search.sort_option().unwrap_or(DEFAULT_CACHE_SORT),
+                                            //SortOptions::Recent, 
+                                            //SortOptions::Popular, 
+                                            //SortOptions::Length, 
+                                            sort_method,
                                             CACHE_SIZE).ok();
     }
     Template::render("bfs", &context)
@@ -256,6 +279,7 @@ pub fn deploy() {
                            //search_api,
                            //test
                            api_bfs,
+                           bfs_sort,
     ])
         .launch();
 }

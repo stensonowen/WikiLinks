@@ -25,6 +25,17 @@
                 <h3> History </h3> 
             </header>
             Recent searches are cached, and viewing them is faster than doing a new search (particularly for long paths). <br>
+            {% if cache %}
+            Sort by: 
+            <form action="/bfs" >
+            <select name="cache_sort">
+                <option value="new" >Recent </option>
+                <option value="popular">Popular</option>
+                <option value="length" >Length</option>
+            </select>
+                <input type="submit" value="Submit" />
+            </form>
+
             {% for c in cache %}
                 <form action="/bfs" >
                     <input name="src" value="{{c.0}}" readonly />
@@ -33,6 +44,7 @@
                     <input type="submit" value="Submit"/>
                 </form> 
             {% endfor %}
+            {% endif %}
         </aside>
 
         <section id="search">

@@ -2,10 +2,41 @@
 //use wikidata;
 use rocket::http::uri::URI; // URI::percent_decode
 use std::borrow::Cow;
-use super::database::SortOptions;
+use std::str::FromStr;
 
 
-// HELPERS
+#[derive(Debug)]
+pub enum SortOptions {
+    Recent,
+    Popular,
+    Length,
+    //Random,   //how to do
+}
+
+impl FromStr for SortOptions {
+    type Err = ();
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        //TODO: do this w/ patterns intead of to_lowercase() ?
+        let lower_in = input.to_lowercase();
+        match lower_in.as_str() {
+            "recent" | "latest" | "new" | "newest" => Ok(SortOptions::Recent),
+            "popular" | "top" | "best" | "hot" => Ok(SortOptions::Popular),
+            "length" | "longest" | "size" => Ok(SortOptions::Length),
+            _ => Err(()),
+        }
+    }
+}
+
+impl SortOptions {
+    pub fn convert(input: &str) -> Option<SortOptions> {
+        SortOptions::from_str(input).ok()
+    }
+}
+
+#[derive(FromForm, Serialize, Debug)]
+pub struct CacheSort<'a> {
+    pub cache_sort: Option<&'a str>,
+}
 
 #[derive(FromForm, Debug)]
 pub struct Search<'a> {
@@ -25,6 +56,7 @@ impl<'a> Search<'a> {
     pub fn prep(&'a self) -> (Cow<'a, str>, Cow<'a, str>) {
         (self.prep_src(), self.prep_dst())
     }
+    /*
     pub fn sort_option(&self) -> Option<SortOptions> {
         match self.cache_sort {
             Some(x) if x.to_lowercase() == "recent"  => Some(SortOptions::Recent),
@@ -33,6 +65,7 @@ impl<'a> Search<'a> {
             _ => None,
         }
     }
+    */
 }
 
 #[derive(FromForm, Debug)]

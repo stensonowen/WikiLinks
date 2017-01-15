@@ -11,18 +11,17 @@
 
 extern crate dotenv;
 extern crate chrono;
-use super::wikidata::ENTRIES;
 
+use wikidata::ENTRIES;
+use SortOptions;
+
+//db stuff
 use diesel::{self, insert};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use diesel::result::Error;
-
-use self::chrono::offset::utc::UTC;
-use self::dotenv::dotenv;
-use std::env;
-use super::phf;
-
+use r2d2::{Pool, PooledConnection, GetTimeout, Config};
+use r2d2_diesel::ConnectionManager;
 use self::models::*;
 use self::schema::paths::dsl::paths;
 use self::schema::paths::dsl as paths_row;
@@ -31,13 +30,17 @@ use self::schema::titles::dsl::titles;
 use self::schema::titles::dsl as titles_row;
 use self::schema::titles::table as titles_table;
 
-use r2d2::{Pool, PooledConnection, GetTimeout, Config};
-use r2d2_diesel::ConnectionManager;
+use self::chrono::offset::utc::UTC;
+use self::dotenv::dotenv;
+use std::env;
+use phf;
 
-use super::rocket::request::{Outcome, FromRequest};
+
+use rocket::request::{Outcome, FromRequest};
 use rocket::Outcome::{Success, Failure};
-use super::rocket::Request;
-use super::rocket::http::Status;
+use rocket::Request;
+use rocket::http::Status;
+
 
 pub mod schema;
 pub mod models;
@@ -193,12 +196,7 @@ pub fn purge_cache(conn: &PgConnection) -> Result<usize,Error> {
     diesel::delete(paths.filter(paths_row::src.gt(i32::min_value()))).execute(conn)
 }
 
-pub enum SortOptions {
-    Recent,
-    Popular,
-    Length,
-    //Random,   //how to do
-}
+
 
 pub fn get_cache(conn: &PgConnection, order: SortOptions, num: i64) 
         -> Result<Vec<(&str,&str,i16)>,String> {
