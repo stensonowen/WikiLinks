@@ -5,48 +5,10 @@ extern crate ironstorm_lookup;
 extern crate lazy_static;
 
 use std::collections::{HashSet, HashMap};
-use wikidata::{ADDRESSES, ENTRIES};
+use wikidata::ENTRIES;
 use std::mem::swap;
 
 const MAX_DEPTH: usize = 10;
-const SEARCH_RESULTS: usize = 10;
-
-use std::iter::FromIterator;
-use ironstorm_lookup::{LookupTable, Lookup, Bucket};
-
-
-// Locate article by title
-
-struct Title(&'static str);
-
-impl Lookup for Title {
-    // do I have to use a dummy struct here? I don't think I can implement Lookup for &str
-    // How much of the `Title` struct will be optimized away?
-    fn searchable_text(&self) -> String {
-        self.0.to_string()
-    }
-    fn bucket(&self) -> Bucket {
-        // optionally, use the title's pagerank ?
-        // use length: prioritize shorter entries
-        self.0.len()
-    }
-}
-
-lazy_static! {
-    static ref TITLES: LookupTable<'static, Title> = {
-        let i = ADDRESSES.keys().map(|a| Title(a));
-        LookupTable::from_iter(i)
-    };
-}
-
-
-pub fn search(query: &str) -> Vec<&'static str> {
-    TITLES.find(query).take(SEARCH_RESULTS).map(|t| t.0).collect()
-}
-
-pub fn load_titles() {
-    TITLES.len();
-}
 
 
 // Find the shortest path between articles

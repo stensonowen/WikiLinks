@@ -1,10 +1,16 @@
 extern crate wikidata;
+extern crate phf;
 extern crate bfs;
 extern crate clap;
+extern crate ironstorm_lookup;
 use std::io::{self, Write};
 use wikidata::ADDRESSES;
-use bfs::{bfs, search, print_path, load_titles};
+use bfs::{bfs, print_path};
 use clap::{App, Arg};
+use ironstorm_lookup::{LookupTable, Lookup, Bucket};
+use std::iter::FromIterator;
+
+const NUM_SEARCH_RESULTS: usize = 10;
 
 // Notes about using:
 //  - Performing the same search multiple times might yield different paths
@@ -30,7 +36,6 @@ fn main() {
             .long("links")
             .help("Print followable links in paths"))
         .get_matches();
-    load_titles();  //get this out of the way (probably doesn't have to be lazy)
     let print_links = match matches.is_present("links") {
         true  => Some("simple"),
         false => None,
@@ -39,17 +44,18 @@ fn main() {
 
     let mut src_id = None;
     let mut dst_id = None;
+    let table = create_lookup_table(&wikidata::ADDRESSES);
     loop {
         println!("Search from one Simple Wikipedia article to another by links");
         print!("Enter the title of the SOURCE article:       ");
-        src_id = Some(get_article(&src_id));
+        src_id = Some(get_article(&table, &src_id));
         print!("Enter the title of the DESTINATION article:  ");
-        dst_id = Some(get_article(&dst_id));
+        dst_id = Some(get_article(&table, &dst_id));
         print_path(bfs(src_id.unwrap(), dst_id.unwrap()), print_links);
     }
 }
 
-fn get_article(prev: &Option<u32>) -> u32 {
+fn get_article(titles: &LookupTable<'static, Title>, prev: &Option<u32>) -> u32 {
     //request an article from the user and return the page_id
     //if it's invalid, try to give them some recommendations
     //if they enter nothing, maybe default back to the previous value (`prev`)
@@ -72,7 +78,7 @@ fn get_article(prev: &Option<u32>) -> u32 {
         page_id = match ADDRESSES.get(fix.as_str()) {
             Some(id) => Some(*id),
             None => {
-                let guesses = search(&fix);
+                let guesses = search(titles, &fix);
                 if guesses.len() == 0 {
                     println!("No such page or similar articles were found");
                     print!("Please enter another article title to try:   ");
@@ -99,4 +105,31 @@ fn get_article(prev: &Option<u32>) -> u32 {
         };
     }
     page_id.unwrap()
+}
+
+// LOOKUP TABLE: Relies on wikidata::ADDRESSES
+
+fn create_lookup_table(titles: &phf::map::Map<&'static str, u32>) 
+        -> LookupTable<'static, Title> {
+    let i = titles.keys().map(|a| Title(a));
+    LookupTable::from_iter(i)
+}
+
+struct Title(&'static str);
+
+impl Lookup for Title {
+    // do I have to use a dummy struct here? I don't think I can implement Lookup for &str
+    // How much of the `Title` struct will be optimized away?
+    fn searchable_text(&self) -> String {
+        self.0.to_string()
+    }
+    fn bucket(&self) -> Bucket {
+        // optionally, use the title's pagerank ?
+        // use length: prioritize shorter entries
+        self.0.len()
+    }
+}
+
+fn search(titles: &LookupTable<'static, Title>, query: &str) -> Vec<&'static str> {
+    titles.find(query).take(NUM_SEARCH_RESULTS).map(|t| t.0).collect()
 }
