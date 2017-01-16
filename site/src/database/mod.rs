@@ -13,6 +13,7 @@ extern crate dotenv;
 extern crate chrono;
 
 use wikidata::ENTRIES;
+use super::bfs;
 use SortOptions;
 
 //db stuff
@@ -46,6 +47,23 @@ pub mod schema;
 pub mod models;
 
 
+// HELPERS: LOOKUP OBJECTS
+
+pub enum PathLookup {
+    Path(Vec<u32>),
+    Terminated(usize),
+    NoSuchPath,
+}
+
+#[derive(Serialize)]
+pub enum AddressLookup {
+    Address(u32),
+    Suggestions(Vec<String>),
+}
+
+
+// DATABASE POOL
+
 pub struct DB(PooledConnection<ConnectionManager<PgConnection>>);
 
 lazy_static! {
@@ -68,6 +86,9 @@ impl<'a, 'r> FromRequest<'a, 'r> for DB {
     }
 }
 
+
+// Connection initializers
+
 pub fn create_db_pool() -> Pool<ConnectionManager<PgConnection>> {
     dotenv().ok();
 
@@ -88,40 +109,31 @@ pub fn establish_connection() -> PgConnection {
 }
 
 
-pub enum PathOption {
-    Path(Vec<u32>),
-    Terminated(usize),
-    NoSuchPath,
-}
+// DATABASE INSERT / GET WRAPPERS
 
-pub fn get_path(conn: &PgConnection, src: u32, dst: u32) -> Result<PathOption, Error> {
+pub fn get_path(conn: &PgConnection, src: u32, dst: u32) -> Result<PathLookup, Error> {
     //adjust timestamp and count
     //Error means path does not exist 
     //  (or that it wasn't updated properly, which is no biggie)
-    let target = paths.find((src as i32, dst as i32));  // ?!
+    let target = paths.find((src as i32, dst as i32));
     let path = diesel::update(target)
         .set(paths_row::timestamp.eq(UTC::now()))
-        .get_result::<Path>(conn)?;
+        .get_result::<PathRow>(conn)?;
 
     let new_count = path.count + 1;
     diesel::update(target).set(paths_row::count.eq(new_count)).execute(conn)?;
     match path.result {
-        0 => Ok(PathOption::NoSuchPath),
-        x if x < 0 => Ok(PathOption::Terminated((x*-1) as usize)),
-        _ => Ok(PathOption::Path(path.path.into_iter().map(|i| i as u32).collect())),
-        //0  => Ok(PathOption::Path(path.path.into_iter().map(|i| i as u32).collect())),
-        //-1 => Ok(PathOption::NoSuchPath),
-        //x if x>0 => Ok(PathOption::Terminated(x as usize)),
-        //_ => Err(Error::NotFound),
+        0 => Ok(PathLookup::NoSuchPath),
+        x if x < 0 => Ok(PathLookup::Terminated((x*-1) as usize)),
+        _ => Ok(PathLookup::Path(path.path.into_iter().map(|i| i as u32).collect())),
     }
 }
 
-use super::bfs;
 
 pub fn insert_path(conn: &PgConnection, 
                    src: u32, 
                    dst: u32, 
-                   //path: PathOption) 
+                   //path: PathLookup) 
                    path: &Result<Vec<u32>,bfs::Error>)
         -> Result<usize,Error> {
     //insert a path from src to dst
@@ -134,14 +146,11 @@ pub fn insert_path(conn: &PgConnection,
     let (result, path) = match path {
         //vec![] should create vector w/ 0 capacity by default
         //so needing to return an empty vec instead of None isn't too bad
-        //PathOption::Path(v) => (0i16, v.into_iter().map(|i| i as i32).collect()),
-        //PathOption::Terminated(i) => ((i as i16) * -1, vec![]),
-        //PathOption::NoSuchPath => (-1i16, vec![]),
         &Ok(ref v) => (v.len() as i16, v.into_iter().map(|&i| i as i32).collect()),
         &Err(bfs::Error::Terminated(i)) => ((i as i16) * -1, vec![]),
         &Err(bfs::Error::NoSuchPath) => (0, vec![]),
     };
-    let new_path = NewPath {
+    let new_path = NewPathRow {
         src: src as i32,
         dst: dst as i32,
         result: result,
@@ -157,7 +166,7 @@ pub fn populate_addrs(conn: &PgConnection,
         -> Result<usize,Error> {
     let mut i = 0;
     for (title, &addr) in addrs.into_iter() {
-        let new_addr = NewAddress {
+        let new_addr = NewAddressRow {
             title: title,
             page_id: addr as i32,
         };
@@ -167,17 +176,11 @@ pub fn populate_addrs(conn: &PgConnection,
     Ok(i)
 }
 
-#[derive(Serialize)]
-pub enum AddressLookup {
-    Address(u32),
-    Suggestions(Vec<String>),
-}
-
 pub fn lookup_addr(conn: &PgConnection, query: &str) -> Result<AddressLookup,Error> {
     //let lookup = titles.find(titles_row::title.eq(query));//.first(conn);
     //let foo: QueryResult<Address> = titles.find(query).first(conn);
     
-    if let Ok(Address{ page_id: id, .. }) = titles.find(query).first(conn) {
+    if let Ok(AddressRow{ page_id: id, .. }) = titles.find(query).first(conn) {
         Ok(AddressLookup::Address(id as u32))
     } else {
         //order by pagerank?
@@ -185,7 +188,7 @@ pub fn lookup_addr(conn: &PgConnection, query: &str) -> Result<AddressLookup,Err
         let fuzzy_query = format!("%{}%", query);
         let guesses = titles.filter(titles_row::title.like(fuzzy_query))
             .limit(10)
-            .load::<Address>(conn)?;
+            .load::<AddressRow>(conn)?;
         let g = guesses.into_iter().map(|i| i.title.clone()).collect();
         Ok(AddressLookup::Suggestions(g))
     }
@@ -202,15 +205,7 @@ pub fn get_cache(conn: &PgConnection, order: SortOptions, num: i64)
         -> Result<Vec<(&str,&str,i16)>,String> {
     //return (src_t, dst_t) pairs for the cache history
     //if anything goes wrong, return a description, but *should* be safe to .unwrap()
-    /* generic match statement?
-    let query = match order {
-        SortOptions::Recent  => paths_row::timestamp.desc(),
-        SortOptions::Popular => paths_row::count.desc(),
-        SortOptions::Length  => paths_row::result.desc(),
-    };
-    //let rows = match paths.order(query).limit(num).load(conn) {
-    */
-    let rows_res: Result<Vec<Path>,Error> = match order {
+    let rows_res: Result<Vec<PathRow>,Error> = match order {
         //reverse order
         SortOptions::Recent  => paths.order(paths_row::timestamp.desc()).limit(num).load(conn),
         SortOptions::Popular => paths.order(paths_row::count.desc()).limit(num).load(conn),

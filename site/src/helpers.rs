@@ -4,13 +4,36 @@ use rocket::http::uri::URI; // URI::percent_decode
 use std::borrow::Cow;
 use std::str::FromStr;
 
+// BASIC REQUEST-RELATED TYPES:
+
+#[derive(Serialize)]
+pub enum BfsApiResult {
+    //Result of a bfs Api call
+    Success {
+        ids: Vec<u32>,
+        titles: Vec<&'static str>,
+    },
+    TerminatedAfter(usize),
+    InvalidSrc,
+    InvalidDst,
+    InvalidSrcAndDst,
+    NoSuchPath,
+}
+
 
 #[derive(Debug)]
 pub enum SortOptions {
+    //Different ways the cache can be sorted
     Recent,
     Popular,
     Length,
-    //Random,   //how to do
+    //Random,   //how to do efficiently?
+}
+
+impl SortOptions {
+    pub fn convert(input: &str) -> Option<SortOptions> {
+        SortOptions::from_str(input).ok()
+    }
 }
 
 impl FromStr for SortOptions {
@@ -27,74 +50,20 @@ impl FromStr for SortOptions {
     }
 }
 
-impl SortOptions {
-    pub fn convert(input: &str) -> Option<SortOptions> {
-        SortOptions::from_str(input).ok()
-    }
-}
-
-#[derive(FromForm, Serialize, Debug)]
-pub struct CacheSort<'a> {
-    pub cache_sort: Option<&'a str>,
-}
-
-#[derive(FromForm, Debug)]
-pub struct Search<'a> {
-    pub src: &'a str,
-    pub dst: &'a str,
-    //pub cache: Option<Vec<(&'a str, &'a str, i16)>>,
-    pub cache_sort: Option<&'a str>,
-}
-
-impl<'a> Search<'a> {
-    fn prep_src(&'a self) -> Cow<'a, str> {
-        preprocess(self.src)
-    }
-    fn prep_dst(&'a self) -> Cow<'a, str> {
-        preprocess(self.dst)
-    }
-    pub fn prep(&'a self) -> (Cow<'a, str>, Cow<'a, str>) {
-        (self.prep_src(), self.prep_dst())
-    }
-    /*
-    pub fn sort_option(&self) -> Option<SortOptions> {
-        match self.cache_sort {
-            Some(x) if x.to_lowercase() == "recent"  => Some(SortOptions::Recent),
-            Some(x) if x.to_lowercase() == "popular" => Some(SortOptions::Popular),
-            Some(x) if x.to_lowercase() == "length"  => Some(SortOptions::Length),
-            _ => None,
-        }
-    }
-    */
-}
-
-#[derive(FromForm, Debug)]
-pub struct BfsApi<'a> {
-    pub src_title:  Option<&'a str>,
-    pub dst_title:  Option<&'a str>,
-    pub src_id:     Option<u32>,
-    pub dst_id:     Option<u32>,
-}
 
 #[derive(Debug, Serialize)]
 pub struct Context<'a> {
-    //pub cache:      Option<&'a str>,
-    //pub cache:      Option<&'a str>,
+    // All data that can be passed to tera template
+    //TODO: replace some Strings w/ &'a strs 
     pub cache:      Option<Vec<(&'a str, &'a str, i16)>>,
     pub src_t:      Option<String>, //todo
     pub dst_t:      Option<String>,
     pub bad_src:    bool,
     pub bad_dst:    bool,
-    //pub path:       Option<&'a str>,
-    //pub path:       Option<String>,
-    //pub path:       Option<Vec<String>>,
     pub path:       Option<Vec<(&'static str, String)>>,
-    pub src_alts:   Option<Vec<String>>,    //todo: &'a str ?
+    pub src_alts:   Option<Vec<String>>,
     pub dst_alts:   Option<Vec<String>>,
-    //pub dst_err:    Option<String>,
     pub path_err:   Option<String>,
-    //pub src_err: Option<&'a str>,
-    //pub dst_err: Option<&'a str>,
 }
 
 impl<'a> Context<'a> {
@@ -114,17 +83,44 @@ impl<'a> Context<'a> {
 }
 
 
-#[derive(Serialize)]
-pub enum PathResult {
-    Path {
-        lang:   &'static str,
-        src:    &'static str,
-        dst:    &'static str,
-        len:    usize,
-        nodes:  Vec<u32>,
-    }, 
-    Error(String),
+// QUERY PARAMETER TYPES
+
+#[derive(FromForm, Debug)]
+pub struct CacheSortParam<'a> {
+    pub cache_sort: Option<&'a str>,
 }
+
+
+#[derive(FromForm, Debug)]
+pub struct BfsApiParams<'a> {
+    pub src_title:  Option<&'a str>,
+    pub dst_title:  Option<&'a str>,
+    pub src_id:     Option<u32>,
+    pub dst_id:     Option<u32>,
+}
+
+
+#[derive(FromForm, Debug)]
+pub struct SearchParams<'a> {
+    pub src: &'a str,
+    pub dst: &'a str,
+    pub cache_sort: Option<&'a str>,
+}
+
+impl<'a> SearchParams<'a> {
+    fn prep_src(&'a self) -> Cow<'a, str> {
+        preprocess(self.src)
+    }
+    fn prep_dst(&'a self) -> Cow<'a, str> {
+        preprocess(self.dst)
+    }
+    pub fn prep(&'a self) -> (Cow<'a, str>, Cow<'a, str>) {
+        (self.prep_src(), self.prep_dst())
+    }
+}
+
+
+// HELPER FUNCTIONS
 
 pub fn preprocess<'a>(input: &'a str) -> Cow<'a, str> {
     let decoded = URI::percent_decode_lossy(input.as_bytes());

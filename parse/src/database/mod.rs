@@ -10,7 +10,7 @@ use phf_codegen;
 
 const FILE_LINK_CG:     &'static str = "codegen_links.rs";
 const FILE_ENTRIES_CG:  &'static str = "codegen_entries.rs";
-const FILE_ADDRS_CG:    &'static str = "codegen_addresses.rs";
+const FILE_ADDRS_CG:    &'static str = "_codegen_addresses.rs";
 
 // The actual data storing the internal link structure
 pub struct Database {
@@ -398,10 +398,13 @@ impl Database {
     }
     pub fn codegen(&self, dir: &Path) {
         //should be ../../wikidata/src or something
-        info!(self.log, "Starting LINKS codegen");
-        self.codegen_links(&dir.join(FILE_LINK_CG));
-        info!(self.log, "Starting ENTRIES codegen");
-        self.codegen_entries(&dir.join(FILE_ENTRIES_CG));
+        
+        //info!(self.log, "Starting LINKS codegen");
+        info!(self.log, "Skipping LINKS codegen");
+        //self.codegen_links(&dir.join(FILE_LINK_CG));
+        //info!(self.log, "Starting ENTRIES codegen");
+        info!(self.log, "Skipping ENTRIES codegen");
+        //self.codegen_entries(&dir.join(FILE_ENTRIES_CG));
         info!(self.log, "Starting ADDRS codegen");
         self.codegen_addresses(&dir.join(FILE_ADDRS_CG));
         info!(self.log, "Finished codegen");

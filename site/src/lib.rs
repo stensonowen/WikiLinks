@@ -50,71 +50,21 @@ fn index() -> Redirect {
     Redirect::to("/bfs")
 }
 
-/*
-#[get("/bfs/api/<src>/<dst>", format = "application/json")]
-fn bfs_api(src: u32, dst: u32) -> JSON<PathResult> {
-    let r = match (wikidata::ENTRIES.get(&src), wikidata::ENTRIES.get(&dst)) {
-        (None, None) => 
-            PathResult::Error(String::from("Both src and dst page_ids were invalid")),
-        (None, _) => 
-            PathResult::Error(String::from("Invalid source page_id")),
-        (_, None) => 
-            PathResult::Error(String::from("Invalid destination page_id")),
-        (Some(s), Some(d)) => { 
-            match bfs::bfs(src,dst) {
-                Ok(v) => PathResult::Path {
-                    lang:   LANGUAGE,
-                    src:    s.title,
-                    dst:    d.title,
-                    len:    v.len()-1,
-                    nodes:  v
-                },
-                Err(bfs::Error::Terminated(x)) => 
-                    PathResult::Error(format!("Failed after {} rounds", x)),
-                Err(bfs::Error::NoSuchPath) => 
-                    PathResult::Error(String::from("No Such Path")),
-            }
-        }
-    };
-    JSON(r)
-}
-
-#[get("/bfs/api/search?<query>")]
-fn search_api(query: &str, db: DB) -> JSON<database::AddressLookup> {
-    //let decoded = URI::percent_decode_lossy(query.as_bytes());
-    //let fixed = bfs::preprocess(decoded.as_ref());
-    let query_ = preprocess(query);
-    JSON(database::lookup_addr(db.conn(), query_.as_ref()).unwrap())
-}
-*/
-
-#[derive(Serialize)]
-enum BfsApiRet {
-    Success {
-        ids: Vec<u32>,
-        titles: Vec<&'static str>,
-    },
-    InvalidSrc,
-    InvalidDst,
-    InvalidSrcAndDst,
-    TerminatedAfter(usize),
-    NoSuchPath,
-}
 
 #[get("/bfs_api?<api>")]
-fn api_bfs(db: DB, api: BfsApi) -> JSON<BfsApiRet> {
+fn api_bfs(db: DB, api: BfsApiParams) -> JSON<BfsApiResult> {
     let src = lookup_id_or_title(&db, api.src_id, api.src_title);
     let dst = lookup_id_or_title(&db, api.dst_id, api.dst_title);
     let ret = match (src, dst) {
-        (Err(_), Err(_)) => BfsApiRet::InvalidSrcAndDst,
-        (Err(_), _) => BfsApiRet::InvalidSrc,
-        (_, Err(_)) => BfsApiRet::InvalidDst,
+        (Err(_), Err(_)) => BfsApiResult::InvalidSrcAndDst,
+        (Err(_), _) => BfsApiResult::InvalidSrc,
+        (_, Err(_)) => BfsApiResult::InvalidDst,
         (Ok(src_id), Ok(dst_id)) => {
             let path = match database::get_path(db.conn(), src_id, dst_id) {
                 //TODO: make these the same type?
-                Ok(database::PathOption::Path(p)) => Ok(p),
-                Ok(database::PathOption::Terminated(i)) => Err(bfs::Error::Terminated(i)),
-                Ok(database::PathOption::NoSuchPath) => Err(bfs::Error::NoSuchPath),
+                Ok(database::PathLookup::Path(p)) => Ok(p),
+                Ok(database::PathLookup::Terminated(i)) => Err(bfs::Error::Terminated(i)),
+                Ok(database::PathLookup::NoSuchPath) => Err(bfs::Error::NoSuchPath),
                 _ => {
                     //perform the search if we never have, and save it in the db
                     let path = bfs::bfs(src_id, dst_id);
@@ -123,14 +73,14 @@ fn api_bfs(db: DB, api: BfsApi) -> JSON<BfsApiRet> {
                 }
             };
             match path {
-                Ok(v) => BfsApiRet::Success {
+                Ok(v) => BfsApiResult::Success {
                     titles: v.iter()
                         .map(|id| wikidata::ENTRIES.get(id).unwrap().title)
                         .collect(),
                     ids: v,
                 },
-                Err(bfs::Error::Terminated(i)) => BfsApiRet::TerminatedAfter(i),
-                Err(bfs::Error::NoSuchPath) => BfsApiRet::NoSuchPath,
+                Err(bfs::Error::Terminated(i)) => BfsApiResult::TerminatedAfter(i),
+                Err(bfs::Error::NoSuchPath) => BfsApiResult::NoSuchPath,
             }
         }
     };
@@ -175,7 +125,7 @@ fn bfs_empty<'a>(db: DB) -> Template {
 }
 
 #[get("/bfs?<sort>", rank = 2)]
-fn bfs_sort<'a>(db: DB, sort: CacheSort) -> Template {
+fn bfs_sort<'a>(db: DB, sort: CacheSortParam) -> Template {
     //request certain cache sort without making a search
     let mut context = Context::blank();
     context.bad_src = false;
@@ -191,7 +141,7 @@ fn bfs_sort<'a>(db: DB, sort: CacheSort) -> Template {
 }
 
 #[get("/bfs?<search>", rank = 1)]
-fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
+fn bfs_search<'a>(search: SearchParams<'a>, db: DB) -> Template {
     //let src_query = database::lookup_addr(db.conn(), preprocess(search.src));
     let mut context = Context::blank();
     //pre-process, check title validity
@@ -210,9 +160,9 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
             context.bad_dst = false;
             //try to get this from the database
             let path = match database::get_path(db.conn(), src_id, dst_id) {
-                Ok(database::PathOption::Path(p)) => Ok(p),
-                Ok(database::PathOption::Terminated(i)) => Err(bfs::Error::Terminated(i)),
-                Ok(database::PathOption::NoSuchPath) => Err(bfs::Error::NoSuchPath),
+                Ok(database::PathLookup::Path(p)) => Ok(p),
+                Ok(database::PathLookup::Terminated(i)) => Err(bfs::Error::Terminated(i)),
+                Ok(database::PathLookup::NoSuchPath) => Err(bfs::Error::NoSuchPath),
                 _ => {
                     //perform the search if we never have, and save it in the db
                     let path = bfs::bfs(src_id, dst_id);
@@ -257,19 +207,7 @@ fn bfs_search<'a>(search: Search<'a>, db: DB) -> Template {
 }
 
 
-//#[derive(FromForm, Queryable, Debug)]
-//struct Test {
-//    a: String,
-//    b: Option<String>,
-//}
-
-//#[get("/foo?<t>")]
-//fn test(t: Test) -> String {
-//    format!("`{:?}`", t)
-//}
-
 pub fn deploy() {
-    //bfs::load_titles(); //just for testing??
     rocket::ignite()
         .mount("/",
                routes![index,

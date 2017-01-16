@@ -7,19 +7,15 @@ use super::schema::titles;
 //TODO: are i32's large enough for page_id's?
 // any page_id's ≥ 2**31 ?
 #[derive(Queryable)]
-pub struct Path {
+pub struct PathRow {
     // index of this entry
-    //pub id: i32,
-    //src page_id
     pub src: i32,
-    //dst page_id
     pub dst: i32,
     //Result of search: can be
-    //  0: success
-    // -1: definitely no path
-    // ≥0: search cancelled after n iterations
+    //  0: definitely no path
+    // -x: search terminated after x iterations
+    // +x: succeeded with a length of x iterations
     pub result: i16,
-
     //page_ids of the path
     pub path: Vec<i32>,    //not Option<Vec<i32>> ?
     //pub path: Option<Vec<i32>>,
@@ -33,7 +29,7 @@ pub struct Path {
 
 #[derive(Insertable)]
 #[table_name="paths"]
-pub struct NewPath {
+pub struct NewPathRow {
     pub src: i32,
     pub dst: i32,
     pub result: i16,
@@ -42,17 +38,15 @@ pub struct NewPath {
 }
 
 #[derive(Queryable)]
-pub struct Address {
+pub struct AddressRow {
     pub title: String,
     pub page_id: i32,
 }
 
 #[derive(Insertable)]
 #[table_name="titles"]
-pub struct NewAddress<'a> {
+pub struct NewAddressRow<'a> {
     pub title: &'a str,
     pub page_id: i32,
 }
-
-
 

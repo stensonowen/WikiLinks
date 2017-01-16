@@ -36,3 +36,13 @@ At this point the generated static variables are in place, but they still need t
 
 ### PageRank
 
+
+### Site
+
+## API
+
+The site exposes a JSON-based API for easy requests. Articles can be looked up with `/bfs/search?query` and searches can be run with 
+
+`/bfs/<src_id>/<dst_id>` will return 
+
+apt-get install libpq-dev libsqlite3-dev
