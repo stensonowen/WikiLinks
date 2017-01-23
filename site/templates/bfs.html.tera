@@ -29,11 +29,25 @@
             Sort by: 
             <form action="/bfs" >
             <select name="cache_sort">
-                <option value="new" >Recent </option>
-                <option value="popular">Popular</option>
-                <option value="length" >Length</option>
+                <option value="new"
+                        {% if cache_sort == "Recent" %}
+                        selected="selected"
+                        {% endif %}
+                >Recent </option>
+
+                <option value="popular"
+                        {% if cache_sort == "Popular" %}
+                        selected="selected"
+                        {% endif %}
+                >Popular</option>
+
+                <option value="length"
+                        {% if cache_sort == "Length" %}
+                        selected="selected"
+                        {% endif %}
+                >Length</option>
             </select>
-                <input type="submit" value="Submit" />
+                <input type="submit" value="Update" />
             </form>
 
             {% for c in cache %}

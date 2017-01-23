@@ -27,7 +27,7 @@ use database::DB;
 
 const LANGUAGE: &'static str = "simple";
 const CACHE_SIZE: i64 = 15; //ew, must be signed
-const DEFAULT_CACHE_SORT: SortOptions = SortOptions::Recent;
+use helpers::DEFAULT_CACHE_SORT;
 
 // Intented site behavior
 //
@@ -121,6 +121,7 @@ fn bfs_empty<'a>(db: DB) -> Template {
     context.cache = database::get_cache(db.conn(), 
                                         DEFAULT_CACHE_SORT,
                                         CACHE_SIZE).ok();
+    context.cache_sort = DEFAULT_CACHE_SORT;
     Template::render("bfs", &context)
 }
 
@@ -133,9 +134,11 @@ fn bfs_sort<'a>(db: DB, sort: CacheSortParam) -> Template {
     let sort_method: SortOptions = sort.cache_sort
         .and_then(SortOptions::convert)
         .unwrap_or(DEFAULT_CACHE_SORT);
+    context.cache_sort = sort_method;
     context.cache = database::get_cache(db.conn(), 
                                         sort_method,
                                         CACHE_SIZE).ok();
+    context.cache_sort = sort_method;
     Template::render("bfs", &context)
 
 }

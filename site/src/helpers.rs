@@ -4,6 +4,8 @@ use rocket::http::uri::URI; // URI::percent_decode
 use std::borrow::Cow;
 use std::str::FromStr;
 
+pub const DEFAULT_CACHE_SORT: SortOptions = SortOptions::Recent;
+
 // BASIC REQUEST-RELATED TYPES:
 
 #[derive(Serialize)]
@@ -21,7 +23,7 @@ pub enum BfsApiResult {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Clone, Copy)]
 pub enum SortOptions {
     //Different ways the cache can be sorted
     Recent,
@@ -56,6 +58,8 @@ pub struct Context<'a> {
     // All data that can be passed to tera template
     //TODO: replace some Strings w/ &'a strs 
     pub cache:      Option<Vec<(&'a str, &'a str, i16)>>,
+    //pub cache_sort: Option<&'a str>,
+    pub cache_sort: SortOptions,
     pub src_t:      Option<String>, //todo
     pub dst_t:      Option<String>,
     pub bad_src:    bool,
@@ -70,6 +74,7 @@ impl<'a> Context<'a> {
     pub fn blank() -> Context<'a> {
         Context {
             cache: None,
+            cache_sort: DEFAULT_CACHE_SORT,
             src_t: None,
             dst_t: None,
             bad_src: true,
