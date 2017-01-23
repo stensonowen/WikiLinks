@@ -133,7 +133,7 @@ pub fn preprocess<'a>(input: &'a str) -> Cow<'a, str> {
     //first, replace any spaces with underscores (iff necessary)
     //replace spaces w/ underscores (how they are in the wiki dump)
     //replace pluses also, which are an artifact of html forms
-    let escaped = |c| c == ' ' || c == '+';
+    let escaped = |c| c == ' ';
     let decoded = {
         if decoded.contains(&escaped) {
             //urls/forms turn spaces into 

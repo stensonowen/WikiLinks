@@ -205,6 +205,7 @@ fn bfs_search<'a>(search: SearchParams<'a>, db: DB) -> Template {
                                             //SortOptions::Length, 
                                             sort_method,
                                             CACHE_SIZE).ok();
+        context.cache_sort = sort_method;
     }
     Template::render("bfs", &context)
 }
