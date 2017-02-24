@@ -27,7 +27,7 @@
             Recent searches are cached, and viewing them is faster than doing a new search (particularly for long paths). <br>
             {% if cache %}
             Sort by: 
-            <form action="/bfs" >
+            <form action="/bfs" id="blank">
             <select name="cache_sort" form="bfs" >
                 <option value="new"
                         {% if cache_sort == "Recent" %}
