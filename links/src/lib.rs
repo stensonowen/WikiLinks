@@ -39,6 +39,9 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc,Mutex};
 
+mod parse;
+mod pagerank;
+
 trait State { }
 impl State for LinkDb { }
 impl State for LinkData { }
@@ -57,6 +60,9 @@ struct LinkDb {
     db_redirect: PathBuf,
     db_pagelinks: PathBuf,
     simple_wiki: bool,
+    //db: parse::Database,
+    db: parse::database::Database,
+
 }
 
 struct LinkData {
@@ -87,11 +93,14 @@ enum Entry {
 fn test() {
     let drain = slog_term::streamer().compact().build().fuse();
     let root_log = slog::Logger::root(drain, o!() );
+    /*
     let ls = LinkState { 
         log: root_log,
         state: HashLinks {
             links: HashMap::new(),
         }
-    };
+    };*/
+    let a = parse::populate_db(String::new(), String::new(), String::new(), &root_log);
 
 }
+
