@@ -7,13 +7,13 @@ mod pagerank;
 impl From<LinkState<LinkDb>> for LinkState<LinkData> {
     fn from(old: LinkState<LinkDb>) -> LinkState<LinkData> {
         //split into vector 
-        let threads: Vec<Vec<(u32, Entry)>> = Vec::with_capacity(old.threads);
-        let entries_iter = old.state.db.entries.iter();
-        let size = old.state.db.entries.len();
-        for i in 0 .. old.threads-1 {
-            //threads.push(entries_iter.take(size).map(|e| ).collect());
+        //let threads: Vec<Vec<(u32, Entry)>> = Vec::with_capacity(old.threads);
+        //let entries_iter = old.state.db.entries.iter();
+        //let size = old.state.db.entries.len();
+        //for i in 0 .. old.threads-1 {
+        //    //threads.push(entries_iter.take(size).map(|e| ).collect());
 
-        }
+        //}
         
 
         LinkState {

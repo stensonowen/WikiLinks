@@ -5,6 +5,8 @@ use std::collections::{HashMap, HashSet};
 use self::helpers::*;
 mod helpers;
 
+use super::super::super::Entry as PrimaryEntry;
+
 
 // The actual data storing the internal link structure
 pub struct Database {
@@ -339,7 +341,7 @@ impl Database {
         
     }
 
-    //fn export(&self) -> Vec<Vec<(u32,
+    //fn export(self) -> HashMap<u32, PrimaryEntry> { remove any }
     
     /*
     // Codegen:
