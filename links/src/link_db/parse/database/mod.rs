@@ -2,12 +2,9 @@ extern crate slog;
 extern crate regex;
 
 use std::collections::{HashMap, HashSet};
-mod helpers;
 use self::helpers::*;
+mod helpers;
 
-const FILE_LINK_CG:     &'static str = "codegen_links.rs";
-const FILE_ENTRIES_CG:  &'static str = "codegen_entries.rs";
-const FILE_ADDRS_CG:    &'static str = "_codegen_addresses.rs";
 
 // The actual data storing the internal link structure
 pub struct Database {
@@ -15,9 +12,9 @@ pub struct Database {
     // which means that multiple addresses (u32) can map to the same page
     //
     // Address  →  Page
-    entries: HashMap<u32, Entry>,
+    pub entries: HashMap<u32, Entry>,
     //  Title   →  Address
-    addresses: HashMap<String, u32>,
+    pub addresses: HashMap<String, u32>,
     //internal state
     state: State,
     //logging
@@ -341,6 +338,9 @@ impl Database {
         println!();
         
     }
+
+    //fn export(&self) -> Vec<Vec<(u32,
+    
     /*
     // Codegen:
     // data crate should include `#![allow(dead_code)]
