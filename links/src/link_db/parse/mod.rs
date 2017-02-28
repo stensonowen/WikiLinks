@@ -55,7 +55,7 @@ pub fn populate_db(page_sql:   PathBuf,
     db
 }
 
-pub fn parse_generic<F>(filename: &Path, re: &str, db: &mut Database, action: F) -> (u64,u64)
+fn parse_generic<F>(filename: &Path, re: &str, db: &mut Database, action: F) -> (u64,u64)
     where F: Fn(&mut Database, regex::Captures) -> bool 
 {
     // parse a mysql dump from a custom regex

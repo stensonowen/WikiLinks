@@ -6,8 +6,6 @@ use std::fmt::Display;
 use self::helpers::*;
 mod helpers;
 
-use super::super::super::Entry as PrimaryEntry;
-
 
 // The actual data storing the internal link structure
 pub struct Database {
@@ -15,9 +13,9 @@ pub struct Database {
     // which means that multiple addresses (u32) can map to the same page
     //
     // Address  →  Page
-    pub entries: HashMap<u32, Entry>,
+    entries: HashMap<u32, Entry>,
     //  Title   →  Address
-    pub addresses: HashMap<String, u32>,
+    addresses: HashMap<String, u32>,
     //internal state
     state: State,
     //logging
@@ -136,7 +134,9 @@ impl Database {
             None => {
                 //this can happen if the dst article isn't in the same namespace, or has
                 // been removed so it wasn't listed in page.sql
-                //warn!(self.log, "A pagelink gave a destination title not in the db: `{}`", dst_title);
+                //warn!(self.log, 
+                //      "A pagelink gave a destination title not in the db: `{}`", 
+                //      dst_title);
                 return false;
             },
         };
@@ -205,7 +205,7 @@ impl Database {
             }
         }
     }
-    pub fn tidy_entries(&mut self) {
+    fn tidy_entries(&mut self) {
         //delete any redirects in page.sql that didn't show up in redirects.sql
         // they'll be in self.entries of type Entry::Redirect { target=None }
         
@@ -255,7 +255,7 @@ impl Database {
             self.addresses.insert(title,addr);
         }
     }
-    pub fn print(&self) {
+    fn _print(&self) {
         let mut children = 0;
         let mut true_pages = 0;
         let mut redirects = 0;
@@ -301,9 +301,39 @@ impl Database {
                 p.shrink_to_fit();
             }
         }
+
+        // delete redirects in page.sql that didn't show up in redirects.sql
+        //debug!(self.log, "Delete unconfirmed redirects...");
+        //self.tidy_entries();
+
+        // get rid of the redirects in self.entries 
+        debug!(self.log, "Purge Entries of redirects...");
+        self.remove_redirects();
+
+        // make sure parent/child links go both ways
+        debug!(self.log, "Assert symmetric child/parent relationships...");
+        self.validate();
+
+        // make sure links from addresses to entries go both ways
+        // delete those that don't
+        let asymmetric_references = self.asymmetric_references();
+        debug!(self.log, 
+               "Delete {} unrequited addresseses (not echoed in Entries)...",
+               asymmetric_references.len());
+        self.pop_asymmetric_references(asymmetric_references);
+
+        //make sure no children or parents links contain redirects
+        debug!(self.log, "Assert no children or parents can be redirects...");
+        self.find_redirs_in_links();
+
+        //self._children_vs_parents();
+        //self.verify_children_present();
+
         info!(self.log, "Finalized db");
     }
-    pub fn fattest(&self) {
+    /*
+    fn fattest(&self) {
+        //find the most popular entry
         let mut max_addr = 0;
         let mut max_val  = 0;
         for (&addr,entry) in &self.entries {
@@ -342,10 +372,10 @@ impl Database {
             println!("ERror");
         }
         println!();
-        
     }
+    */
 
-    pub fn validate(&self) {
+    fn validate(&self) {
         //panic if there are parent/child inconsistencies
         //verify all parent → child relationships are commutative
         //verify there are no Redirects in child/parent types
@@ -409,7 +439,7 @@ impl Database {
         info!(self.log, "parents: \t\t{}", parents);
     }
 
-    pub fn remove_redirects(&mut self) {
+    fn remove_redirects(&mut self) {
         //iterate through self.entries and remove redirects
         //set self.addresses[title] to redirect dst, not src
  
@@ -422,7 +452,7 @@ impl Database {
                 redirects.push(id);
             }
         }
-        info!(self.log, "Removing {} redirects", redirects.len());
+        info!(self.log, "Removing {} redirects from entries", redirects.len());
 
         //get those redirect entries out
         for r in redirects {
@@ -433,7 +463,63 @@ impl Database {
         //  (gonna be expensive)
     }
 
-    pub fn verify_links(&self) {
+    fn find_redirs_in_links(&self) {
+        info!(self.log, "Looking for redirect family...");
+        let mut redirects: HashSet<u32> = HashSet::new();
+        for (&id, entry) in &self.entries {
+            if let &Entry::Redirect{ .. } = entry {
+                redirects.insert(id);
+            }
+        }
+        info!(self.log, "Found {} redirects...", redirects.len());
+        let mut fails = 0usize;
+        let mut checked = 0usize;
+        for (&id, entry) in &self.entries {
+            if let &Entry::Page{ title: ref ti, children: ref c, parents: ref p} = entry {
+                for child in c {
+                    checked += 1;
+                    if redirects.contains(child) {
+                        error!(self.log, 
+                               "Found a child (of {}: {}) w/ a redirect child ({})",
+                               id, ti, child);
+                        fails += 1;
+                        if fails > 10 {
+                            return;
+                        }
+                    }
+
+                }
+                for parent in p {
+                    checked += 1;
+                    if redirects.contains(parent) {
+                        error!(self.log, 
+                               "Found a parent (of {}: {}) w/ a redirect parent ({})",
+                               id, ti, parent);
+                        fails += 1;
+                        if fails > 10 {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        info!(self.log, "NO REDIRECTS IN  {}  CHILDREN OR PARENTS :)", checked);
+
+    }
+
+    fn pop_asymmetric_references(&mut self, chopping_block: Vec<String>) {
+        //mut/immut workaround :/
+        for title in chopping_block {
+            self.addresses.remove(&title);
+        }
+    }
+    fn asymmetric_references(&self) -> Vec<String> {
+        /*
+         * Welp. There are some redirects that have the redirect flag in page.sql
+         *  but are not in redirects.sql. I guess it's not too bad to just purge them
+         *
+         */
+        let mut chopping_block: Vec<String> = vec![];
         //make sure everything in addresses points to a real element
         for (id, entry) in &self.entries {
             //make sure every entry is a Page, not a redirect
@@ -444,118 +530,22 @@ impl Database {
                 //_ => continue
             };
             let other_id = self.addresses.get(title).unwrap();
-            //assert_eq!(id, other_id, "entries[{}]->title = {}; addrs[{}] != {}", 
-            //        id, title, title, other_id);
-            if id != other_id {
-                error!(self.log, "entries[{}]->title = {}; addrs[{}] != {}", 
+            //shouldn't be any of these
+            assert_eq!(id, other_id, "entries[{}]->title = {}; addrs[{}] != {}", 
                     id, title, title, other_id);
-            }
         }
         for (title, id) in &self.addresses {
-            let other_ti = match self.entries.get(id).unwrap() {
+            let (other_ti, _other_c) = match self.entries.get(id).unwrap() {
                 &Entry::Redirect{..} => panic!("Addr {} → redirect {}", title, id),
                 //&Entry::Redirect{..} => continue,
-                &Entry::Page{ title: ref ti, .. } => ti,
+                &Entry::Page{ title: ref ti, children: ref c, .. } => (ti, c),
             };
             //assert_eq!(title, other_ti, "addrs[{}] = {} but entries[{}] = {}",
             //           title, id, id, other_ti);
             if title != other_ti {
-                error!(self.log, "addrs[{}] = {} but entries[{}] = {}",
-                           title, id, id, other_ti);
+                chopping_block.push(title.to_owned());
             }
         }
-        info!(self.log, "Tables are consistent!");
-
+        chopping_block
     }
-
-
-    fn export(self) -> HashMap<u32, PrimaryEntry> { 
-        //remove redirects in Entries
-        //Entry Page children/parent links that point to redirects
-        //  should be updated to point to the target of the redirect 
-        //  Also make sure no children/parent vectors contain self
-        //Entry redirects can then be deleted
-        //But Addresses should still contain redirects
-        //Redirect addresses should now point to the target of the redirect
-        let mut redirects: HashMap<u32,u32> = HashMap::new();
-        for (&start,entry) in &self.entries {
-            if let &Entry::Redirect{ target: ref t, .. } = entry {
-                let end = t.expect("Found an empty redirect :(");
-                redirects.insert(start, end);
-            }
-        }
-        // some article children will point to `start` instead of `end`
-        // `end`'s parents might point to 
-
-        //for each redirect, change the parent and child values
-        HashMap::new()
-    }
-    
-    /*
-    // Codegen:
-    // data crate should include `#![allow(dead_code)]
-    fn codegen_links(&self, path: &Path) {
-        let mut file = BufWriter::new(File::create(&path).unwrap());
-        //copy all page links into static vars
-        for (&addr,entry) in &self.entries {
-            if let Some(s) = entry.codegen_links(addr) {
-                file.write_all(s.as_bytes()).unwrap();
-            }
-        }
-    }
-    fn codegen_entries(&self, path: &Path) {
-        let mut file = BufWriter::new(File::create(&path).unwrap());
-        //copy the Entry type:
-        /* struct Entry {
-         *      title:      &'static str,
-         *      children:   &'static [u32],
-         *      parents:    &'static [u32],
-		 *  } */
-		write!(&mut file, "pub static ENTRIES: phf::Map<u32, Page> = ").unwrap();
-        let mut builder = phf_codegen::Map::new();
-		for (&addr,entry) in &self.entries {
-            let mut i = 0;
-            if let Some(s) = entry.codegen_page(addr) {
-                builder.entry(addr,&s);
-                i += 1;
-                if i % 1_000_000 == 0 {
-                    info!(self.log, "Entries Codegen Progress: {}  /  5 M", i);
-                }
-            }
-        }
-        info!(self.log, "Starting to generate ENTRIES phf table");
-        builder.build(&mut file).unwrap();
-        write!(&mut file, ";\n").unwrap();
-    }
-    fn codegen_addresses(&self, path: &Path) {
-        let mut file = BufWriter::new(File::create(&path).unwrap());
-        //copy the addresses type: map Strings to u32
-		write!(&mut file, "pub static ADDRESSES: phf::Map<&'static str, u32> = ").unwrap();
-        let mut builder = phf_codegen::Map::new();
-        let mut i = 0;
-        for (title,&addr) in &self.addresses {
-            builder.entry(title.to_owned(), &addr.to_string());
-            i += 1;
-            if i % 1_000_000 == 0 {
-                info!(self.log, "Entries Codegen Progress: {}  /  5 M", i);
-            }
-        }
-        info!(self.log, "Starting to generate ADDRESS phf table");
-        builder.build(&mut file).unwrap();
-        write!(&mut file, ";\n").unwrap();
-    }
-    pub fn codegen(&self, dir: &Path) {
-        //should be ../../wikidata/src or something
-        
-        //info!(self.log, "Starting LINKS codegen");
-        info!(self.log, "Skipping LINKS codegen");
-        //self.codegen_links(&dir.join(FILE_LINK_CG));
-        //info!(self.log, "Starting ENTRIES codegen");
-        info!(self.log, "Skipping ENTRIES codegen");
-        //self.codegen_entries(&dir.join(FILE_ENTRIES_CG));
-        info!(self.log, "Starting ADDRS codegen");
-        self.codegen_addresses(&dir.join(FILE_ADDRS_CG));
-        info!(self.log, "Finished codegen");
-    }
-    */
 }

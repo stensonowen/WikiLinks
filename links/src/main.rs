@@ -5,6 +5,7 @@
 //          field:      handles to files
 //          function:   process collisions
 //                          also compute pagerank data
+//                          okay to have no IR between db and ranks?
 //  1.  LinkData
 //          field:      vector of vectors of article entry
 //                          thread-safe: can be populated concurrently
@@ -39,9 +40,10 @@ use std::sync::{/*Arc,*/Mutex};
 
 //mod parse;
 //mod pagerank;
-
 pub mod link_db;
 pub mod link_data;
+
+const IS_SIMPLE: bool = true;
 
 //  ------STATE--MACHINE------
 
@@ -58,37 +60,18 @@ struct LinkState<S: State> {
 }
 
 impl LinkState<LinkDb> {
-    fn new(
-        pages_db: PathBuf,
-        redir_db: PathBuf,
-        links_db: PathBuf,
-        ) -> Self {
+    fn new(pages_db: PathBuf, redir_db: PathBuf, links_db: PathBuf) -> Self {
         let drain = slog_term::streamer().compact().build().fuse();
         let root_log = slog::Logger::root(drain, o!() );
-        let pages_db_s = format!("{}", pages_db.display());
-        let redir_db_s = format!("{}", redir_db.display());
-        let links_db_s = format!("{}", links_db.display());
-        let db_log = root_log.new(
-            o!("pages" => pages_db_s, "redir" => redir_db_s, "links" => links_db_s)
-            );
+        let db_log = root_log.new(o!(
+                "pages" => format!("{}", pages_db.display()), 
+                "redir" => format!("{}", redir_db.display()), 
+                "links" => format!("{}", links_db.display())) );
         LinkState { 
             log: root_log,
             threads: 4,
-            state: LinkDb::new(
-                pages_db,
-                redir_db,
-                links_db,
-                //simple,
-                //String::from("/home/owen/wikidata/simplewiki-20170220-page.sql"),
-                //String::from("/home/owen/wikidata/simplewiki-20170220-redirect.sql"),
-                //String::from("/home/owen/wikidata/simplewiki-20170220-pagelinks.sql"),
-                db_log,
-            ),
+            state: LinkDb::new(pages_db, redir_db, links_db, db_log),
         }
-    //ls.state.db.validate();
-    //let a = parse::populate_db(String::new(), String::new(), String::new(), &root_log);
-
-
     }
 }
 
@@ -97,13 +80,7 @@ impl LinkState<LinkDb> {
 
 
 struct LinkDb {
-    //db_pages: PathBuf,
-    //db_redirect: PathBuf,
-    //db_pagelinks: PathBuf,
-    //simple_wiki: bool,
-    //db: parse::Database,
     db: link_db::parse::database::Database,
-
 }
 
 struct LinkData {
@@ -148,18 +125,10 @@ struct Entry {
 
 fn main() {
     println!("😄");
-    let mut ls = LinkState::new(
+    let ls = LinkState::new(
         PathBuf::from("/home/owen/wikidata/simplewiki-20170201-page.sql"),
         PathBuf::from("/home/owen/wikidata/simplewiki-20170201-redirect.sql"),
         PathBuf::from("/home/owen/wikidata/simplewiki-20170201-pagelinks.sql"),
-        );
-
-    ls.state.db.validate();
-    ls.state.db.remove_redirects();
-    ls.state.db.validate();
-    println!("NO REDIRECTS");
-    //ls.state.db.verify_links();
-    //let a = parse::populate_db(String::new(), String::new(), String::new(), &root_log);
-
+    );
 }
 
