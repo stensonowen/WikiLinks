@@ -1,6 +1,6 @@
 use super::{LinkState, LinkDb, LinkData};
 use std::collections::HashMap;
-use super::Entry;
+//use super::Entry;
 
 mod pagerank;
 

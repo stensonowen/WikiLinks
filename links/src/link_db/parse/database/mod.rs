@@ -347,10 +347,21 @@ impl Database {
 
     pub fn validate(&self) {
         //panic if there are parent/child inconsistencies
+        //verify all parent → child relationships are commutative
+        //verify there are no Redirects in child/parent types
+        let mut all = 0;
+        let mut redirects = 0;
+        let mut pages = 0;
+        let mut children = 0;
+        let mut parents = 0;
+        info!(self.log, "Validating...");
         for(id,entry) in &self.entries {
+            all += 1;
             match entry {
                 &Entry::Page { title: ref t, children: ref c, parents: ref p } => {
+                    pages += 1;
                     for child in c {
+                        children += 1;
                         let target = self.entries.get(child);
                         assert!(target.is_some(), 
                                 "Page `{}`'s child {} doesn't exist", t, child);
@@ -367,6 +378,7 @@ impl Database {
                         }
                     }
                     for parent in p {
+                        parents += 1;
                         let target = self.entries.get(parent);
                         assert!(target.is_some(), 
                                 "Page `{}`'s parent {} doesn't exist", t, parent);
@@ -383,13 +395,79 @@ impl Database {
                         }
                     }
                 },
-                &Entry::Redirect { title: ref t, target: ref x } => {
-
+                &Entry::Redirect { title: ref _t, target: ref _x } => {
+                    redirects += 1;
                 }
             }
         }
-        println!("All good");
+        //println!("All good");
+        info!(self.log, "Validated :)");
+        info!(self.log, "All: \t\t{}", all);
+        info!(self.log, "Redirects: \t\t{}", redirects);
+        info!(self.log, "pages: \t\t{}", pages);
+        info!(self.log, "children: \t\t{}", children);
+        info!(self.log, "parents: \t\t{}", parents);
     }
+
+    pub fn remove_redirects(&mut self) {
+        //iterate through self.entries and remove redirects
+        //set self.addresses[title] to redirect dst, not src
+ 
+        //create collection of redirects
+        let mut redirects: Vec<u32> = vec![];
+        for (&id,entry) in &self.entries {
+            if let &Entry::Redirect { title: ref ti, target: ta } = entry {
+                //change address of title to the destination
+                self.addresses.insert(ti.to_owned(), ta.unwrap());
+                redirects.push(id);
+            }
+        }
+        info!(self.log, "Removing {} redirects", redirects.len());
+
+        //get those redirect entries out
+        for r in redirects {
+            self.entries.remove(&r);
+        }
+
+        //TODO: remove redirects from all parent and children lists
+        //  (gonna be expensive)
+    }
+
+    pub fn verify_links(&self) {
+        //make sure everything in addresses points to a real element
+        for (id, entry) in &self.entries {
+            //make sure every entry is a Page, not a redirect
+            //make sure looking it up by its title gives the right id
+            let title = match entry {
+                &Entry::Page{ title: ref t, .. } => t,
+                _ => panic!("Found a redirect in verify_links step"),
+                //_ => continue
+            };
+            let other_id = self.addresses.get(title).unwrap();
+            //assert_eq!(id, other_id, "entries[{}]->title = {}; addrs[{}] != {}", 
+            //        id, title, title, other_id);
+            if id != other_id {
+                error!(self.log, "entries[{}]->title = {}; addrs[{}] != {}", 
+                    id, title, title, other_id);
+            }
+        }
+        for (title, id) in &self.addresses {
+            let other_ti = match self.entries.get(id).unwrap() {
+                &Entry::Redirect{..} => panic!("Addr {} → redirect {}", title, id),
+                //&Entry::Redirect{..} => continue,
+                &Entry::Page{ title: ref ti, .. } => ti,
+            };
+            //assert_eq!(title, other_ti, "addrs[{}] = {} but entries[{}] = {}",
+            //           title, id, id, other_ti);
+            if title != other_ti {
+                error!(self.log, "addrs[{}] = {} but entries[{}] = {}",
+                           title, id, id, other_ti);
+            }
+        }
+        info!(self.log, "Tables are consistent!");
+
+    }
+
 
     fn export(self) -> HashMap<u32, PrimaryEntry> { 
         //remove redirects in Entries

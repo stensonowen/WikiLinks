@@ -147,13 +147,18 @@ struct Entry {
 //}
 
 fn main() {
-    let ls = LinkState::new(
+    println!("😄");
+    let mut ls = LinkState::new(
         PathBuf::from("/home/owen/wikidata/simplewiki-20170201-page.sql"),
         PathBuf::from("/home/owen/wikidata/simplewiki-20170201-redirect.sql"),
         PathBuf::from("/home/owen/wikidata/simplewiki-20170201-pagelinks.sql"),
         );
 
     ls.state.db.validate();
+    ls.state.db.remove_redirects();
+    ls.state.db.validate();
+    println!("NO REDIRECTS");
+    //ls.state.db.verify_links();
     //let a = parse::populate_db(String::new(), String::new(), String::new(), &root_log);
 
 }
