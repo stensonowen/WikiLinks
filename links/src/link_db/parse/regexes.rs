@@ -1,5 +1,5 @@
 
-const IS_SIMPLE: bool = false;   //small parsing differences between simple and English wikis
+const IS_SIMPLE: bool = true;   //small parsing differences between simple and English wikis
 
 // NOTE about namespaces:
 //  Namespaces complicate things. The 0 namespace (i.e. Main, "real" articles) is the

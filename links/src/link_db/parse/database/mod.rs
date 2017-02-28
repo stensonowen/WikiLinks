@@ -2,6 +2,7 @@ extern crate slog;
 extern crate regex;
 
 use std::collections::{HashMap, HashSet};
+use std::fmt::Display;
 use self::helpers::*;
 mod helpers;
 
@@ -31,6 +32,9 @@ impl Database {
             state: State::Begin,
             log: log,
         }
+    }
+    pub fn log<T: Display>(&self, text: T) {
+        info!(self.log, text);
     }
     pub fn add_page(&mut self, data: &regex::Captures) -> bool {
         //must finish before links/redirects start
@@ -341,7 +345,73 @@ impl Database {
         
     }
 
-    //fn export(self) -> HashMap<u32, PrimaryEntry> { remove any }
+    pub fn validate(&self) {
+        //panic if there are parent/child inconsistencies
+        for(id,entry) in &self.entries {
+            match entry {
+                &Entry::Page { title: ref t, children: ref c, parents: ref p } => {
+                    for child in c {
+                        let target = self.entries.get(child);
+                        assert!(target.is_some(), 
+                                "Page `{}`'s child {} doesn't exist", t, child);
+                        match target.unwrap() {
+                            &Entry::Page { title: ref t_, parents: ref p_, .. } => {
+                                assert!(p_.contains(id), 
+                                        "Page `{}` has child {}, but child {} lacks parent {}",
+                                        t, child, t_, id);
+                            },
+                            &Entry::Redirect { title: ref t_, target: ref x_ } => {
+                                panic!("Page `{}` pointed to child {}({}), a redir to {:?}",
+                                       t, child, t_, x_);
+                            }
+                        }
+                    }
+                    for parent in p {
+                        let target = self.entries.get(parent);
+                        assert!(target.is_some(), 
+                                "Page `{}`'s parent {} doesn't exist", t, parent);
+                        match target.unwrap() {
+                            &Entry::Page { title: ref t_, children: ref c_, .. } => {
+                                assert!(c_.contains(id), 
+                                    "Page `{}` has parent {}, but parent {} lacks child {}",
+                                        t, parent, t_, id);
+                            },
+                            &Entry::Redirect { title: ref t_, target: ref x_ } => {
+                                panic!("Page `{}` pointed to parent {}({}), a redir to {:?}",
+                                       t, parent, t_, x_);
+                            }
+                        }
+                    }
+                },
+                &Entry::Redirect { title: ref t, target: ref x } => {
+
+                }
+            }
+        }
+        println!("All good");
+    }
+
+    fn export(self) -> HashMap<u32, PrimaryEntry> { 
+        //remove redirects in Entries
+        //Entry Page children/parent links that point to redirects
+        //  should be updated to point to the target of the redirect 
+        //  Also make sure no children/parent vectors contain self
+        //Entry redirects can then be deleted
+        //But Addresses should still contain redirects
+        //Redirect addresses should now point to the target of the redirect
+        let mut redirects: HashMap<u32,u32> = HashMap::new();
+        for (&start,entry) in &self.entries {
+            if let &Entry::Redirect{ target: ref t, .. } = entry {
+                let end = t.expect("Found an empty redirect :(");
+                redirects.insert(start, end);
+            }
+        }
+        // some article children will point to `start` instead of `end`
+        // `end`'s parents might point to 
+
+        //for each redirect, change the parent and child values
+        HashMap::new()
+    }
     
     /*
     // Codegen:

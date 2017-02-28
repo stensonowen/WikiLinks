@@ -1,6 +1,7 @@
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 use std::borrow::Cow;
+use std::path::{Path, PathBuf};
 
 mod regexes;
 pub mod database;
@@ -23,47 +24,44 @@ extern crate regex;
 const BUFFER_SIZE: usize = 1_250_000;
 
 
-pub fn populate_db(page_sql:   String,
-                   redirs_sql: String,
-                   links_sql:  String,
-                   log: &slog::Logger) -> Database {
+pub fn populate_db(page_sql:   PathBuf,
+                   redirs_sql: PathBuf,
+                   links_sql:  PathBuf,
+                   log: slog::Logger) -> Database {
 
-    let db_log = log.new(o!("page.sql"      => page_sql.clone(),
-                            "redirect.sql"  => redirs_sql.clone(),
-                            "pagelinks.sql" => links_sql.clone()));
-
-    let mut db = Database::new(db_log);
+    let mut db = Database::new(log);
     let pages = parse_generic(&page_sql,
                               &regexes::pages_regex(),
                               &mut db,
                               |db: &mut Database, data: regex::Captures| {
                                   db.add_page(&data)
                               });
-    info!(log, "Number of page entries: {} / {}", pages.0, pages.1);
+    db.log(format!("Number of page entries: {} / {}", pages.0, pages.1));
     let redirs = parse_generic(&redirs_sql,
                               &regexes::redirect_regex(),
                               &mut db,
                               |db: &mut Database, data: regex::Captures| {
                                   db.add_redirect(&data)
                               });
-    info!(log, "Number of redirects: {} / {}", redirs.0, redirs.1);
+    db.log(format!("Number of redirects: {} / {}", redirs.0, redirs.1));
     let links = parse_generic(&links_sql,
                               &regexes::pagelinks_regex(),
                               &mut db,
                               |db: &mut Database, data: regex::Captures| {
                                   db.add_pagelink(&data)
                               });
-    info!(log, "Number of pagelinks: {} / {}", links.0, links.1);
+    db.log(format!("Number of pagelinks: {} / {}", links.0, links.1));
     db.finalize();
     db
 }
 
-pub fn parse_generic<F>(filename: &str, re: &str, db: &mut Database, action: F) -> (u64,u64)
+pub fn parse_generic<F>(filename: &Path, re: &str, db: &mut Database, action: F) -> (u64,u64)
     where F: Fn(&mut Database, regex::Captures) -> bool 
 {
     // parse a mysql dump from a custom regex
     // use a closure to define how the database uses the results
 
+    println!("Opening `{:?}`", filename);
     let f = File::open(filename).unwrap();
     let mut reader = BufReader::new(f);
     let re = regex::Regex::new(&re).unwrap();
