@@ -5,35 +5,36 @@
  *
  */
 
+extern crate slog;
 use std::collections::HashMap;
 
 use std::f64;
 const DAMPING_FACTOR: f64 = 0.85;
 const MAX_ERROR: f64 = f64::EPSILON * 10f64;
-const MAX_ITER: usize = 500;   //iterations to panic! after (usually takes ~150)
+const MAX_ITER: usize = 500;   //iterations to panic! after 
+//  (usually finishes after~150)
 
 
+/*
 pub fn wikidata_pageranks(input: HashMap<u32,Page>, output: &str) {
     //input: file to write results to (as csv)
-    let mut g = Graph::new(input);
+    let mut g = Graph::new(&input);
     g.compute_pageranks(true);  //be verbose
     //g.export(output).unwrap();
 }
+*/
 
-pub struct Page {
-    title:      String,
-    children:   Vec<u32>,
-    parents:    Vec<u32>,
-}
+//use super::RanklessEntry as Page;
+use super::super::Entry as Page;
 
-struct Graph {
+pub struct Graph<'a> {
     //pages:  &'static phf::Map<u32, wikidata::Page>,
-    pages: HashMap<u32, Page>,
+    pages: &'a HashMap<u32, Page>,
     ranks:  HashMap<u32,f64>,
 }
 
-impl Graph {
-    fn new(hm: HashMap<u32,Page>) -> Graph {
+impl<'a> Graph<'a> {
+    pub fn new(hm: &HashMap<u32,Page>) -> Graph {
         //let size = ENTRIES.len();
         let size = hm.len();
         let mut pageranks = HashMap::with_capacity(size);
@@ -45,6 +46,13 @@ impl Graph {
             pages:  hm,
             ranks:  pageranks,
         }
+    }
+    pub fn get_ranks(mut self, log: slog::Logger) -> HashMap<u32,f64> {
+        let iter = self.compute_pageranks(false);
+        info!(log, "Computed pageranks with ε={} after {} iterations", 
+              MAX_ERROR, iter);
+        info!(log, "Final sum is {} (should be ~1.0)", self.sum());
+        self.ranks
     }
     fn sum(&self) -> f64 {
         let mut sum = 0f64;

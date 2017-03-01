@@ -4,7 +4,11 @@ extern crate regex;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use self::helpers::*;
+use std::iter;
 mod helpers;
+
+use super::super::Entry as EntryStruct;
+//use super::super::RanklessEntry;
 
 
 // The actual data storing the internal link structure
@@ -33,6 +37,24 @@ impl Database {
     }
     pub fn log<T: Display>(&self, text: T) {
         info!(self.log, text);
+    }
+    pub fn num_entries(&self) -> usize {
+        self.entries.len()
+    }
+    pub fn explode(self) -> 
+        (Box<iter::Iterator<Item=(u32,EntryStruct)>>,
+         Box<iter::Iterator<Item=(String,u32)>>)
+    {
+        // destroy ourSelf and yield our contents
+        // they will go in totally different data structures so yield iterators
+        let entry_iter = self.entries.into_iter().map(|e: (u32,Entry)| {
+            (e.0, match e.1 {
+                Entry::Redirect{..} => panic!("Found redirect during explosion"),
+                Entry::Page{ title: ti, parents: p, children: c } => 
+                    EntryStruct { title: ti, parents: p, children: c, }
+            })});
+        let addr_iter = self.addresses.into_iter();
+        (Box::new(entry_iter), Box::new(addr_iter))
     }
     pub fn add_page(&mut self, data: &regex::Captures) -> bool {
         //must finish before links/redirects start
