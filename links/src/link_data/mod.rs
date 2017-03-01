@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::io::{self, Read, Write};
+use std::io::{self, Read, /*Write*/};
 use std::path::PathBuf;
 use std::fs::File;
 use serde_json;
@@ -23,12 +23,13 @@ impl From<LinkState<LinkDb>> for LinkState<LinkData> {
         //seems like there should be a more functional way to do this
         //  if .take() didn't consume?  doesn't shallow copy??
         // could stand to be refactored
-        for _ in 0..old.threads {
-            entries.push(Mutex::new(Vec::with_capacity(old.size/old.threads)));
+        let size = old.size / old.threads + 1;
+        for _ in 0..old.threads+1 {
+            entries.push(Mutex::new(Vec::with_capacity(size)));
         }
         let mut count = 0usize;
         for entry in entries_i {
-            entries[count/old.threads].get_mut().unwrap().push(entry);
+            entries[count/size].get_mut().unwrap().push(entry);
             count += 1;
         }
         assert_eq!(count, old.size, "Lost elements populating LinkDb");
@@ -80,13 +81,13 @@ impl LinkState<LinkData> {
             }
         });
 
-        let entry_threads: Vec<_> = (0..self.threads).map(|i| {
+        let _entry_threads: Vec<_> = (0..self.threads).map(|_i| {
             //thread::spawn(move || {
                 //let mut f = File::open(manifest.entries[i]).unwrap();
             //})
         }).collect();
 
-        addr_thread.join();
+        addr_thread.join().unwrap();
         Ok(()) 
     }
 

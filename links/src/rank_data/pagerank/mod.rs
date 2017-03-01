@@ -9,9 +9,9 @@ extern crate slog;
 use std::collections::HashMap;
 
 use std::f64;
-const DAMPING_FACTOR: f64 = 0.85;
-const MAX_ERROR: f64 = f64::EPSILON * 10f64;
-const MAX_ITER: usize = 500;   //iterations to panic! after 
+pub const DAMPING_FACTOR: f64 = 0.85;
+pub const MAX_ERROR: f64 = f64::EPSILON * 10f64;
+pub const MAX_ITER: usize = 500;   //iterations to panic! after 
 //  (usually finishes after~150)
 
 

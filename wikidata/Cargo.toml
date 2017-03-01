@@ -1,7 +1,0 @@
-[package]
-name = "wikidata"
-version = "0.1.0"
-
-[dependencies]
-phf = "0.7.20"
-

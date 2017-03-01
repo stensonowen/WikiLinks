@@ -47,12 +47,10 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{/*Arc,*/Mutex};
 
-//mod parse;
-//mod pagerank;
 pub mod link_db;
 pub mod link_data;
 pub mod rank_data;
-use rank_data::RankedEntry;
+pub mod hash_links;
 
 const IS_SIMPLE: bool = true;
 
@@ -82,7 +80,7 @@ impl LinkState<LinkDb> {
                 "links" => format!("{}", links_db.display())) );
         let link_db = LinkDb::new(pages_db, redir_db, links_db, db_log);
         LinkState { 
-            size:       0,
+            size:       link_db.size(),
             threads:    4,
             log:        root_log,
             state:      link_db,
@@ -107,7 +105,9 @@ struct LinkData {
 
 struct RankData {
     links: HashMap<u32,Entry>,
-    ranks: Vec<RankedEntry>,
+    //ranks: Vec<RankedEntry>,
+    //ranks: Vec<(String,u32)>,
+    ranks: HashMap<u32, f64>,
 }
 
 struct HashLinks {
@@ -116,6 +116,28 @@ struct HashLinks {
     // HashMap<String,u32> ?
 }
 
+
+/*
+enum Links {
+    LinkDb(   LinkState<LinkDb>),
+    LinkData( LinkState<LinkData>),
+    RankData( LinkState<RankData>),
+    HashLinks(LinkState<HashLinks>),
+}
+
+impl Links {
+    fn from_sql(p: PathBuf, r: PathBuf, l: PathBuf) -> Self {
+        Links::LinkDb(LinkState::new(p, r, l))
+    }
+    fn step(self) -> Links {
+        match self {
+            Links::LinkDb(ld)   => Links::LinkData(ld.into()),
+            Links::LinkData(ld) => Links::RankData(ld.into()),
+            Links::RankData(rd) => Links::HashLinks(rd.into()),
+            Links::HashLinks(_) => panic!("Link already in its final state"),
+        }
+    }
+}*/
 
 // ------COMMON-OBJECTS------
 
@@ -144,11 +166,28 @@ pub struct Entry {
 
 fn main() {
     println!("😄");
-    let ls = LinkState::new(
-        PathBuf::from("/home/owen/wikidata/simplewiki-20170201-page.sql"),
-        PathBuf::from("/home/owen/wikidata/simplewiki-20170201-redirect.sql"),
-        PathBuf::from("/home/owen/wikidata/simplewiki-20170201-pagelinks.sql"),
-    );
+    let pages_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-page.sql");
+    let redir_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-redirect.sql");
+    let links_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-pagelinks.sql");
+    /*
+    println!("Parsing Db...");
+    let links = Links::from_sql(pages_db, redir_db, links_db);
+    println!("Creating Links...");
+    let links = links.step();
+    println!("Computing Pageranks...");
+    let links = links.step();
+    println!("Finalizing Data");
+    let links = links.step();
+    */
+    println!("Parsing Db...");
+    let ls_db = LinkState::new(pages_db, redir_db, links_db);
+    println!("Creating Links...");
+    let ls_ld: LinkState<LinkData> = ls_db.into(); 
+    println!("Computing Pageranks...");
+    let ls_rd: LinkState<RankData> = ls_ld.into(); 
+    ls_rd.data();
+    println!("Finalizing...");
+    let _ls_hl: LinkState<HashLinks>= ls_rd.into(); 
+    println!("Done");
+
 }
-
-

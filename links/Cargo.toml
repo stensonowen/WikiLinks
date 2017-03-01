@@ -1,0 +1,18 @@
+[package]
+name = "links"
+version = "0.1.0"
+authors = ["owen <owen@oms.sh>"]
+
+[dependencies]
+#fnv = "1.0.5"
+#clap = "2.20.5"
+regex = "0.1.80"
+
+slog = "1.5.2"
+slog-term = "1.5.0"
+
+serde = "0.9.9"
+serde_json = "0.9.8"
+serde_derive = "0.9.9"
+
+csv = "*"
