@@ -5,12 +5,15 @@
  *
  */
 
-extern crate slog;
+use slog;
 use std::collections::HashMap;
+//use rayon::par_iter::{IntoParallelRefIterator, ParallelIterator};
+//use std::sync::{Arc, Mutex};
 
 use std::f64;
 pub const DAMPING_FACTOR: f64 = 0.85;
-pub const MAX_ERROR: f64 = f64::EPSILON * 10f64;
+//pub const MAX_ERROR: f64 = f64::EPSILON * 10f64;
+pub const MAX_ERROR: f64 = 0.00000001;  // for testing: ~55 iters, ~4 mins
 pub const MAX_ITER: usize = 500;   //iterations to panic! after 
 //  (usually finishes after~150)
 
@@ -73,32 +76,50 @@ impl<'a> Graph<'a> {
         let starting_val = (1.0 - DAMPING_FACTOR) / (self.pages.len() as f64);
 
         let mut new_ranks: HashMap<u32,f64> = HashMap::with_capacity(self.ranks.capacity());
+        //let new_ranks: Mutex<HashMap<u32,f64>> = 
+        //    Mutex::new(HashMap::with_capacity(self.ranks.capacity()));
+        //let new_ranks_arc = new_ranks.clone();
         //distribute pagerank
-        for (addr,page) in self.pages.iter() {
+        //self.pages.par_iter().for_each(|(addr,page)| {
+        for (addr,page) in self.pages {
             let pr = self.ranks.get(&addr).unwrap();
             if page.children.len() == 0 {
                 //equally distribute our pagerank to every page
                 let n = self.pages.len() as f64;
                 for &a in self.pages.keys() {
+                    //let mut nr = new_ranks.lock().unwrap();
                     let mut x = new_ranks.entry(a).or_insert(starting_val);
+                    //let mut x = nr.entry(a).or_insert(starting_val);
                     *x += DAMPING_FACTOR * (pr / n);
                 }
             } else {
                 //equally distribute our pagerank to all our children
                 let n = page.children.len() as f64;
                 for &a in &page.children {
+                    //let mut nr = new_ranks.lock().unwrap();
+                    //let mut x = nr.entry(a).or_insert(starting_val);
                     let mut x = new_ranks.entry(a).or_insert(starting_val);
                     *x += DAMPING_FACTOR * (pr / n);
                 }
             }
         }
+        //});
+
+        //let new_ranks_ = new_ranks.lock().unwrap();
+        //let nr_ = (*new_ranks_).clone();        //TODO: kill the clone
+        // TODO: don't do this so often
         //identify the greatest change that is being made to self.ranks
-        let mut max_change = 0f64;
-        for (addr,rank) in &self.ranks {
-            let delta = (rank - new_ranks.get(addr).unwrap()).abs();
-            max_change = max_change.max(delta);
-        }
+        let max_change = self.ranks.iter().fold(0f64, |max_change, (addr,&rank)| {
+            max_change.max((rank - new_ranks.get(addr).unwrap()).abs())
+        });
+        //let mut max_change = 0f64;
+        //for (addr,rank) in &self.ranks {
+        //    let delta = (rank - new_ranks.get(addr).unwrap()).abs();
+        //    //let delta = (rank - nr_.get(addr).unwrap()).abs();
+        //    max_change = max_change.max(delta);
+        //}
         self.ranks = new_ranks;
+        //self.ranks = nr_;
         max_change
     }
     fn compute_pageranks(&mut self, verbose: bool) -> usize {
