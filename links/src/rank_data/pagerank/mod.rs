@@ -7,8 +7,6 @@
 
 use slog;
 use std::collections::HashMap;
-//use rayon::par_iter::{IntoParallelRefIterator, ParallelIterator};
-//use std::sync::{Arc, Mutex};
 
 use std::f64;
 pub const DAMPING_FACTOR: f64 = 0.85;
@@ -18,27 +16,15 @@ pub const MAX_ITER: usize = 500;   //iterations to panic! after
 //  (usually finishes after~150)
 
 
-/*
-pub fn wikidata_pageranks(input: HashMap<u32,Page>, output: &str) {
-    //input: file to write results to (as csv)
-    let mut g = Graph::new(&input);
-    g.compute_pageranks(true);  //be verbose
-    //g.export(output).unwrap();
-}
-*/
-
-//use super::RanklessEntry as Page;
 use super::super::Entry as Page;
 
 pub struct Graph<'a> {
-    //pages:  &'static phf::Map<u32, wikidata::Page>,
     pages: &'a HashMap<u32, Page>,
     ranks:  HashMap<u32,f64>,
 }
 
 impl<'a> Graph<'a> {
     pub fn new(hm: &HashMap<u32,Page>) -> Graph {
-        //let size = ENTRIES.len();
         let size = hm.len();
         let mut pageranks = HashMap::with_capacity(size);
         let guess = (size as f64).recip();  // start each pagerank at 1/N
@@ -76,50 +62,31 @@ impl<'a> Graph<'a> {
         let starting_val = (1.0 - DAMPING_FACTOR) / (self.pages.len() as f64);
 
         let mut new_ranks: HashMap<u32,f64> = HashMap::with_capacity(self.ranks.capacity());
-        //let new_ranks: Mutex<HashMap<u32,f64>> = 
-        //    Mutex::new(HashMap::with_capacity(self.ranks.capacity()));
-        //let new_ranks_arc = new_ranks.clone();
         //distribute pagerank
-        //self.pages.par_iter().for_each(|(addr,page)| {
         for (addr,page) in self.pages {
             let pr = self.ranks.get(&addr).unwrap();
             if page.children.len() == 0 {
                 //equally distribute our pagerank to every page
                 let n = self.pages.len() as f64;
                 for &a in self.pages.keys() {
-                    //let mut nr = new_ranks.lock().unwrap();
                     let mut x = new_ranks.entry(a).or_insert(starting_val);
-                    //let mut x = nr.entry(a).or_insert(starting_val);
                     *x += DAMPING_FACTOR * (pr / n);
                 }
             } else {
                 //equally distribute our pagerank to all our children
                 let n = page.children.len() as f64;
                 for &a in &page.children {
-                    //let mut nr = new_ranks.lock().unwrap();
-                    //let mut x = nr.entry(a).or_insert(starting_val);
                     let mut x = new_ranks.entry(a).or_insert(starting_val);
                     *x += DAMPING_FACTOR * (pr / n);
                 }
             }
         }
-        //});
 
-        //let new_ranks_ = new_ranks.lock().unwrap();
-        //let nr_ = (*new_ranks_).clone();        //TODO: kill the clone
-        // TODO: don't do this so often
         //identify the greatest change that is being made to self.ranks
         let max_change = self.ranks.iter().fold(0f64, |max_change, (addr,&rank)| {
             max_change.max((rank - new_ranks.get(addr).unwrap()).abs())
         });
-        //let mut max_change = 0f64;
-        //for (addr,rank) in &self.ranks {
-        //    let delta = (rank - new_ranks.get(addr).unwrap()).abs();
-        //    //let delta = (rank - nr_.get(addr).unwrap()).abs();
-        //    max_change = max_change.max(delta);
-        //}
         self.ranks = new_ranks;
-        //self.ranks = nr_;
         max_change
     }
     fn compute_pageranks(&mut self, verbose: bool) -> usize {
@@ -133,13 +100,12 @@ impl<'a> Graph<'a> {
             println!(" i\t\tMax Diff\t\t\tSum");
         }
         while diff > MAX_ERROR {
-            //terminate early if (sum - 1.0).abs() > diff?
+            //terminate early if (sum - 1.0).abs() > diff
             // that would indicate that floating point errors are getting meaningful
-            //currently takes 148 iterations for the Simple wiki (~80 seconds)
+            //currently takes 148 iterations for the Simple wiki; err = 100*machine ε
             diff = self.iterate();
             iter += 1;
             if verbose && iter % every == 0 {
-                //println!("{:03}:    {:1.20}, \t{:1.20}", iter, diff, self.sum());
                 println!("{:03}:    {},\t\t{}", iter, diff, self.sum());
             } 
             if iter > MAX_ITER {
