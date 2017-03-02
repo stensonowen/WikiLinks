@@ -7,8 +7,7 @@ use self::helpers::*;
 use std::iter;
 mod helpers;
 
-use super::super::Entry as EntryStruct;
-//use super::super::RanklessEntry;
+use super::super::IndexedEntry;
 
 
 // The actual data storing the internal link structure
@@ -42,17 +41,17 @@ impl Database {
         self.entries.len()
     }
     pub fn explode(self) -> 
-        (Box<iter::Iterator<Item=(u32,EntryStruct)>>,
+        (Box<iter::Iterator<Item=IndexedEntry>>,
          Box<iter::Iterator<Item=(String,u32)>>)
     {
         // destroy ourSelf and yield our contents
         // they will go in totally different data structures so yield iterators
         let entry_iter = self.entries.into_iter().map(|e: (u32,Entry)| {
-            (e.0, match e.1 {
+            match e.1 {
                 Entry::Redirect{..} => panic!("Found redirect during explosion"),
                 Entry::Page{ title: ti, parents: p, children: c } => 
-                    EntryStruct { title: ti, parents: p, children: c, }
-            })});
+                    IndexedEntry::from(e.0, ti, p, c)
+            }});
         let addr_iter = self.addresses.into_iter();
         (Box::new(entry_iter), Box::new(addr_iter))
     }

@@ -38,8 +38,6 @@ extern crate slog;
 extern crate slog_term;
 use slog::DrainExt;
 
-extern crate rayon;
-
 #[macro_use] 
 extern crate serde_derive;
 extern crate serde_json;
@@ -53,6 +51,8 @@ pub mod link_db;
 pub mod link_data;
 pub mod rank_data;
 pub mod hash_links;
+
+use link_data::IndexedEntry;
 
 const IS_SIMPLE: bool = true;
 
@@ -100,7 +100,8 @@ struct LinkDb {
 
 struct LinkData {
     //len is desired num of threads (num cpus?)
-    dumps: Vec<Mutex<Vec<(u32,Entry)>>>, // Vec<Arc<Mutex<&u32>>>, //?
+    //dumps: Vec<Mutex<Vec<(u32,Entry)>>>, // Vec<Arc<Mutex<&u32>>>, //?
+    dumps: Vec<Mutex<Vec<IndexedEntry>>>,
     //ranks: HashMap<u32,f64>,
     addrs: Vec<(String,u32)>,
 }
@@ -181,15 +182,19 @@ fn main() {
     println!("Finalizing Data");
     let links = links.step();
     */
+    let output = PathBuf::from("/home/owen/wikidata/dumps/simple_20170201_dump1");
+
     println!("Parsing Db...");
     let ls_db = LinkState::new(pages_db, redir_db, links_db);
     println!("Creating Links...");
     let ls_ld: LinkState<LinkData> = ls_db.into(); 
+    ls_ld.to_file(output).unwrap();
+    /*
     println!("Computing Pageranks...");
     let ls_rd: LinkState<RankData> = ls_ld.into(); 
     ls_rd.data();
     println!("Finalizing...");
     let _ls_hl: LinkState<HashLinks>= ls_rd.into(); 
     println!("Done");
-
+    */
 }

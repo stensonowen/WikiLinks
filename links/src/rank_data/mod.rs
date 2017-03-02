@@ -4,13 +4,6 @@ use Entry;
 
 mod pagerank;
 
-//pub struct RankedEntry {
-//    title: String,
-//    pagerank: f64,
-//    parents:  Vec<u32>,
-//    children: Vec<u32>,
-//}
-
 
 impl From<LinkState<LinkData>> for LinkState<RankData> {
     fn from(old: LinkState<LinkData>) -> LinkState<RankData> {
@@ -24,7 +17,8 @@ impl From<LinkState<LinkData>> for LinkState<RankData> {
         // single threaded population
         let mut links: HashMap<u32,Entry> = HashMap::with_capacity(old.size);
         for dump in old.state.dumps {
-            for (id, entry) in dump.into_inner().unwrap() {
+            for ie in dump.into_inner().unwrap() {
+                let (id, entry) = ie.decompose();
                 links.insert(id, entry);
             }
         }
