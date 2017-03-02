@@ -133,7 +133,7 @@ impl LinkState<LinkData> {
         Ok(()) 
     }
 
-    fn from_file(src: PathBuf, log: slog::Logger) -> Result<Self,io::Error> { 
+    pub fn from_file(src: PathBuf, log: slog::Logger) -> Result<Self,io::Error> { 
         assert!(src.is_file());
         let mut s = String::new();
         let mut f = File::open(src)?;
@@ -142,7 +142,8 @@ impl LinkState<LinkData> {
 
         //populate addresses
         let mut addrs: Vec<(String,u32)> = Vec::with_capacity(manifest.size);
-        let mut csv_r = csv::Reader::from_file(&manifest.addrs).unwrap();
+        let mut csv_r = csv::Reader::from_file(&manifest.addrs)
+            .unwrap().has_headers(false);
         for line in csv_r.decode() {
              let (id, title): (u32, String) = line.unwrap();
              addrs.push((title,id));
@@ -152,7 +153,6 @@ impl LinkState<LinkData> {
         let mut entries: Vec<Mutex<Vec<IndexedEntry>>> = Vec::with_capacity(manifest.threads);
         for i in 0..manifest.threads {
             let mut entries_v = Vec::with_capacity(manifest.size/manifest.threads);
-            //entries.push(Mutex::new(Vec::with_capacity(manifest.size/manifest.threads)));
             let f = File::open(&manifest.entries[i])?;
             let r = BufReader::new(f);
             for line in r.lines() {

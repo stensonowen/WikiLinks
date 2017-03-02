@@ -43,8 +43,10 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate csv;
 
+extern crate fnv;
+
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{/*Arc,*/Mutex};
 
 pub mod link_db;
@@ -74,8 +76,7 @@ struct LinkState<S: State> {
 
 impl LinkState<LinkDb> {
     fn new(pages_db: PathBuf, redir_db: PathBuf, links_db: PathBuf) -> Self {
-        let drain = slog_term::streamer().compact().build().fuse();
-        let root_log = slog::Logger::root(drain, o!() );
+        let root_log = new_loger();
         let db_log = root_log.new(o!(
                 "pages" => format!("{}", pages_db.display()), 
                 "redir" => format!("{}", redir_db.display()), 
@@ -90,6 +91,11 @@ impl LinkState<LinkDb> {
     }
 }
 
+fn new_loger() -> slog::Logger {
+    let drain = slog_term::streamer().compact().build().fuse();
+    slog::Logger::root(drain, o!())
+}
+
 
 //  ----------STATES----------
 
@@ -100,21 +106,17 @@ struct LinkDb {
 
 struct LinkData {
     //len is desired num of threads (num cpus?)
-    //dumps: Vec<Mutex<Vec<(u32,Entry)>>>, // Vec<Arc<Mutex<&u32>>>, //?
     dumps: Vec<Mutex<Vec<IndexedEntry>>>,
-    //ranks: HashMap<u32,f64>,
     addrs: Vec<(String,u32)>,
 }
 
 struct RankData {
-    links: HashMap<u32,Entry>,
-    //ranks: Vec<RankedEntry>,
-    //ranks: Vec<(String,u32)>,
+    links: fnv::FnvHashMap<u32,Entry>,
     ranks: HashMap<u32, f64>,
 }
 
 struct HashLinks {
-    links: HashMap<u32,Entry>,
+    links: fnv::FnvHashMap<u32,Entry>,
     // database?
     // HashMap<String,u32> ?
 }
@@ -182,13 +184,20 @@ fn main() {
     println!("Finalizing Data");
     let links = links.step();
     */
-    let output = PathBuf::from("/home/owen/wikidata/dumps/simple_20170201_dump1");
+    let input = PathBuf::from("/home/owen/wikidata/dumps/simple_20170201_dump1");
+    let output = PathBuf::from("/home/owen/wikidata/dumps/simple_20170201_dump2");
 
+    /*
     println!("Parsing Db...");
     let ls_db = LinkState::new(pages_db, redir_db, links_db);
     println!("Creating Links...");
     let ls_ld: LinkState<LinkData> = ls_db.into(); 
     ls_ld.to_file(output).unwrap();
+    */
+    /*
+    let bu = LinkState::<LinkData>::from_file(input, new_loger()).unwrap();
+    bu.to_file(output).unwrap();
+    */
     /*
     println!("Computing Pageranks...");
     let ls_rd: LinkState<RankData> = ls_ld.into(); 
@@ -197,4 +206,22 @@ fn main() {
     let _ls_hl: LinkState<HashLinks>= ls_rd.into(); 
     println!("Done");
     */
+
+    let rank_file = Path::new("/home/owen/wikidata/dumps/simple_20170201_ranks1");
+    let rank_file2 = Path::new("/home/owen/wikidata/dumps/simple_20170201_ranks2");
+
+    println!("Restoring link_data from file");
+    let ld = LinkState::<LinkData>::from_file(input, new_loger()).unwrap();
+
+    //println!("Populating simple lookup table and computing pageranks");
+    //let rd: LinkState<RankData> = ld.into();
+
+    //println!("Writing pageranks to file");
+    //rd.save_ranks(rank_file).unwrap();
+    
+    println!("Restoring pagerank data from link_data and file");
+    let rd = LinkState::<RankData>::from_ranks(ld, rank_file);
+
+    println!("Writing pageranks to second file");
+    rd.save_ranks(rank_file2).unwrap();
 }

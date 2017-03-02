@@ -6,6 +6,7 @@
  */
 
 use slog;
+use fnv::FnvHashMap;
 use std::collections::HashMap;
 
 use std::f64;
@@ -19,12 +20,12 @@ pub const MAX_ITER: usize = 500;   //iterations to panic! after
 use super::super::Entry as Page;
 
 pub struct Graph<'a> {
-    pages: &'a HashMap<u32, Page>,
+    pages: &'a FnvHashMap<u32, Page>,
     ranks:  HashMap<u32,f64>,
 }
 
 impl<'a> Graph<'a> {
-    pub fn new(hm: &HashMap<u32,Page>) -> Graph {
+    pub fn new(hm: &FnvHashMap<u32,Page>) -> Graph {
         let size = hm.len();
         let mut pageranks = HashMap::with_capacity(size);
         let guess = (size as f64).recip();  // start each pagerank at 1/N

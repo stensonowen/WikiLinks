@@ -1,27 +1,21 @@
+use csv;
 use std::collections::HashMap;
+use std::path::Path;
+use std::sync::Mutex;
 use super::{LinkState, LinkData, RankData};
 use Entry;
+use IndexedEntry;
+use fnv::FnvHashMap;
 
 mod pagerank;
 
 
 impl From<LinkState<LinkData>> for LinkState<RankData> {
     fn from(old: LinkState<LinkData>) -> LinkState<RankData> {
-        //let (entries, addresses) = old.state.db.explode();
-        //let pr_log = old.log.new(o!("elenemts" => entries.len()));
-        //let ranks = pagerank::Graph::new(&entries).get_ranks(pr_log);
-
-        // addresses and ranks feed into PostgreSQL
-        // entries will become into lookup table
+        // move addrs and entries from LinkData and compute pageranks
         
         // single threaded population
-        let mut links: HashMap<u32,Entry> = HashMap::with_capacity(old.size);
-        for dump in old.state.dumps {
-            for ie in dump.into_inner().unwrap() {
-                let (id, entry) = ie.decompose();
-                links.insert(id, entry);
-            }
-        }
+        let links = Self::consolidate_links(old.state.dumps, old.size); 
 
         // compute pageranks
         let pr_log = old.log.new(o!(
@@ -42,6 +36,51 @@ impl From<LinkState<LinkData>> for LinkState<RankData> {
 }
 
 impl LinkState<RankData> {
+    fn consolidate_links(links: Vec<Mutex<Vec<IndexedEntry>>>, size: usize) 
+        -> FnvHashMap<u32,Entry> 
+    {
+        let mut hm: FnvHashMap<u32,Entry> = 
+            FnvHashMap::with_capacity_and_hasher(size, Default::default());
+        for bucket in links {
+            for ie in bucket.into_inner().unwrap() {
+                let (id, entry) = ie.decompose();
+                hm.insert(id, entry);
+            }
+        }
+        hm
+    }
+    pub fn from_ranks(old: LinkState<LinkData>, ranks_path: &Path) -> Self {
+        let links = Self::consolidate_links(old.state.dumps, old.size);
+        //populate ranks from csv file
+        //let mut ranks: HashMap<u32,f64> = HashMap::with_capacity(old.size);
+        let mut ranks: HashMap<u32,f64> = HashMap::with_capacity(old.size);
+        let mut csv_r = csv::Reader::from_file(ranks_path)
+            .unwrap().has_headers(false);
+        for line in csv_r.decode() {
+            let (id, rank): (u32, f64) = line.unwrap();
+            ranks.insert(id, rank);
+        }
+
+        LinkState {
+            threads: old.threads,
+            size:    old.size,
+            log:     old.log,
+            state:   RankData {
+                links: links,
+                ranks: ranks,
+            }
+        }
+    }
+    pub fn save_ranks(&self, ranks_path: &Path) -> Result<(),csv::Error> {
+        // note about writing/reading files: they won't be identical
+        // because we're iterating through a hashmap
+        // but they are identical content-wise
+        let mut csv_w = csv::Writer::from_file(ranks_path)?;
+        for datum in &self.state.ranks {
+            csv_w.encode(datum)?;
+        }
+        Ok(())
+    }
     //fn to_file(&self) -> Result<(),()> { }
     //fn from_file(mn: BufPath) -> Self { }
     pub fn data(&self) {

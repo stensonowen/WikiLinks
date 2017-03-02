@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["owen <owen@oms.sh>"]
 
 [dependencies]
-#fnv = "1.0.5"
+fnv = "1.0.5"
 #clap = "2.20.5"
 regex = "0.1.80"
 
