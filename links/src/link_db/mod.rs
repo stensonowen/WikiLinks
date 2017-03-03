@@ -18,7 +18,6 @@ impl LinkDb {
         self.db.num_entries()
     }
     pub fn parts(self) -> 
-        //(Box<iter::Iterator<Item=(u32,Entry)>>,
         (Box<iter::Iterator<Item=IndexedEntry>>,
          Box<iter::Iterator<Item=(String,u32)>>) 
     {

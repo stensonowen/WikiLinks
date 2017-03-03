@@ -328,23 +328,25 @@ impl Database {
         //self.tidy_entries();
 
         // get rid of the redirects in self.entries 
-        debug!(self.log, "Purge Entries of redirects...");
+        info!(self.log, "\tPurge Entries of redirects...");
         self.remove_redirects();
 
         // make sure parent/child links go both ways
-        debug!(self.log, "Assert symmetric child/parent relationships...");
-        self.validate();
+        info!(self.log, "\tAssert symmetric child/parent relationships...");
+        self.validate();    // AFTER HERE
 
         // make sure links from addresses to entries go both ways
         // delete those that don't
         let asymmetric_references = self.asymmetric_references();
-        debug!(self.log, 
-               "Delete {} unrequited addresseses (not echoed in Entries)...",
+        println!("Done collecting asymmetric refs");
+        info!(self.log, 
+               "\tDelete {} unrequited addresseses (not echoed in Entries)...",
                asymmetric_references.len());
         self.pop_asymmetric_references(asymmetric_references);
 
+        // BEFORE HERE
         //make sure no children or parents links contain redirects
-        debug!(self.log, "Assert no children or parents can be redirects...");
+        info!(self.log, "\tAssert no children or parents can be redirects...");
         self.find_redirs_in_links();
 
         //self._children_vs_parents();
@@ -550,13 +552,33 @@ impl Database {
                 _ => panic!("Found a redirect in verify_links step"),
                 //_ => continue
             };
-            let other_id = self.addresses.get(title).unwrap();
+            let other_id = match self.addresses.get(title) {
+                Some(id) => id,
+                None => {
+                    error!(self.log, 
+                           "Found an entry ({}) whose title wasn't in addresses",
+                           title);
+                    //TODO: add it?
+                    continue;
+                }
+            };
+
             //shouldn't be any of these
             assert_eq!(id, other_id, "entries[{}]->title = {}; addrs[{}] != {}", 
                     id, title, title, other_id);
         }
         for (title, id) in &self.addresses {
-            let (other_ti, _other_c) = match self.entries.get(id).unwrap() {
+            let corresponding_entry = match self.entries.get(id) {
+                Some(id_) => id_,
+                None => {
+                    error!(self.log, 
+                         "Found an address whose id ({}) wasn't in entries", id);
+                    //TODO: amend? or ignore?
+                    continue;
+                }
+            };
+            //let (other_ti, _other_c) = match self.entries.get(id).unwrap() {
+            let (other_ti, _other_c) = match corresponding_entry {
                 &Entry::Redirect{..} => panic!("Addr {} → redirect {}", title, id),
                 //&Entry::Redirect{..} => continue,
                 &Entry::Page{ title: ref ti, children: ref c, .. } => (ti, c),

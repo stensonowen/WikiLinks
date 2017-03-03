@@ -43,6 +43,8 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate csv;
 
+#[macro_use] 
+extern crate clap;
 extern crate fnv;
 
 use std::collections::HashMap;
@@ -76,7 +78,7 @@ struct LinkState<S: State> {
 
 impl LinkState<LinkDb> {
     fn new(pages_db: PathBuf, redir_db: PathBuf, links_db: PathBuf) -> Self {
-        let root_log = new_loger();
+        let root_log = new_logger();
         let db_log = root_log.new(o!(
                 "pages" => format!("{}", pages_db.display()), 
                 "redir" => format!("{}", redir_db.display()), 
@@ -91,7 +93,7 @@ impl LinkState<LinkDb> {
     }
 }
 
-fn new_loger() -> slog::Logger {
+fn new_logger() -> slog::Logger {
     let drain = slog_term::streamer().compact().build().fuse();
     slog::Logger::root(drain, o!())
 }
@@ -169,7 +171,63 @@ pub struct Entry {
 //    Absent, //default? use?
 //}
 
+fn clap<'a>() -> clap::ArgMatches<'a> {
+    //should be able to form HashLinks from...
+    //  sql dumps only
+    //  sql dumps and rank backup
+    //  links backup only
+    //  links backup and rank backup
+    // need to provide:
+    //  exactly one of { sql locations | manifest location }
+    //  optional rank location
+    clap::App::new(crate_name!())
+        .about(crate_description!())
+        .author(crate_authors!("\n"))
+        .version(crate_version!())
+        .help("foo")
+        //.arg(
+        //.conflicts_with("ranks")
+        .arg(clap::Arg::with_name("ranks")
+             .short("r")
+             .long("ranks_dump")
+             .help("Supply location of rank data in csv form")
+             .takes_value(true)
+             )
+        .arg(clap::Arg::with_name("manifest")
+             .short("json")
+             //.long("links_dump")
+             .help("Supply dump of parsed link data manifest in json form")
+             .takes_value(true)
+             )
+        .arg(clap::Arg::with_name("page.sql")
+             .short("pages")
+             .takes_value(true)
+             .conflicts_with("manifest")
+             .requires("redirect.sql")
+             .requires("pagelinks.sql")
+             )
+        .arg(clap::Arg::with_name("redirect.sql")
+             .short("dirs")
+             .takes_value(true)
+             .conflicts_with("manifest")
+             .requires("page.sql")
+             .requires("pagelinks.sql")
+             )
+        .arg(clap::Arg::with_name("pagelinks.sql")
+             .short("links")
+             .takes_value(true)
+             .conflicts_with("manifest")
+             .requires("page.sql")
+             .requires("redirect.sql")
+             )
+        .group(clap::ArgGroup::with_name("sources")
+               .required(true)
+               .args(&["sql", "manifest", "page.sql", "redirects.sql", "pagelink.sql"]))
+        .get_matches()
+}
+
 fn main() {
+    clap();
     println!("😄");
     let pages_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-page.sql");
     let redir_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-redirect.sql");
@@ -195,7 +253,7 @@ fn main() {
     ls_ld.to_file(output).unwrap();
     */
     /*
-    let bu = LinkState::<LinkData>::from_file(input, new_loger()).unwrap();
+    let bu = LinkState::<LinkData>::from_file(input, new_logger()).unwrap();
     bu.to_file(output).unwrap();
     */
     /*
@@ -211,7 +269,7 @@ fn main() {
     let rank_file2 = Path::new("/home/owen/wikidata/dumps/simple_20170201_ranks2");
 
     println!("Restoring link_data from file");
-    let ld = LinkState::<LinkData>::from_file(input, new_loger()).unwrap();
+    let ld = LinkState::<LinkData>::from_file(input, new_logger()).unwrap();
 
     //println!("Populating simple lookup table and computing pageranks");
     //let rd: LinkState<RankData> = ld.into();
