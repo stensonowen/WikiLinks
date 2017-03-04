@@ -45,7 +45,8 @@ impl From<LinkState<RankData>> for LinkState<HashLinks> {
             size:       old.size,
             log:        old.log,
             state:      HashLinks {
-                links: old.state.links
+                links: old.state.links,
+                ranks: old.state.ranks,
             }
         }
     }

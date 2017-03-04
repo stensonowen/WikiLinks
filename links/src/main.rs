@@ -59,7 +59,7 @@ extern crate dotenv;
 //use dotenv::dotenv;
 
 // STD
-use std::collections::HashMap;
+//use std::collections::HashMap;
 use std::sync::Mutex;
 //use std::path::PathBuf;
 //use std::env;
@@ -116,11 +116,12 @@ struct LinkData {
 
 struct RankData {
     links: fnv::FnvHashMap<u32,Entry>,
-    ranks: HashMap<u32, f64>,
+    ranks: fnv::FnvHashMap<u32, f64>,
 }
 
 struct HashLinks {
     links: fnv::FnvHashMap<u32,Entry>,
+    ranks: fnv::FnvHashMap<u32, f64>,
     // database?
     // HashMap<String,u32> ?
 }

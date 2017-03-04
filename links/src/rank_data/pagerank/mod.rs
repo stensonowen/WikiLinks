@@ -7,7 +7,7 @@
 
 use slog;
 use fnv::FnvHashMap;
-use std::collections::HashMap;
+//use std::collections::HashMap;
 
 use std::f64;
 pub const DAMPING_FACTOR: f64 = 0.85;
@@ -21,13 +21,14 @@ use super::super::Entry as Page;
 
 pub struct Graph<'a> {
     pages: &'a FnvHashMap<u32, Page>,
-    ranks:  HashMap<u32,f64>,
+    ranks:  FnvHashMap<u32,f64>,
 }
 
 impl<'a> Graph<'a> {
     pub fn new(hm: &FnvHashMap<u32,Page>) -> Graph {
         let size = hm.len();
-        let mut pageranks = HashMap::with_capacity(size);
+        let mut pageranks = 
+            FnvHashMap::with_capacity_and_hasher(size, Default::default());
         let guess = (size as f64).recip();  // start each pagerank at 1/N
         for &entry in hm.keys() {
             pageranks.insert(entry,guess);
@@ -37,7 +38,7 @@ impl<'a> Graph<'a> {
             ranks:  pageranks,
         }
     }
-    pub fn get_ranks(mut self, log: slog::Logger) -> HashMap<u32,f64> {
+    pub fn get_ranks(mut self, log: slog::Logger) -> FnvHashMap<u32,f64> {
         let iter = self.compute_pageranks(false);
         info!(log, "Computed pageranks with ε={} after {} iterations", 
               MAX_ERROR, iter);
@@ -62,7 +63,8 @@ impl<'a> Graph<'a> {
         //  Or, if it has no children, it equally distributes rank among all articles
         let starting_val = (1.0 - DAMPING_FACTOR) / (self.pages.len() as f64);
 
-        let mut new_ranks: HashMap<u32,f64> = HashMap::with_capacity(self.ranks.capacity());
+        let mut new_ranks: FnvHashMap<u32,f64> = 
+            FnvHashMap::with_capacity_and_hasher(self.ranks.capacity(), Default::default());
         //distribute pagerank
         for (addr,page) in self.pages {
             let pr = self.ranks.get(&addr).unwrap();

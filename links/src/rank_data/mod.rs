@@ -1,5 +1,6 @@
 use csv;
-use std::collections::HashMap;
+use fnv;
+//use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Mutex;
 use super::{LinkState, LinkData, RankData};
@@ -54,7 +55,9 @@ impl LinkState<RankData> {
         let links = Self::consolidate_links(old.state.dumps, old.size);
         //populate ranks from csv file
         //let mut ranks: HashMap<u32,f64> = HashMap::with_capacity(old.size);
-        let mut ranks: HashMap<u32,f64> = HashMap::with_capacity(old.size);
+        let mut ranks: fnv::FnvHashMap<u32,f64> = 
+            FnvHashMap::with_capacity_and_hasher(old.size, Default::default());
+
         let mut csv_r = csv::Reader::from_file(ranks_path)
             .unwrap().has_headers(false);
         for line in csv_r.decode() {
