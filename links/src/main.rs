@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+//#![feature(plugin, custom_derive, custom_attribute)]
 
 // Order
 //  0.  LinkDb
@@ -33,36 +34,52 @@
 
 // NOTE: when scaling, remember to change link_db/parse/regexes.rs/IS_SIMPLE
 
+// LOGGING
 #[macro_use] 
 extern crate slog;
 extern crate slog_term;
-use slog::DrainExt;
-
+use slog::{Logger, DrainExt};
+// SERIALIZING
 #[macro_use] 
 extern crate serde_derive;
 extern crate serde_json;
 extern crate csv;
-
+// MISC
 #[macro_use] 
 extern crate clap;
 extern crate fnv;
+extern crate chrono;
+use clap::Arg;
+// DATABASE
+#[macro_use] extern crate diesel;
+#[macro_use] extern crate diesel_codegen;
+extern crate dotenv;
+//use diesel::prelude::*;
+//use diesel::pg::PgConnection;
+//use dotenv::dotenv;
 
+// STD
 use std::collections::HashMap;
-use std::path::{/*Path,*/ PathBuf};
+use std::sync::Mutex;
+//use std::path::PathBuf;
+//use std::env;
 //use std::path::Path;
-use std::sync::{/*Arc,*/Mutex};
+//use std::sync::{/*Arc,*/Mutex};
+//use std::{thread, time};
 
+// HELPERS
 pub mod link_db;
 pub mod link_data;
 pub mod rank_data;
 pub mod hash_links;
-
-use link_data::IndexedEntry;
-//use std::{thread, time};
+pub mod cache;
+//use link_data::IndexedEntry;
 
 const IS_SIMPLE: bool = true;
 
+
 //  ------STATE--MACHINE------
+
 
 trait State { }
 impl State for LinkDb { }
@@ -71,33 +88,16 @@ impl State for RankData { }
 impl State for HashLinks { }
 
 struct LinkState<S: State> {
-    //shared vars go here
     threads: usize,     // number of threads/files to use concurrently
-    size: usize,        // number of entries
-    log: slog::Logger,  // root logger that will be split off for components
-    state: S,           // one of 4 values that represent development of the data
+    size:    usize,     // number of entries
+    log:     Logger,    // root logger that will be split off for components
+    state:   S,         // 1 of 4 values that represent development of the data
 }
 
-impl LinkState<LinkDb> {
-    fn new(pages_db: PathBuf, redir_db: PathBuf, links_db: PathBuf) -> Self {
-        let root_log = new_logger();
-        let db_log = root_log.new(o!(
-                "pages" => format!("{}", pages_db.display()), 
-                "redir" => format!("{}", redir_db.display()), 
-                "links" => format!("{}", links_db.display())) );
-        let link_db = LinkDb::new(pages_db, redir_db, links_db, db_log);
-        LinkState { 
-            size:       link_db.size(),
-            threads:    4,
-            log:        root_log,
-            state:      link_db,
-        }
-    }
-}
-
-fn new_logger() -> slog::Logger {
-    let drain = slog_term::streamer().compact().build().fuse();
-    slog::Logger::root(drain, o!())
+fn new_logger() -> Logger {
+    //let drain = slog_term::streamer().compact().build().fuse();
+    //Logger::root(drain, o!())
+    Logger::root(slog_term::streamer().compact().build().fuse(), o!())
 }
 
 
@@ -110,7 +110,7 @@ struct LinkDb {
 
 struct LinkData {
     //len is desired num of threads (num cpus?)
-    dumps: Vec<Mutex<Vec<IndexedEntry>>>,
+    dumps: Vec<Mutex<Vec<link_data::IndexedEntry>>>,
     addrs: Vec<(String,u32)>,
 }
 
@@ -126,28 +126,6 @@ struct HashLinks {
 }
 
 
-/*
-enum Links {
-    LinkDb(   LinkState<LinkDb>),
-    LinkData( LinkState<LinkData>),
-    RankData( LinkState<RankData>),
-    HashLinks(LinkState<HashLinks>),
-}
-
-impl Links {
-    fn from_sql(p: PathBuf, r: PathBuf, l: PathBuf) -> Self {
-        Links::LinkDb(LinkState::new(p, r, l))
-    }
-    fn step(self) -> Links {
-        match self {
-            Links::LinkDb(ld)   => Links::LinkData(ld.into()),
-            Links::LinkData(ld) => Links::RankData(ld.into()),
-            Links::RankData(rd) => Links::HashLinks(rd.into()),
-            Links::HashLinks(_) => panic!("Link already in its final state"),
-        }
-    }
-}*/
-
 // ------COMMON-OBJECTS------
 
 
@@ -162,65 +140,20 @@ pub struct Entry {
 //  --------------------------
 
 
-//don't need to represenent 
-//enum Entry {
-//    Page {
-//        title: String,
-//        children: Vec<u32>,
-//        parents: Vec<u32>,
-//    },
-//    Redirect(u32),
-//    Absent, //default? use?
-//}
-
 fn argv<'a>() -> clap::ArgMatches<'a> {
-    //should be able to form HashLinks from...
-    //  sql dumps only
-    //  sql dumps and rank backup
-    //  links backup only
-    //  links backup and rank backup
-    // need to provide:
-    //  exactly one of { sql locations | manifest location }
-    //  optional rank location
-    clap::App::new(crate_name!())
-        .about(crate_description!())
-        .author(crate_authors!("\n"))
-        .version(crate_version!())
-        //.help("foo")
-        .arg(clap::Arg::with_name("ranks")
-             .short("r")
-             .long("ranks_dump")
-             .help("Supply location of rank data in csv form")
-             .takes_value(true)
-             )
-        .arg(clap::Arg::with_name("manifest")
-             .short("json")
-             .help("Supply dump of parsed link data manifest in json form")
-             .takes_value(true)
-             )
-        .arg(clap::Arg::with_name("page.sql")
-             .short("pages")
-             .takes_value(true)
-             .conflicts_with("manifest")
-             .requires("redirect.sql")
-             .requires("pagelinks.sql")
-             )
-        .arg(clap::Arg::with_name("redirect.sql")
-             .short("dirs")
-             .takes_value(true)
-             .conflicts_with("manifest")
-             .requires("page.sql")
-             .requires("pagelinks.sql")
-             )
-        .arg(clap::Arg::with_name("pagelinks.sql")
-             .short("links")
-             .takes_value(true)
-             .conflicts_with("manifest")
-             .requires("page.sql")
-             .requires("redirect.sql")
-             )
-        .group(clap::ArgGroup::with_name("sources")
-               .required(true)
+    clap::App::new(crate_name!()).about(crate_description!())
+        .author(crate_authors!("\n")).version(crate_version!())
+        .arg(Arg::with_name("ranks").short("r").long("ranks_dump").takes_value(true)
+             .help("Supply location of rank data in csv form"))
+        .arg(Arg::with_name("manifest").short("json").takes_value(true)
+             .help("Supply dump of parsed link data manifest in json form"))
+        .arg(Arg::with_name("page.sql").short("pages").takes_value(true)
+             .conflicts_with("manifest").requires("redirect.sql").requires("pagelinks.sql"))
+        .arg(Arg::with_name("redirect.sql").short("dirs").takes_value(true)
+             .conflicts_with("manifest").requires("page.sql").requires("pagelinks.sql"))
+        .arg(Arg::with_name("pagelinks.sql").short("links").takes_value(true)
+             .conflicts_with("manifest").requires("page.sql").requires("redirect.sql"))
+        .group(clap::ArgGroup::with_name("sources").required(true)
                .args(&["sql", "manifest", "page.sql", "redirects.sql", "pagelink.sql"]))
         .get_matches()
 }
@@ -243,7 +176,11 @@ fn main() {
     let hl = LinkState::<HashLinks>::from_args(argv());
     println!("Size: {}", hl.size);
 
-    println!("{:?}", hl.bfs(232327,460509));
+    //println!("{:?}", hl.bfs(232327,460509));
+    hl.print_bfs(232327,460509);
 
     //thread::sleep(time::Duration::from_secs(30));
 }
+
+
+

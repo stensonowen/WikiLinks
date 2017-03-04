@@ -4,7 +4,7 @@ use std::path::Path;
 use std::sync::Mutex;
 use super::{LinkState, LinkData, RankData};
 use Entry;
-use IndexedEntry;
+use super::link_data::IndexedEntry;
 use fnv::FnvHashMap;
 use std::cmp::Ordering;
 

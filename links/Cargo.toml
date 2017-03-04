@@ -7,6 +7,7 @@ authors = ["owen <owen@oms.sh>"]
 fnv = "1.0.5"
 clap = "2.20.5"
 regex = "0.1.80"
+chrono = "0.3.0"
 
 slog = "1.5.2"
 slog-term = "1.5.0"
@@ -17,4 +18,8 @@ serde_derive = "0.9.9"
 
 csv = "*"
 #rayon = "0.6.0"
+
+diesel = { version = "0.11.0", features = ["postgres", "chrono"] }
+diesel_codegen = { version = "0.11.0", features = ["postgres"] }
+dotenv = "0.8.0"
 

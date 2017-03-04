@@ -1,10 +1,41 @@
 //use std::collections::HashMap;
 use super::{LinkState, RankData, HashLinks};
 use super::{LinkData, new_logger};
-use std::path::{Path, PathBuf};
+use std::path::{self, PathBuf};
 use clap;
-//use Entry;
+use fnv;
+use Entry;
 mod bfs;
+
+
+#[derive(Debug)]
+pub struct Path {
+    pub src: u32,
+    pub dst: u32,
+    pub path: Result<Vec<u32>,PathError>,
+}
+
+#[derive(Debug)]
+pub enum PathError {
+    NoSuchPath,
+    Terminated(usize)
+}
+
+impl Path {
+    fn print(&self, entries: &fnv::FnvHashMap<u32,Entry>) {
+        println!("Path from {}\t(\"{}\")", self.src, entries.get(&self.src).unwrap().title);
+        println!("  to {}\t(\"{}\") :", self.dst, entries.get(&self.dst).unwrap().title);
+        match self.path {
+            Ok(ref v) => for i in v {
+                println!("\t{}:\t\"{}\"", i, entries.get(&i).unwrap().title);
+            },
+            Err(PathError::NoSuchPath) => println!("\tNo such path exists"),
+            Err(PathError::Terminated(i)) => 
+                println!("\tSearch expired after {} iterations", i),
+        }
+    }
+    // fn to_html() -> String {}
+}
 
 impl From<LinkState<RankData>> for LinkState<HashLinks> {
     fn from(old: LinkState<RankData>) -> LinkState<HashLinks> {
@@ -41,7 +72,7 @@ impl LinkState<HashLinks> {
 
         //then decide whether to build pagelinks from data or import from backup
         let ls_rd = match args.value_of("ranks") {
-            Some(r) => LinkState::<RankData>::from_ranks(ls_dt, Path::new(r)),
+            Some(r) => LinkState::<RankData>::from_ranks(ls_dt, path::Path::new(r)),
             None => ls_dt.into(),
         };
 
