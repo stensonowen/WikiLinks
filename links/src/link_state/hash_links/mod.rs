@@ -4,7 +4,7 @@ use super::{LinkData, new_logger};
 use std::path::{self, PathBuf};
 use clap;
 use fnv;
-use Entry;
+use super::Entry;
 mod bfs;
 
 
@@ -53,6 +53,9 @@ impl From<LinkState<RankData>> for LinkState<HashLinks> {
 }
 
 impl LinkState<HashLinks> {
+    pub fn size(&self) -> usize {
+        self.size
+    }
     pub fn from_args(args: clap::ArgMatches) -> Self {
         //populate complete HashLinks from command-line args
 

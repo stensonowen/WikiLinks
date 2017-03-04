@@ -8,8 +8,8 @@ use diesel::pg::PgConnection;
 use chrono::offset::utc::UTC;
 
 use cache::models::*;
-use super::hash_links::Path;
-use Entry;
+use super::link_state::hash_links::Path;
+use super::link_state::Entry;
 use std::collections::HashMap;
 
 pub mod schema;
