@@ -48,7 +48,8 @@ extern crate clap;
 extern crate fnv;
 
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::{/*Path,*/ PathBuf};
+//use std::path::Path;
 use std::sync::{/*Arc,*/Mutex};
 
 pub mod link_db;
@@ -57,6 +58,7 @@ pub mod rank_data;
 pub mod hash_links;
 
 use link_data::IndexedEntry;
+//use std::{thread, time};
 
 const IS_SIMPLE: bool = true;
 
@@ -171,7 +173,7 @@ pub struct Entry {
 //    Absent, //default? use?
 //}
 
-fn clap<'a>() -> clap::ArgMatches<'a> {
+fn argv<'a>() -> clap::ArgMatches<'a> {
     //should be able to form HashLinks from...
     //  sql dumps only
     //  sql dumps and rank backup
@@ -184,9 +186,7 @@ fn clap<'a>() -> clap::ArgMatches<'a> {
         .about(crate_description!())
         .author(crate_authors!("\n"))
         .version(crate_version!())
-        .help("foo")
-        //.arg(
-        //.conflicts_with("ranks")
+        //.help("foo")
         .arg(clap::Arg::with_name("ranks")
              .short("r")
              .long("ranks_dump")
@@ -195,7 +195,6 @@ fn clap<'a>() -> clap::ArgMatches<'a> {
              )
         .arg(clap::Arg::with_name("manifest")
              .short("json")
-             //.long("links_dump")
              .help("Supply dump of parsed link data manifest in json form")
              .takes_value(true)
              )
@@ -227,59 +226,24 @@ fn clap<'a>() -> clap::ArgMatches<'a> {
 }
 
 fn main() {
-    clap();
-    println!("😄");
-    let pages_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-page.sql");
-    let redir_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-redirect.sql");
-    let links_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-pagelinks.sql");
-    /*
-    println!("Parsing Db...");
-    let links = Links::from_sql(pages_db, redir_db, links_db);
-    println!("Creating Links...");
-    let links = links.step();
-    println!("Computing Pageranks...");
-    let links = links.step();
-    println!("Finalizing Data");
-    let links = links.step();
-    */
-    let input = PathBuf::from("/home/owen/wikidata/dumps/simple_20170201_dump1");
-    let output = PathBuf::from("/home/owen/wikidata/dumps/simple_20170201_dump2");
+    //let pages_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-page.sql");
+    //let redir_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-redirect.sql");
+    //let links_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-pagelinks.sql");
+    //let output = PathBuf::from("/home/owen/wikidata/dumps/simple_20170201_dump2");
+    //let rank_file = Path::new("/home/owen/wikidata/dumps/simple_20170201_ranks1");
+    //let p_rank_file = Path::new("/home/owen/wikidata/dumps/simple_20170201_pretty_ranks1");
+    //let dump = PathBuf::from("/home/owen/wikidata/dumps/simple_20170201_dump1");
 
-    /*
-    println!("Parsing Db...");
-    let ls_db = LinkState::new(pages_db, redir_db, links_db);
-    println!("Creating Links...");
-    let ls_ld: LinkState<LinkData> = ls_db.into(); 
-    ls_ld.to_file(output).unwrap();
-    */
-    /*
-    let bu = LinkState::<LinkData>::from_file(input, new_logger()).unwrap();
-    bu.to_file(output).unwrap();
-    */
-    /*
-    println!("Computing Pageranks...");
-    let ls_rd: LinkState<RankData> = ls_ld.into(); 
-    ls_rd.data();
-    println!("Finalizing...");
-    let _ls_hl: LinkState<HashLinks>= ls_rd.into(); 
-    println!("Done");
-    */
-
-    let rank_file = Path::new("/home/owen/wikidata/dumps/simple_20170201_ranks1");
-    let rank_file2 = Path::new("/home/owen/wikidata/dumps/simple_20170201_ranks2");
-
-    println!("Restoring link_data from file");
-    let ld = LinkState::<LinkData>::from_file(input, new_logger()).unwrap();
-
-    //println!("Populating simple lookup table and computing pageranks");
-    //let rd: LinkState<RankData> = ld.into();
-
-    //println!("Writing pageranks to file");
-    //rd.save_ranks(rank_file).unwrap();
+    //let ld = LinkState::<LinkData>::from_file(dump, new_logger()).unwrap();
+    //let rd = LinkState::<RankData>::from_ranks(ld, rank_file);
+    //rd.pretty_ranks(p_rank_file).unwrap();
     
-    println!("Restoring pagerank data from link_data and file");
-    let rd = LinkState::<RankData>::from_ranks(ld, rank_file);
+    // ====
 
-    println!("Writing pageranks to second file");
-    rd.save_ranks(rank_file2).unwrap();
+    let hl = LinkState::<HashLinks>::from_args(argv());
+    println!("Size: {}", hl.size);
+
+    println!("{:?}", hl.bfs(232327,460509));
+
+    //thread::sleep(time::Duration::from_secs(30));
 }

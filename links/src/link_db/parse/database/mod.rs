@@ -315,9 +315,12 @@ impl Database {
                 title: ref mut t 
             } = entry {
                 //clean up children/parents/title
+                //need to sort before dedup 
                 t.shrink_to_fit();
+                c.sort();
                 c.dedup();
                 c.shrink_to_fit();
+                p.sort();
                 p.dedup();
                 p.shrink_to_fit();
             }
@@ -555,11 +558,12 @@ impl Database {
             let other_id = match self.addresses.get(title) {
                 Some(id) => id,
                 None => {
-                    error!(self.log, 
-                           "Found an entry ({}) whose title wasn't in addresses",
+                    //error!(self.log, 
+                    //       "Found an entry ({}) whose title wasn't in addresses",
+                    //       title);
+                    //continue;
+                    panic!("Found an entry ({}) whose title wasn't in addresses", 
                            title);
-                    //TODO: add it?
-                    continue;
                 }
             };
 
@@ -572,8 +576,9 @@ impl Database {
                 Some(id_) => id_,
                 None => {
                     error!(self.log, 
-                         "Found an address whose id ({}) wasn't in entries", id);
-                    //TODO: amend? or ignore?
+                     "Found an addr whose id ({}) wasn't in entries; deleting it.",
+                         id);
+                    chopping_block.push(title.to_owned());
                     continue;
                 }
             };

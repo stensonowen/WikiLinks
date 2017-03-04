@@ -4,6 +4,7 @@ use super::{LinkData, new_logger};
 use std::path::{Path, PathBuf};
 use clap;
 //use Entry;
+mod bfs;
 
 impl From<LinkState<RankData>> for LinkState<HashLinks> {
     fn from(old: LinkState<RankData>) -> LinkState<HashLinks> {
@@ -20,7 +21,7 @@ impl From<LinkState<RankData>> for LinkState<HashLinks> {
 }
 
 impl LinkState<HashLinks> {
-    fn from_args(args: clap::ArgMatches) -> Self {
+    pub fn from_args(args: clap::ArgMatches) -> Self {
         //populate complete HashLinks from command-line args
 
         //first, decide whether to build links from source sql or previous backup

@@ -6,6 +6,7 @@ use super::{LinkState, LinkData, RankData};
 use Entry;
 use IndexedEntry;
 use fnv::FnvHashMap;
+use std::cmp::Ordering;
 
 mod pagerank;
 
@@ -81,8 +82,29 @@ impl LinkState<RankData> {
         }
         Ok(())
     }
-    //fn to_file(&self) -> Result<(),()> { }
-    //fn from_file(mn: BufPath) -> Self { }
+    pub fn pretty_ranks(&self, ranks_path: &Path) -> Result<(),csv::Error> {
+        //sort greatest-to-least
+        // (RANK, ID, TITLE)
+        let mut sorted_ranks: Vec<_> = self.state.ranks.iter().collect();
+        sorted_ranks.sort_by(|&(&a_i,&a_r),&(&b_i,&b_r)| {
+            //sort by floats, which Ord does not provide
+            assert!(!a_r.is_nan(), "Page {} had a NaN rank", a_i);
+            assert!(!b_r.is_nan(), "Page {} had a NaN rank", b_i);
+            match (a_r > b_r, a_r == b_r) {
+                (true, _) => Ordering::Less,
+                (_, true) => Ordering::Equal,
+                _         => Ordering::Greater,
+            }
+        });
+        
+        // write using interesting csv data
+        let mut csv_w = csv::Writer::from_file(ranks_path)?;
+        for (id,rank) in sorted_ranks {
+            let ref title = self.state.links.get(&id).unwrap().title;
+            csv_w.encode((rank,id,title))?;
+        }
+        Ok(())
+    }
     pub fn data(&self) {
         info!(self.log, "State of RankData:");
         info!(self.log, "Number of entries: {}", self.state.links.len());
