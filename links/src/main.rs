@@ -14,6 +14,18 @@ use links::cache as db;
 extern crate rocket;
 extern crate rocket_contrib;
 use rocket_contrib::Template;
+use rocket::State;
+
+use links::link_state::{LinkState, HashLinks};
+
+use std::str::FromStr;
+use links::cache::get_cache;
+use links::web::{self, Context, CacheSort, SortParam, PathRes, Node};
+use links::cache::{self, lookup_addr};
+type SharedLinks<'a> = State<'a, LinkState<HashLinks>>;
+
+const DEFAULT_SORT: CacheSort = CacheSort::Recent;
+const DEFAULT_SIZE: u32 = 15;
 
 use clap::Arg;
 fn argv<'a>() -> clap::ArgMatches<'a> {
@@ -34,22 +46,72 @@ fn argv<'a>() -> clap::ArgMatches<'a> {
         .get_matches()
 }
 
+
 #[get("/")]
-fn index(conn: db::Conn) -> String {
-    String::from("howdy whorl")
+fn index(conn: db::Conn, links: SharedLinks) -> Template {
+    let sort = DEFAULT_SORT;
+    let cache = get_cache(&conn, links.get_links(), &sort, DEFAULT_SIZE);
+    let context = Context::from_cache(sort, cache);
+    Template::render("bfs", &context)
+}
+
+#[get("/bfs?<sort>", rank = 2)]
+fn bfs_sort<'a>(sort: SortParam, conn: db::Conn, links: SharedLinks) -> Template {
+    let sort = match sort.by {
+        Some(s) => CacheSort::from_str(s).unwrap_or(DEFAULT_SORT),
+        None => DEFAULT_SORT,
+    };
+    let cache = get_cache(&conn, links.get_links(), &sort, DEFAULT_SIZE);
+    let context = Context::from_cache(sort, cache);
+    Template::render("bfs", &context)
+}
+
+#[get("/bfs?<search>", rank = 1)]
+fn bfs_search<'a>(search: web::SearchParams<'a>, conn: db::Conn, 
+                  links: SharedLinks) -> Template 
+{
+    let src_n = lookup_addr(&*conn, search.src);
+    let dst_n = lookup_addr(&*conn, search.dst);
+    //let path_res = if src_n.valid() && dst_n.valid() {
+    let path_res = if let (&Node::Found(s,..), &Node::Found(d,..)) = (&src_n, &dst_n) {
+        if let Some(db_path) = cache::lookup_path(&*conn, s, d) {
+            // return the path that was saved last time
+            PathRes::from_db_path(db_path, links.get_links())
+        } else {
+            // can't find record of previous search; perform for the first time
+            let path = links.bfs(s,d);
+            PathRes::from_path(path, links.get_links())
+        }
+    } else {
+        // invalid request; search not run
+        PathRes::NotRun
+    };
+    let cache = get_cache(&conn, links.get_links(), &DEFAULT_SORT, DEFAULT_SIZE);
+    let context = Context {
+        path:       path_res,
+        src_search: src_n,
+        dst_search: dst_n,
+        cache:      cache,
+        cache_sort: DEFAULT_SORT,
+    };
+    println!("Context: {:?}", context);
+    Template::render("bfs", &context)
 }
 
 
-use links::link_state::{LinkState, HashLinks};
 fn main() {
     // get links hashmap
     // uhhhh, will .manage() do a bunch of memmoves?? sure hope not
+    // use an Arc/Rc/Cell/ something?
     let hl = LinkState::<HashLinks>::from_args(argv());
+
+    //let conn = cache::establish_connection();
+    //cache::populate_addrs(&conn, hl.get_links(), hl.get_ranks()).unwrap();
 
     rocket::ignite()
         .manage(db::init_pool())
         .manage(hl)
-        .mount("/", routes![index])
+        .mount("/", routes![index, bfs_sort, bfs_search])
         .launch();
 
 }

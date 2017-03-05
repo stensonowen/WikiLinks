@@ -15,19 +15,25 @@ use fnv::FnvHashMap;
 use cache::models::*;
 use super::link_state::hash_links::Path;
 use super::link_state::Entry;
+use super::web::CacheSort;
 
-use std::collections::HashMap;
 use std::ops::Deref;
 use std::env;
 
 pub mod schema;
 pub mod models;
-pub mod web;
 
 const PREVIEW_SIZE: u32 = 16;
 
 
 // NOTE: most of the db state stuff stolen from Rocket 'todo' example
+
+pub fn establish_connection() -> PgConnection {
+    dotenv().ok();
+    let database_url = env::var("DATABASE_URL").expect("set DATABASE_URL");
+    PgConnection::establish(&database_url)
+        .expect(&format!("Error connecting to {}", database_url))
+}
 
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
@@ -65,18 +71,18 @@ impl<'a, 'r> FromRequest<'a, 'r> for Conn {
 
 
 pub fn get_cache<'a>(conn: &PgConnection, links: &'a FnvHashMap<u32,Entry>,
-                     sort: web::CacheSort, num: u32) 
+                     sort: &CacheSort, num: u32) 
         -> Option<Vec<(&'a str, i8, &'a str)>> 
 {
     use self::schema::paths::dsl::paths;
     use self::schema::paths::dsl as path_row;
-    use self::web::CacheSort::*;
+    use super::web::CacheSort::*;
     let n = num as i64;
     let rows_res: Result<Vec<DbPath>,diesel::result::Error> = match sort {
-        Recent => paths.order(path_row::timestamp.desc()).limit(n).load(conn),
-        Popular => paths.order(path_row::count.desc()).limit(n).load(conn),
-        Length => paths.order(path_row::result.desc()).limit(n).load(conn),
-        Random => unimplemented!(),
+        &Recent => paths.order(path_row::timestamp.desc()).limit(n).load(conn),
+        &Popular => paths.order(path_row::count.desc()).limit(n).load(conn),
+        &Length => paths.order(path_row::result.desc()).limit(n).load(conn),
+        &Random => unimplemented!(),
     };
     let rows = match rows_res {
         Ok(r) => r,
@@ -100,7 +106,7 @@ pub fn get_cache<'a>(conn: &PgConnection, links: &'a FnvHashMap<u32,Entry>,
 //  ---------GETTERS*---------
 
 
-fn lookup_path(conn: &PgConnection, src: u32, dst: u32) -> Option<DbPath> {
+pub fn lookup_path(conn: &PgConnection, src: u32, dst: u32) -> Option<DbPath> {
     // NOTE: MODIFIES INTERNAL STATE: update count and timestamp
     // NOTE: failure is recoverable
     use self::schema::paths::dsl::paths;
@@ -116,7 +122,9 @@ fn lookup_path(conn: &PgConnection, src: u32, dst: u32) -> Option<DbPath> {
                   .ok())
 }
 
-fn lookup_addr(conn: &PgConnection, query: &str) -> Result<u32,Vec<String>> {
+use super::web;
+//fn lookup_addr(conn: &PgConnection, query: &str) -> Result<u32,Vec<String>> {
+pub fn lookup_addr<'a>(conn: &PgConnection, query: &'a str) -> web::Node<'a> {
     // return address corresponding to 
     // uhh, will diesel stop this from being a potential sql injection?
     // NOTE: failure is irrecoverable (panic!s)
@@ -124,41 +132,24 @@ fn lookup_addr(conn: &PgConnection, query: &str) -> Result<u32,Vec<String>> {
     use self::schema::titles::dsl as title_row;
     if let Ok(DbAddr { page_id: id, .. }) = titles.find(query).first(conn) {
         // first try the exact query
-        Ok(id as u32)
+        web::Node::Found(id as u32, query)
+        //Ok(id as u32)
     } else {
         // would it be super expensive to order by pagerank?
         let fuzzy_query = format!("%{}%", query);
         let guesses = titles.filter(title_row::title.like(fuzzy_query))
             .limit(10).load::<DbAddr>(conn).unwrap();
-        Err(guesses.into_iter().map(|i| i.title).collect())
+        //Err(guesses.into_iter().map(|i| i.title).collect())
+        if guesses.is_empty() {
+            web::Node::Unknown(query)
+        } else {
+            let sugg: Vec<_> = guesses.into_iter().map(|i| i.title).collect();
+            //web::Node::Sugg(guesses.into_iter().map(|i| &i.title).collect())
+            //web::Node::Unknown(query)
+            web::Node::Sugg(sugg)
+        }
     }
 }
-
-/*
-fn get_cache(conn: &PgConnection, sort: web::CacheSort, num: u32, 
-             links: FnvHashMap<u32,Entry>) -> Option<Vec<(&str,i8,&str)>>
-    //-> Result<Vec<(&str,i8,&str)>,String> 
-{
-    use self::schema::paths::dsl::paths;
-    use self::schema::paths::dsl as path_row;
-    use self::web::CacheSort::*;
-    let n = num as i64;
-    let rows: Vec<DbPath> = match sort {
-        Recent => paths.order(path_row::timestamp.desc()).limit(n).load(conn),
-        Popular => paths.order(path_row::count.desc()).limit(n).load(conn),
-        Length => paths.order(path_row::result.desc()).limit(n).load(conn),
-        Random => unimplemented!(),
-    }.expect("Failed cache query");
-    let mut cache = Vec::<(&str, i8, &str)>::with_capacity(num as usize);
-    //for (s,r,d) in rows.into_ter().map(|p| (p.src as u32, p.result, p.dst as u32)) {
-    //    let src_t = match 
-
-    //}
-
-
-    None
-}
-*/
 
 
 //  ----------SETTERS---------
@@ -186,12 +177,13 @@ fn insert_title(conn: &PgConnection, t: String, n: u32) -> DbAddr {
 
 
 //pub fn purge_cac
-fn populate_addrs(conn: &PgConnection, 
-                  ranks: &HashMap<u32,f64>,
-                  links: &HashMap<u32,Entry>) 
-    -> Result<usize,diesel::result::Error>
+pub fn populate_addrs(conn: &PgConnection, 
+                  links: &FnvHashMap<u32,Entry>,
+                  ranks: &FnvHashMap<u32,f64>)
+    -> Result<(),diesel::result::Error>
 {
     use self::schema::titles;
+    use std::cmp::min;
     //could use new struct w/ a &str rather than String
     //fine that this involves a lot of copying
     //just a preproc step; it doesn't have to be performant
@@ -201,7 +193,18 @@ fn populate_addrs(conn: &PgConnection,
         //pagerank: None,
         pagerank: ranks.get(&i).map(|f| *f),
     }).collect();
-    diesel::insert(&rows).into(titles::table).execute(conn)
+    // can't insert more than <65k at a time
+    let mut current = 0;
+    let incr = 10_000;
+    while current < rows.len() {
+        let upper = min(current+incr, rows.len());
+        diesel::insert(&rows[current..upper])
+            .into(titles::table)
+            .execute(conn)?;
+        current += incr;
+    }
+    Ok(())
+    //diesel::insert(&rows[0..20]).into(titles::table).execute(conn)
 }
 
 

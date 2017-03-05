@@ -2,7 +2,7 @@ use std::collections::{HashSet, HashMap};
 use super::{Path, PathError, LinkState, HashLinks};
 use std::mem::swap;
 
-const MAX_DEPTH: usize = 10;
+const MAX_DEPTH: u32 = 10;
 
 // Find the shortest path between articles
 
@@ -15,7 +15,7 @@ impl LinkState<HashLinks> {
         let bfs = self.bfs(src, dst);
         bfs.print(&self.state.links);
     }
-    fn bfs(&self, src: u32, dst: u32) -> Path {
+    pub fn bfs(&self, src: u32, dst: u32) -> Path {
         use self::SearchDirection::*;
         // perform breadth-first-search using entries from src to dst
         // should this be multithreaded??

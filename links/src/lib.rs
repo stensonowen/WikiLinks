@@ -1,5 +1,6 @@
 #![allow(dead_code)]
-//#![feature(plugin, custom_derive, custom_attribute)]
+#![feature(plugin, custom_derive)]
+#![plugin(rocket_codegen)]
 
 // NOTE: when scaling, remember to change bool link_db/parse/regexes.rs/IS_SIMPLE
 
@@ -22,11 +23,12 @@ extern crate r2d2_diesel;
 extern crate dotenv;
 
 extern crate rocket;    //move this lower?
+extern crate rocket_contrib;
 
 // COMPONENTS
 pub mod link_state;
 pub mod cache;
-//pub mod web;
+pub mod web;
 
 
 /*

@@ -18,7 +18,7 @@ pub struct Path {
 #[derive(Debug)]
 pub enum PathError {
     NoSuchPath,
-    Terminated(usize)
+    Terminated(u32)
 }
 
 impl Path {
@@ -58,6 +58,9 @@ impl LinkState<HashLinks> {
     }
     pub fn get_links(&self) -> &fnv::FnvHashMap<u32,Entry> {
         &self.state.links
+    }
+    pub fn get_ranks(&self) -> &fnv::FnvHashMap<u32,f64> {
+        &self.state.ranks
     }
     pub fn from_args(args: clap::ArgMatches) -> Self {
         //populate complete HashLinks from command-line args
