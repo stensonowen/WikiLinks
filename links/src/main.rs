@@ -40,10 +40,18 @@ fn index(conn: db::Conn) -> String {
 }
 
 
+use links::link_state::{LinkState, HashLinks};
 fn main() {
+    // get links hashmap
+    // uhhhh, will .manage() do a bunch of memmoves?? sure hope not
+    let hl = LinkState::<HashLinks>::from_args(argv());
+
     rocket::ignite()
         .manage(db::init_pool())
+        .manage(hl)
         .mount("/", routes![index])
         .launch();
 
 }
+
+

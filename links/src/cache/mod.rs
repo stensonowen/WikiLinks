@@ -64,38 +64,36 @@ impl<'a, 'r> FromRequest<'a, 'r> for Conn {
 }
 
 
-impl super::SharedState {
-    pub fn get_cache(&self, sort: web::CacheSort, num: u32) 
-        -> Option<Vec<(&str,i8,&str)>> 
-    {
-        use self::schema::paths::dsl::paths;
-        use self::schema::paths::dsl as path_row;
-        use self::web::CacheSort::*;
-        let n = num as i64;
-        let rows_res: Result<Vec<DbPath>,diesel::result::Error> = match sort {
-            Recent => paths.order(path_row::timestamp.desc()).limit(n).load(&*self.conn),
-            Popular => paths.order(path_row::count.desc()).limit(n).load(&*self.conn),
-            Length => paths.order(path_row::result.desc()).limit(n).load(&*self.conn),
-            Random => unimplemented!(),
-        };
-        let rows = match rows_res {
-            Ok(r) => r,
-            Err(_) => return None,
-        };
-        let mut cache = Vec::<(&str, i8, &str)>::with_capacity(num as usize);
-        for db_path in rows.into_iter() {
-            let src = db_path.src as u32;
-            let dst = db_path.dst as u32;
-            let res = db_path.result;
-            let links = self.hash_links.get_links();
-            if let (Some(s), Some(d)) = (links.get(&src), links.get(&dst)) {
-                if res > 0 {
-                    cache.push((&s.title, res as i8 - 1, &d.title));
-                }
+pub fn get_cache<'a>(conn: &PgConnection, links: &'a FnvHashMap<u32,Entry>,
+                     sort: web::CacheSort, num: u32) 
+        -> Option<Vec<(&'a str, i8, &'a str)>> 
+{
+    use self::schema::paths::dsl::paths;
+    use self::schema::paths::dsl as path_row;
+    use self::web::CacheSort::*;
+    let n = num as i64;
+    let rows_res: Result<Vec<DbPath>,diesel::result::Error> = match sort {
+        Recent => paths.order(path_row::timestamp.desc()).limit(n).load(conn),
+        Popular => paths.order(path_row::count.desc()).limit(n).load(conn),
+        Length => paths.order(path_row::result.desc()).limit(n).load(conn),
+        Random => unimplemented!(),
+    };
+    let rows = match rows_res {
+        Ok(r) => r,
+        Err(_) => return None,
+    };
+    let mut cache = Vec::<(&str, i8, &str)>::with_capacity(num as usize);
+    for db_path in rows.into_iter() {
+        let src = db_path.src as u32;
+        let dst = db_path.dst as u32;
+        let res = db_path.result;
+        if let (Some(s), Some(d)) = (links.get(&src), links.get(&dst)) {
+            if res > 0 {
+                cache.push((&s.title, res as i8 - 1, &d.title));
             }
         }
-        Some(cache)
     }
+    Some(cache)
 }
 
 
@@ -136,6 +134,7 @@ fn lookup_addr(conn: &PgConnection, query: &str) -> Result<u32,Vec<String>> {
     }
 }
 
+/*
 fn get_cache(conn: &PgConnection, sort: web::CacheSort, num: u32, 
              links: FnvHashMap<u32,Entry>) -> Option<Vec<(&str,i8,&str)>>
     //-> Result<Vec<(&str,i8,&str)>,String> 
@@ -159,6 +158,7 @@ fn get_cache(conn: &PgConnection, sort: web::CacheSort, num: u32,
 
     None
 }
+*/
 
 
 //  ----------SETTERS---------
