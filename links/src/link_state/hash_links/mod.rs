@@ -56,6 +56,9 @@ impl LinkState<HashLinks> {
     pub fn size(&self) -> usize {
         self.size
     }
+    pub fn get_links(&self) -> &fnv::FnvHashMap<u32,Entry> {
+        &self.state.links
+    }
     pub fn from_args(args: clap::ArgMatches) -> Self {
         //populate complete HashLinks from command-line args
 

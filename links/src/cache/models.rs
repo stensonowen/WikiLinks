@@ -1,12 +1,10 @@
 
 use chrono::datetime::DateTime;
 use chrono::offset::utc::UTC;
-use super::schema::paths;
-use super::schema::titles;
-use super::Path;
-//use super::super::hash_links::PathError;
-//use super::link_state::hash_links::PathError;
+
 use link_state::hash_links::PathError;
+use super::schema::{paths, titles};
+use super::Path;
 
 
 #[derive(Insertable, Queryable)]

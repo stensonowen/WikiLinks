@@ -1,38 +1,102 @@
 extern crate chrono;
 
+use r2d2;
 use diesel;
-use std::env;
 use dotenv::dotenv;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use r2d2_diesel::ConnectionManager;
 use chrono::offset::utc::UTC;
+use rocket::http::Status;
+use rocket::request::{self, FromRequest};
+use rocket::{Request, State, Outcome};
+use fnv::FnvHashMap;
 
 use cache::models::*;
 use super::link_state::hash_links::Path;
 use super::link_state::Entry;
+
 use std::collections::HashMap;
+use std::ops::Deref;
+use std::env;
 
 pub mod schema;
 pub mod models;
+pub mod web;
 
-pub fn establish_connection() -> PgConnection {
+const PREVIEW_SIZE: u32 = 16;
+
+
+// NOTE: most of the db state stuff stolen from Rocket 'todo' example
+
+pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
+
+pub fn init_pool() -> Pool {
     dotenv().ok();
     let db_url = env::var("DATABASE_URL").expect("missing DATABASE_URL");
-    PgConnection::establish(&db_url)
-        .expect(&format!("Failed to connect to {}", db_url))
-
+    let config = r2d2::Config::default();
+    let manager = ConnectionManager::<PgConnection>::new(db_url);
+    r2d2::Pool::new(config, manager).expect("db pool")
 }
 
-/*
-fn run() {
-    use cache::schema::paths::dsl::*;
-    let conn = establish_connection();
-    let results = paths.filter(count.eq(0))
-        .limit(5)
-        .load::<DbPath>(&conn)
-        .expect("Error posts"); ;
+pub struct Conn(r2d2::PooledConnection<ConnectionManager<PgConnection>>);
+
+impl Deref for Conn {
+    type Target = PgConnection;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
-*/
+
+impl<'a, 'r> FromRequest<'a, 'r> for Conn {
+    type Error = ();
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<Conn, ()> {
+        let pool = match <State<Pool> as FromRequest>::from_request(request) {
+            Outcome::Success(pool) => pool,
+            Outcome::Failure(e) => return Outcome::Failure(e),
+            Outcome::Forward(_) => return Outcome::Forward(())
+        };
+        match pool.get() {
+            Ok(conn) => Outcome::Success(Conn(conn)),
+            Err(_) => Outcome::Failure((Status::ServiceUnavailable, ()))
+        }
+    }
+}
+
+
+impl super::SharedState {
+    pub fn get_cache(&self, sort: web::CacheSort, num: u32) 
+        -> Option<Vec<(&str,i8,&str)>> 
+    {
+        use self::schema::paths::dsl::paths;
+        use self::schema::paths::dsl as path_row;
+        use self::web::CacheSort::*;
+        let n = num as i64;
+        let rows_res: Result<Vec<DbPath>,diesel::result::Error> = match sort {
+            Recent => paths.order(path_row::timestamp.desc()).limit(n).load(&*self.conn),
+            Popular => paths.order(path_row::count.desc()).limit(n).load(&*self.conn),
+            Length => paths.order(path_row::result.desc()).limit(n).load(&*self.conn),
+            Random => unimplemented!(),
+        };
+        let rows = match rows_res {
+            Ok(r) => r,
+            Err(_) => return None,
+        };
+        let mut cache = Vec::<(&str, i8, &str)>::with_capacity(num as usize);
+        for db_path in rows.into_iter() {
+            let src = db_path.src as u32;
+            let dst = db_path.dst as u32;
+            let res = db_path.result;
+            let links = self.hash_links.get_links();
+            if let (Some(s), Some(d)) = (links.get(&src), links.get(&dst)) {
+                if res > 0 {
+                    cache.push((&s.title, res as i8 - 1, &d.title));
+                }
+            }
+        }
+        Some(cache)
+    }
+}
 
 
 //  ---------GETTERS*---------
@@ -72,6 +136,30 @@ fn lookup_addr(conn: &PgConnection, query: &str) -> Result<u32,Vec<String>> {
     }
 }
 
+fn get_cache(conn: &PgConnection, sort: web::CacheSort, num: u32, 
+             links: FnvHashMap<u32,Entry>) -> Option<Vec<(&str,i8,&str)>>
+    //-> Result<Vec<(&str,i8,&str)>,String> 
+{
+    use self::schema::paths::dsl::paths;
+    use self::schema::paths::dsl as path_row;
+    use self::web::CacheSort::*;
+    let n = num as i64;
+    let rows: Vec<DbPath> = match sort {
+        Recent => paths.order(path_row::timestamp.desc()).limit(n).load(conn),
+        Popular => paths.order(path_row::count.desc()).limit(n).load(conn),
+        Length => paths.order(path_row::result.desc()).limit(n).load(conn),
+        Random => unimplemented!(),
+    }.expect("Failed cache query");
+    let mut cache = Vec::<(&str, i8, &str)>::with_capacity(num as usize);
+    //for (s,r,d) in rows.into_ter().map(|p| (p.src as u32, p.result, p.dst as u32)) {
+    //    let src_t = match 
+
+    //}
+
+
+    None
+}
+
 
 //  ----------SETTERS---------
 
@@ -104,8 +192,9 @@ fn populate_addrs(conn: &PgConnection,
     -> Result<usize,diesel::result::Error>
 {
     use self::schema::titles;
-    //okay that this involves a lot of copying
-    //it doesn't have to be performant
+    //could use new struct w/ a &str rather than String
+    //fine that this involves a lot of copying
+    //just a preproc step; it doesn't have to be performant
     let rows: Vec<_> = links.iter().map(|(&i,e)| DbAddr {
         title: e.title.clone(),
         page_id: i as i32,

@@ -1,29 +1,19 @@
 //#![allow(dead_code)]
 //#![feature(plugin, custom_derive, custom_attribute)]
+#![feature(plugin)]
+#![plugin(rocket_codegen)]
 
 // NOTE: when scaling, remember to change bool link_db/parse/regexes.rs/IS_SIMPLE
 
-// LOGGING
-#[macro_use] extern crate slog;
-extern crate slog_term;
-// SERIALIZING
-#[macro_use] extern crate serde_derive;
-extern crate serde_json;
-extern crate csv;
-// MISC
-#[macro_use] extern crate clap;
-extern crate fnv;
-extern crate chrono;
-// DATABASE
-#[macro_use] extern crate diesel;
-#[macro_use] extern crate diesel_codegen;
-extern crate dotenv;
+#[macro_use]
+extern crate clap;
+extern crate links;
+//use links::web;
+use links::cache as db;
 
-// COMPONENTS
-pub mod link_state;
-pub mod cache;
-
-// use std:: 
+extern crate rocket;
+extern crate rocket_contrib;
+use rocket_contrib::Template;
 
 use clap::Arg;
 fn argv<'a>() -> clap::ArgMatches<'a> {
@@ -44,29 +34,16 @@ fn argv<'a>() -> clap::ArgMatches<'a> {
         .get_matches()
 }
 
-fn main() {
-    use link_state::{LinkState, HashLinks};
-    //let pages_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-page.sql");
-    //let redir_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-redirect.sql");
-    //let links_db = PathBuf::from("/home/owen/wikidata/simplewiki-20170201-pagelinks.sql");
-    //let output = PathBuf::from("/home/owen/wikidata/dumps/simple_20170201_dump2");
-    //let rank_file = Path::new("/home/owen/wikidata/dumps/simple_20170201_ranks1");
-    //let p_rank_file = Path::new("/home/owen/wikidata/dumps/simple_20170201_pretty_ranks1");
-    //let dump = PathBuf::from("/home/owen/wikidata/dumps/simple_20170201_dump1");
-
-    //let ld = LinkState::<LinkData>::from_file(dump, new_logger()).unwrap();
-    //let rd = LinkState::<RankData>::from_ranks(ld, rank_file);
-    //rd.pretty_ranks(p_rank_file).unwrap();
-    
-    // ====
-
-    let hl = LinkState::<HashLinks>::from_args(argv());
-    println!("Size: {}", hl.size());
-
-    //println!("{:?}", hl.bfs(232327,460509));
-    hl.print_bfs(232327,460509);
-
-    //thread::sleep(time::Duration::from_secs(30));
+#[get("/")]
+fn index(conn: db::Conn) -> String {
+    String::from("howdy whorl")
 }
 
-//fn main() {}
+
+fn main() {
+    rocket::ignite()
+        .manage(db::init_pool())
+        .mount("/", routes![index])
+        .launch();
+
+}
