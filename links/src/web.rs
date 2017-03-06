@@ -2,8 +2,10 @@
 
 use fnv;
 use std::str::FromStr;
+use std::borrow::Cow;
 use link_state::Entry;
 use link_state::hash_links::{Path, PathError};
+use rocket::http::uri::URI;
 
 const WIKI_URL_FMT: &'static str = "https://simple.wikipedia.org/?curid=";
 
@@ -34,18 +36,6 @@ pub struct Context<'a> {
 
 
 impl<'a> Context<'a> {
-    //pub fn new(path: PathRes, src: Node, dst: Node, 
-    //           cache: Option<Vec<(&'a str, i8, &'a str)>>, sort: CacheSort) 
-    //    -> Context<'a> 
-    //{
-    //    Context {
-    //        path:       path,
-    //        src_search: src,
-    //        dst_search: dst,
-    //        cache:      cache,
-    //        cache_sort: sort,
-    //    }
-    //}
     pub fn from_cache(sort: CacheSort, cache: Option<Vec<(&'a str, i8, &'a str)>>) 
         -> Context<'a> 
 {
@@ -152,6 +142,32 @@ pub struct SortParam<'a> {
 pub struct SearchParams<'a> {
     pub src: &'a str,
     pub dst: &'a str,
-    pub sort: Option<&'a str>,
+    pub cache_sort: Option<&'a str>,
 }
 
+impl<'a> SearchParams<'a> {
+    pub fn fix(&self) -> (Cow<'a, str>, Cow<'a, str>) {
+        // perform preprocessing on user input 
+        (preprocess(self.src), preprocess(self.dst))
+    }
+}
+
+fn preprocess<'a>(input: &'a str) -> Cow<'a, str> {
+    // pluses become underscores
+    // %20Bs become pluses
+    println!("Preprocessing: {}", input);
+    let spaces = if input.contains('+') {
+        Cow::Owned(input.replace('+', &"_"))
+    } else {
+        Cow::Borrowed(input)
+    };
+    let percents = if input.contains('%') {
+        Cow::Owned(
+            URI::percent_decode_lossy(
+                spaces.as_ref().as_bytes())
+            .to_string())
+    } else {
+        spaces
+    };
+    percents
+}

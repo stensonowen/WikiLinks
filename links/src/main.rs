@@ -55,6 +55,13 @@ fn index(conn: db::Conn, links: SharedLinks) -> Template {
     Template::render("bfs", &context)
 }
 
+#[get("/bfs", rank = 3)]
+fn bfs_empty<'a>(conn: db::Conn, links: SharedLinks) -> Template {
+    let cache = get_cache(&conn, links.get_links(), &DEFAULT_SORT, DEFAULT_SIZE);
+    let context = Context::from_cache(DEFAULT_SORT, cache);
+    Template::render("bfs", &context)
+}
+
 #[get("/bfs?<sort>", rank = 2)]
 fn bfs_sort<'a>(sort: SortParam, conn: db::Conn, links: SharedLinks) -> Template {
     let sort = match sort.by {
@@ -70,9 +77,9 @@ fn bfs_sort<'a>(sort: SortParam, conn: db::Conn, links: SharedLinks) -> Template
 fn bfs_search<'a>(search: web::SearchParams<'a>, conn: db::Conn, 
                   links: SharedLinks) -> Template 
 {
-    let src_n = lookup_addr(&*conn, search.src);
-    let dst_n = lookup_addr(&*conn, search.dst);
-    //let path_res = if src_n.valid() && dst_n.valid() {
+    let (src_f, dst_f) = search.fix();
+    let src_n = lookup_addr(&*conn, src_f.as_ref());
+    let dst_n = lookup_addr(&*conn, dst_f.as_ref());
     let path_res = if let (&Node::Found(s,..), &Node::Found(d,..)) = (&src_n, &dst_n) {
         if let Some(db_path) = cache::lookup_path(&*conn, s, d) {
             // return the path that was saved last time
@@ -80,19 +87,24 @@ fn bfs_search<'a>(search: web::SearchParams<'a>, conn: db::Conn,
         } else {
             // can't find record of previous search; perform for the first time
             let path = links.bfs(s,d);
+            cache::insert_path(&conn, path.clone());    // TODO: kill the clone
             PathRes::from_path(path, links.get_links())
         }
     } else {
         // invalid request; search not run
         PathRes::NotRun
     };
-    let cache = get_cache(&conn, links.get_links(), &DEFAULT_SORT, DEFAULT_SIZE);
+    let sort = match search.cache_sort {
+        Some(s) => CacheSort::from_str(s).unwrap_or(DEFAULT_SORT),
+        None => DEFAULT_SORT,
+    };
+    let cache = get_cache(&conn, links.get_links(), &sort, DEFAULT_SIZE);
     let context = Context {
         path:       path_res,
         src_search: src_n,
         dst_search: dst_n,
         cache:      cache,
-        cache_sort: DEFAULT_SORT,
+        cache_sort: sort,
     };
     println!("Context: {:?}", context);
     Template::render("bfs", &context)
@@ -111,7 +123,7 @@ fn main() {
     rocket::ignite()
         .manage(db::init_pool())
         .manage(hl)
-        .mount("/", routes![index, bfs_sort, bfs_search])
+        .mount("/", routes![index, bfs_empty, bfs_sort, bfs_search])
         .launch();
 
 }

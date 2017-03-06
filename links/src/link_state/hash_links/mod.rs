@@ -8,14 +8,14 @@ use super::Entry;
 mod bfs;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Path {
     pub src: u32,
     pub dst: u32,
     pub path: Result<Vec<u32>,PathError>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum PathError {
     NoSuchPath,
     Terminated(u32)

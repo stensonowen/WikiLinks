@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WikiLinks</title>
+        <center><h1><a href="/bfs">WikiLinks</a></h1></center>
+
+        <meta name="keywords" content="Wikipedia, shortest path, wikipedia game" />
+        <meta name="description" content="Find the shortest path between Wikipedia articles" />
+        <meta name="revised" content="1/10/2017" />
+        <meta name="author" content="qjkxkcd" />
+        <meta charset="utf-8">
+    </head>
+
+    <body> 
+
+        <article id="about" >
+            <strong> Navigate from any given Wikipedia article to another in the fewest number of steps.</strong> <br>
+            <p><strong>How it Works: </strong>The program will search through all articles that are one iteration away from the source, then two, and so on through ten articles or until the destination is found. The number of articles that need to be checked increases exponentially, so longer searches can be quite expensive. Because so much much information has to be processed, searching is done based on a (bi-)monthly dump of the English Wikipedia, meaning that if a page was modified in the last few weeks the results might be outdated.</p>
+            A path will be found faster if the destination article is somewhat popular. 
+            More information including code and instructions to run locally can be found on <a href="https://github.com/stensonowen/WikiLinks">github</a>.
+        </article>
+
+        <aside id="links">
+            <header> 
+                <h3> History </h3> 
+            </header>
+            Recent searches are cached, and viewing them is faster than doing a new search (particularly for long paths). <br>
+            Sort by: 
+            <form action="/bfs" id="blank">
+            <select name="cache_sort" form="bfs" >
+                <option value="new"
+                        {% if cache_sort == "Recent" %}
+                        selected="selected"
+                        {% endif %}
+                >Recent </option>
+
+                <option value="popular"
+                        {% if cache_sort == "Popular" %}
+                        selected="selected"
+                        {% endif %}
+                >Popular</option>
+
+                <option value="length"
+                        {% if cache_sort == "Length" %}
+                        selected="selected"
+                        {% endif %}
+                >Length</option>
+                
+                <option value="random"
+                        {% if cache_sort == "Random" %}
+                        selected="selected"
+                        {% endif %}
+                >Random</option>
+            </select>
+            </form>
+
+            {% for c in cache %}
+                <form action="/bfs" >
+                    <input name="src" value="{{c.0}}" readonly />
+                    &rarr; {{c.1}} &rarr;
+                    <input name="dst" value="{{c.2}}" readonly />
+                    <input type="submit" value="Submit"/>
+                </form> 
+            {% endfor %}
+        </aside>
+
+        <section id="search">
+            <header> 
+                <h3>Search</h1> 
+            </header>
+
+            <form action="/bfs" id="bfs" >
+                <tt>
+                    source <br>
+                    <input type="text" 
+                           name="src" 
+                           id="input"  
+                           size="30" 
+                           autofocus 
+                           value=
+                           "{% if src_search.Found and not dst_search.Found %}
+                           {{src_search.Found.1}}
+                           {% endif %}"
+                           /> <br>
+                        
+                        {% if src_search.Sugg %}
+                        No source article found with that title;
+                        perhaps you meant: <br>
+                        {% for sugg in src_search.Sugg %}
+                            <input type="radio" name="src" value="{{sugg}}" />{{sugg}}<br />
+                        {% endfor %}
+
+                        {% elif src_search.Unknown %}
+                        No article or suggestions found for the query "{{src_search.Unknown}}"
+
+                        {% endif %}
+
+                    <br> destination <br>
+                    <input type="text" 
+                           name="dst" 
+                           id="input" 
+                           size="30" 
+                           value=
+                           "{% if dst_search.Found and not src_search.Found %}
+                           {{dst_search.Found.1}}
+                           {% endif %}"
+                           /> <br>
+
+                        {% if dst_search.Sugg %}
+                        No destination article found with that title;
+                        perhaps you meant: <br>
+                        {% for sugg in dst_search.Sugg %}
+                            <input type="radio" name="dst" value="{{sugg}}" />{{sugg}}<br />
+                        {% endfor %}
+
+                        {% elif dst_search.Unknown %}
+                        No article or suggestions found for the query "{{dst_search.Unknown}}"
+
+                        {% endif %}
+
+                    <br> <input type="submit" value="Submit" />
+                </tt> 
+            </form>
+            <h3>Results</h3> 
+
+            {% if src_search.Found and dst_search.Found %}
+            Path from <tt>`{{src_search.Found.1}}`</tt> 
+            to <tt>`{{dst_search.Found.1}}`</tt>: <br>
+
+            {% if path.NoSuchPath %}
+            No such path exists!
+            {% elif path.Terminated %}
+            Path search terminated after {{path.Terminated}} iterations
+            {% elif path.Success %}
+            <ol start="0">
+                {% for p in path.Success %}
+                <li><a href="{{p.1}}">{{p.0}}</a></li>
+                {% endfor %}
+            </ol>
+            {% endif %}
+
+            {% endif %}
+
+        </section>
+
+    </body>
+
+</html>
+<style>
+article#about {
+    padding:10px;
+}
+    section#search {
+        <!-- text-align: center; -->
+    float: left;
+    width: 50%;
+    padding:10px;
+    }
+    aside#links {
+        float: right;
+        width: 50%;
+        padding: 10px;
+    }
+    input#input {
+        width: 60%;
+    }
+</style>

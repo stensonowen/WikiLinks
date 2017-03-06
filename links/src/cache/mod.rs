@@ -1,5 +1,3 @@
-extern crate chrono;
-
 use r2d2;
 use diesel;
 use dotenv::dotenv;
@@ -130,7 +128,10 @@ pub fn lookup_addr<'a>(conn: &PgConnection, query: &'a str) -> web::Node<'a> {
     // NOTE: failure is irrecoverable (panic!s)
     use self::schema::titles::dsl::titles;
     use self::schema::titles::dsl as title_row;
-    if let Ok(DbAddr { page_id: id, .. }) = titles.find(query).first(conn) {
+    if query.is_empty() {
+        web::Node::Unused
+    }
+    else if let Ok(DbAddr { page_id: id, .. }) = titles.find(query).first(conn) {
         // first try the exact query
         web::Node::Found(id as u32, query)
         //Ok(id as u32)
@@ -155,7 +156,7 @@ pub fn lookup_addr<'a>(conn: &PgConnection, query: &'a str) -> web::Node<'a> {
 //  ----------SETTERS---------
 
 
-fn insert_path(conn: &PgConnection, p: Path) -> Option<DbPath> {
+pub fn insert_path(conn: &PgConnection, p: Path) -> Option<DbPath> {
     // NOTE: failure is recoverable
     use self::schema::paths;
     let new_path: DbPath = p.into();
