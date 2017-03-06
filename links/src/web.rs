@@ -7,7 +7,7 @@ use link_state::Entry;
 use link_state::hash_links::{Path, PathError};
 use rocket::http::uri::URI;
 
-const WIKI_URL_FMT: &'static str = "https://simple.wikipedia.org/?curid=";
+use super::WIKI_URL_FMT;
 
 #[derive(Debug, Serialize)]
 pub struct Context<'a> {
@@ -117,7 +117,7 @@ pub enum CacheSort {
     Recent,
     Popular,
     Length,
-    Random,
+    //Random,
 }
 
 impl FromStr for CacheSort {
@@ -127,7 +127,7 @@ impl FromStr for CacheSort {
             "recent" | "latest" | "new" | "newest"  => Ok(CacheSort::Recent),
             "popular" | "top" | "best" | "hot"      => Ok(CacheSort::Popular),
             "length" | "longest" | "size"           => Ok(CacheSort::Length),
-            "random" | "rand" | "idk"               => Ok(CacheSort::Random),
+            //"random" | "rand" | "idk"               => Ok(CacheSort::Random),
             _ => Err(()),
         }
     }

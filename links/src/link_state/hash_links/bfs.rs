@@ -1,5 +1,5 @@
 use std::collections::{HashSet, HashMap};
-use super::{Path, PathError, LinkState, HashLinks};
+use super::{Path, PathError, HashLinks};
 use std::mem::swap;
 
 const MAX_DEPTH: u32 = 10;
@@ -10,10 +10,11 @@ const MAX_DEPTH: u32 = 10;
 
 enum SearchDirection { Up, Down, }
 
-impl LinkState<HashLinks> {
+//impl LinkState<HashLinks> {
+impl HashLinks {
     pub fn print_bfs(&self, src: u32, dst: u32) {
         let bfs = self.bfs(src, dst);
-        bfs.print(&self.state.links);
+        bfs.print(&self.links);
     }
     pub fn bfs(&self, src: u32, dst: u32) -> Path {
         use self::SearchDirection::*;
@@ -89,8 +90,8 @@ impl LinkState<HashLinks> {
         for &i in prev_line {
             // link_start
             let pool = match direction {
-                Up => &self.state.links.get(&i).unwrap().parents,
-                Down => &self.state.links.get(&i).unwrap().children,
+                Up => &self.links.get(&i).unwrap().parents,
+                Down => &self.links.get(&i).unwrap().children,
             };
             for &j in pool {
                 // link_end

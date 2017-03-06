@@ -1,5 +1,5 @@
-use r2d2;
-use diesel;
+
+use {r2d2, diesel};
 use dotenv::dotenv;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
@@ -80,7 +80,13 @@ pub fn get_cache<'a>(conn: &PgConnection, links: &'a FnvHashMap<u32,Entry>,
         &Recent => paths.order(path_row::timestamp.desc()).limit(n).load(conn),
         &Popular => paths.order(path_row::count.desc()).limit(n).load(conn),
         &Length => paths.order(path_row::result.desc()).limit(n).load(conn),
-        &Random => unimplemented!(),
+        /*&Random => {
+            extern crate rand;
+            let r = rand::random::<u32>() % 53_000_000;
+            paths.filter(
+            unimplemented!()
+        },
+        */
     };
     let rows = match rows_res {
         Ok(r) => r,

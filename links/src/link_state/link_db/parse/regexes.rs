@@ -1,6 +1,6 @@
 
 //const IS_SIMPLE: bool = true;   //small parsing differences between simple and English wikis
-use super::super::super::IS_SIMPLE; //a little awkward, but this is harder to forget
+use super::super::super::super::IS_SIMPLE; //a little awkward, but this is harder to forget
 
 // NOTE about namespaces:
 //  Namespaces complicate things. The 0 namespace (i.e. Main, "real" articles) is the
@@ -12,7 +12,6 @@ use super::super::super::IS_SIMPLE; //a little awkward, but this is harder to fo
 //
 
 pub fn pagelinks_regex() -> String {
-    // String::from(r"\((\d)+,0,'([^'\\]*(?:\\.[^'\\]*)*)',-?\d+\)")
     String::from(r"\((\d+),0,'([^'\\]*(?:\\.[^'\\]*)*)',0\)")
 }
 

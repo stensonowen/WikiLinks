@@ -46,11 +46,6 @@
                         {% endif %}
                 >Length</option>
                 
-                <option value="random"
-                        {% if cache_sort == "Random" %}
-                        selected="selected"
-                        {% endif %}
-                >Random</option>
             </select>
             </form>
 
@@ -127,7 +122,7 @@
             Path from <tt>`{{src_search.Found.1}}`</tt> 
             to <tt>`{{dst_search.Found.1}}`</tt>: <br>
 
-            {% if path.NoSuchPath %}
+            {% if path == "NoSuchPath" %}
             No such path exists!
             {% elif path.Terminated %}
             Path search terminated after {{path.Terminated}} iterations

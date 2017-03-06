@@ -30,14 +30,6 @@ pub mod link_state;
 pub mod cache;
 pub mod web;
 
+const WIKI_URL_FMT: &'static str = "https://simple.wikipedia.org/?curid=";
+const IS_SIMPLE: bool = true;
 
-/*
-use diesel::pg::PgConnection;
-use r2d2_diesel::ConnectionManager;
-
-pub struct SharedState {
-    conn: r2d2::PooledConnection<ConnectionManager<PgConnection>>,
-    // should this /just/ be the 'links' hashmap? or the whole state?
-    hash_links: link_state::LinkState<link_state::HashLinks>,
-}
-*/

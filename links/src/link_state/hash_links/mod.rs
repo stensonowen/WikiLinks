@@ -1,10 +1,10 @@
 //use std::collections::HashMap;
+extern crate rand;
+use {clap, fnv};
 use super::{LinkState, RankData, HashLinks};
 use super::{LinkData, new_logger};
-use std::path::{self, PathBuf};
-use clap;
-use fnv;
 use super::Entry;
+use std::path::{self, PathBuf};
 mod bfs;
 
 
@@ -34,7 +34,6 @@ impl Path {
                 println!("\tSearch expired after {} iterations", i),
         }
     }
-    // fn to_html() -> String {}
 }
 
 impl From<LinkState<RankData>> for LinkState<HashLinks> {
@@ -52,15 +51,31 @@ impl From<LinkState<RankData>> for LinkState<HashLinks> {
     }
 }
 
-impl LinkState<HashLinks> {
+impl HashLinks {
     pub fn size(&self) -> usize {
-        self.size
+        self.links.len()
     }
     pub fn get_links(&self) -> &fnv::FnvHashMap<u32,Entry> {
-        &self.state.links
+        &self.links
     }
-    pub fn get_ranks(&self) -> &fnv::FnvHashMap<u32,f64> {
-        &self.state.ranks
+    pub fn get_ranks(&self) -> &Vec<(u32,f64)> {
+        &self.ranks
+    }
+    pub fn random_id(&self) -> u32 {
+        //find random element in table; return its id
+        let index = rand::random::<usize>() % self.ranks.len();
+        self.ranks[index].0
+    }
+    pub fn random_id_and_title(&self) -> (u32, &str) {
+        let id = self.random_id();
+        let entry = self.links.get(&id).unwrap();
+        (id, &entry.title)
+    }
+}
+
+impl LinkState<HashLinks> {
+    pub fn extract(self) -> HashLinks {
+        self.state
     }
     pub fn from_args(args: clap::ArgMatches) -> Self {
         //populate complete HashLinks from command-line args

@@ -1,5 +1,3 @@
-//#![allow(dead_code)]
-//#![feature(plugin, custom_derive, custom_attribute)]
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 
@@ -8,7 +6,6 @@
 #[macro_use]
 extern crate clap;
 extern crate links;
-//use links::web;
 use links::cache as db;
 
 extern crate rocket;
@@ -22,7 +19,8 @@ use std::str::FromStr;
 use links::cache::get_cache;
 use links::web::{self, Context, CacheSort, SortParam, PathRes, Node};
 use links::cache::{self, lookup_addr};
-type SharedLinks<'a> = State<'a, LinkState<HashLinks>>;
+//type SharedLinks<'a> = State<'a, LinkState<HashLinks>>;
+type SharedLinks<'a> = State<'a, HashLinks>;
 
 const DEFAULT_SORT: CacheSort = CacheSort::Recent;
 const DEFAULT_SIZE: u32 = 15;
@@ -78,8 +76,20 @@ fn bfs_search<'a>(search: web::SearchParams<'a>, conn: db::Conn,
                   links: SharedLinks) -> Template 
 {
     let (src_f, dst_f) = search.fix();
-    let src_n = lookup_addr(&*conn, src_f.as_ref());
-    let dst_n = lookup_addr(&*conn, dst_f.as_ref());
+    let src_n = match src_f.is_empty() {
+        false => lookup_addr(&*conn, src_f.as_ref()),
+        true  => {
+            let (id, title) = links.random_id_and_title();
+            Node::Found(id, title)
+        }
+    };
+    let dst_n = match dst_f.is_empty() {
+        false => lookup_addr(&*conn, dst_f.as_ref()),
+        true  => {
+            let (id, title) = links.random_id_and_title();
+            Node::Found(id, title)
+        }
+    };
     let path_res = if let (&Node::Found(s,..), &Node::Found(d,..)) = (&src_n, &dst_n) {
         if let Some(db_path) = cache::lookup_path(&*conn, s, d) {
             // return the path that was saved last time
@@ -115,10 +125,10 @@ fn main() {
     // get links hashmap
     // uhhhh, will .manage() do a bunch of memmoves?? sure hope not
     // use an Arc/Rc/Cell/ something?
-    let hl = LinkState::<HashLinks>::from_args(argv());
-
+    let hl_state = LinkState::<HashLinks>::from_args(argv());
     //let conn = cache::establish_connection();
-    //cache::populate_addrs(&conn, hl.get_links(), hl.get_ranks()).unwrap();
+    //cache::populate_addrs(&conn, hl_state.get_links(), hl_state.get_ranks()).unwrap();
+    let hl = hl_state.extract();
 
     rocket::ignite()
         .manage(db::init_pool())
