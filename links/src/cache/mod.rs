@@ -13,13 +13,13 @@ use fnv::FnvHashMap;
 use cache::models::*;
 use super::link_state::hash_links::Path;
 use super::link_state::Entry;
-use super::web::CacheSort;
+use super::web::{self, CacheSort};
 
 use std::ops::Deref;
 use std::env;
 
-pub mod schema;
 pub mod models;
+mod schema;
 
 const PREVIEW_SIZE: u32 = 16;
 
@@ -126,8 +126,6 @@ pub fn lookup_path(conn: &PgConnection, src: u32, dst: u32) -> Option<DbPath> {
                   .ok())
 }
 
-use super::web;
-//fn lookup_addr(conn: &PgConnection, query: &str) -> Result<u32,Vec<String>> {
 pub fn lookup_addr<'a>(conn: &PgConnection, query: &'a str) -> web::Node<'a> {
     // return address corresponding to 
     // uhh, will diesel stop this from being a potential sql injection?
@@ -140,19 +138,18 @@ pub fn lookup_addr<'a>(conn: &PgConnection, query: &'a str) -> web::Node<'a> {
     else if let Ok(DbAddr { page_id: id, .. }) = titles.find(query).first(conn) {
         // first try the exact query
         web::Node::Found(id as u32, query)
-        //Ok(id as u32)
     } else {
         // would it be super expensive to order by pagerank?
         let fuzzy_query = format!("%{}%", query);
         let guesses = titles.filter(title_row::title.like(fuzzy_query))
-            .limit(10).load::<DbAddr>(conn).unwrap();
-        //Err(guesses.into_iter().map(|i| i.title).collect())
+            .order(title_row::pagerank.desc())
+            .limit(10)
+            .load::<DbAddr>(conn)
+            .unwrap();
         if guesses.is_empty() {
             web::Node::Unknown(query)
         } else {
             let sugg: Vec<_> = guesses.into_iter().map(|i| i.title).collect();
-            //web::Node::Sugg(guesses.into_iter().map(|i| &i.title).collect())
-            //web::Node::Unknown(query)
             web::Node::Sugg(sugg)
         }
     }
@@ -174,7 +171,6 @@ fn insert_title(conn: &PgConnection, t: String, n: u32) -> DbAddr {
     // TODO: probably just insert a bunch at a time
     //  the allocation is probably worth it
     use self::schema::titles;
-    //let new_addr: DbAddr = (t,n).into();
     let new_addr = DbAddr::blank(t, n);
     diesel::insert(&new_addr).into(titles::table).get_result(conn).unwrap()
 }

@@ -116,6 +116,7 @@ pub enum CacheSort {
     Popular,
     Length,
     //Random,
+    //By combined pagerank?
 }
 
 impl FromStr for CacheSort {
