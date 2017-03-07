@@ -1,7 +1,8 @@
-use super::link_data::IndexedEntry;
-use super::{LinkState, LinkDb, new_logger};
 use std::path::{PathBuf};
 use std::iter;
+
+use super::link_data::IndexedEntry;
+use super::{LinkState, LinkDb, new_logger};
 
 pub mod parse;
 

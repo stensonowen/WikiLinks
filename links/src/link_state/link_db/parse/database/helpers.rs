@@ -1,6 +1,4 @@
 
-//pub type PAGE_ID = u32;
-
 #[derive(Debug)]
 pub enum Entry {
     // either a unique page and its link data

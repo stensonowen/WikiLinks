@@ -26,7 +26,6 @@ pub struct Context<'a> {
     //  Cache
     //      Sorting options
     //      Preview of elements
-    //path:       Option<Vec<(String,String)>>,
     pub path:       PathRes<'a>,
     pub src_search: Node<'a>,
     pub dst_search: Node<'a>,
@@ -54,7 +53,6 @@ impl<'a> Context<'a> {
 #[derive(Debug, Serialize)]
 pub enum Node<'a> {
     Found(u32, &'a str),
-    //Sugg(Vec<&'a str>),
     Sugg(Vec<String>),      // when requested from diesel we get Strings anyway
     Unknown(&'a str),
     Unused
@@ -155,7 +153,6 @@ impl<'a> SearchParams<'a> {
 fn preprocess<'a>(input: &'a str) -> Cow<'a, str> {
     // pluses become underscores
     // %20Bs become pluses
-    println!("Preprocessing: {}", input);
     let spaces = if input.contains('+') {
         Cow::Owned(input.replace('+', &"_"))
     } else {

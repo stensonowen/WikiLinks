@@ -197,7 +197,6 @@ pub fn populate_addrs(conn: &PgConnection,
     let rows: Vec<_> = links.iter().map(|(&i,e)| DbAddr {
         title: e.title.clone(),
         page_id: i as i32,
-        //pagerank: None,
         pagerank: ranks.get(&i).map(|f| *f),
     }).collect();
     // can't insert more than <65k at a time
@@ -211,7 +210,6 @@ pub fn populate_addrs(conn: &PgConnection,
         current += incr;
     }
     Ok(())
-    //diesel::insert(&rows[0..20]).into(titles::table).execute(conn)
 }
 
 

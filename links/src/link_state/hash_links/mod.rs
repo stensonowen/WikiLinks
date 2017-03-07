@@ -1,10 +1,13 @@
-//use std::collections::HashMap;
 extern crate rand;
+
 use {clap, fnv};
+
 use super::{LinkState, RankData, HashLinks};
 use super::{LinkData, new_logger};
 use super::Entry;
+
 use std::path::{self, PathBuf};
+
 mod bfs;
 
 
@@ -38,7 +41,6 @@ impl Path {
 
 impl From<LinkState<RankData>> for LinkState<HashLinks> {
     fn from(old: LinkState<RankData>) -> LinkState<HashLinks> {
-        //TODO: create DB or something?
         LinkState {
             threads:    old.threads,
             size:       old.size,

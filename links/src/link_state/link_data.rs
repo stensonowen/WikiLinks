@@ -1,12 +1,10 @@
-use std::sync::{/*Arc,*/ Mutex};
-//use std::thread;
+
+use {slog, csv, serde_json};
+use std::sync::Mutex;
 use std::io::{self, Read, Write, BufRead, BufReader};
 use std::path::PathBuf;
 use std::fs::File;
 use std::ffi::OsString;
-use serde_json;
-use slog;
-use csv;
 
 use super::{LinkState, LinkDb, LinkData};
 use super::Entry;

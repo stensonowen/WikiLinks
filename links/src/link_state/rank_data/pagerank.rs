@@ -7,14 +7,14 @@
 
 use slog;
 use fnv::FnvHashMap;
-//use std::collections::HashMap;
 
 use std::f64;
 pub const DAMPING_FACTOR: f64 = 0.85;
 //pub const MAX_ERROR: f64 = f64::EPSILON * 10f64;
 pub const MAX_ERROR: f64 = 0.00000001;  // for testing: ~55 iters, ~4 mins
 pub const MAX_ITER: usize = 500;   //iterations to panic! after 
-//  (usually finishes after~150)
+//  (max_err = 10ε usually finishes after ~150 for simplewiki)
+//  (max_err = 0.00000001 takes about 50 iters for enwiki)
 
 
 use super::super::Entry as Page;
@@ -122,19 +122,6 @@ impl<'a> Graph<'a> {
         }
         iter
     }
-    /*
-    fn export(&self, filepath: &str) -> csv::Result<()> {
-        //output into a .csv
-        // page_id, pagerank, page_title
-        let path = Path::new(filepath);
-        let mut writer = csv::Writer::from_file(&path)?;
-        for (id,rank) in &self.ranks {
-            let title = self.pages.get(id).unwrap().title;
-            writer.encode((id, rank, title))?;
-        }
-        Ok(())
-    }
-    */
 }
 
 

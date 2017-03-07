@@ -22,8 +22,7 @@ extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate dotenv;
 
-extern crate rocket;    //move this lower?
-extern crate rocket_contrib;
+extern crate rocket;
 
 // COMPONENTS
 pub mod link_state;

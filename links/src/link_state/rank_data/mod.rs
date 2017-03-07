@@ -1,11 +1,12 @@
 use csv;
 use std::path::Path;
 use std::sync::Mutex;
+use std::cmp::Ordering;
+use fnv::FnvHashMap;
+
 use super::{LinkState, LinkData, RankData};
 use super::Entry;
 use super::link_data::IndexedEntry;
-use fnv::FnvHashMap;
-use std::cmp::Ordering;
 
 mod pagerank;
 
@@ -52,16 +53,12 @@ impl LinkState<RankData> {
     pub fn from_ranks(old: LinkState<LinkData>, ranks_path: &Path) -> Self {
         let links = Self::consolidate_links(old.state.dumps, old.size);
         //populate ranks from csv file
-        //let mut ranks: HashMap<u32,f64> = HashMap::with_capacity(old.size);
-        //let mut ranks: fnv::FnvHashMap<u32,f64> = 
-        //    FnvHashMap::with_capacity_and_hasher(old.size, Default::default());
         let mut ranks: Vec<(u32,f64)> = Vec::with_capacity(old.size);
 
         let mut csv_r = csv::Reader::from_file(ranks_path)
             .unwrap().has_headers(false);
         for line in csv_r.decode() {
             let (id, rank): (u32, f64) = line.unwrap();
-            //ranks.insert(id, rank);
             ranks.push((id, rank));
         }
 
@@ -88,7 +85,6 @@ impl LinkState<RankData> {
     pub fn pretty_ranks(&self, ranks_path: &Path) -> Result<(),csv::Error> {
         //sort greatest-to-least
         // (RANK, ID, TITLE)
-        //let mut sorted_ranks: Vec<_> = self.state.ranks.iter().collect();
         let mut sorted_ranks = self.state.ranks.clone();
         sorted_ranks.sort_by(|&(a_i,a_r),&(b_i,b_r)| {
             //sort by floats, which Ord does not provide

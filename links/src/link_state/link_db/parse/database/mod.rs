@@ -1,13 +1,13 @@
-extern crate slog;
 extern crate regex;
+
+use slog;
+mod helpers;
+use self::helpers::*;
+use super::super::IndexedEntry;
 
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
-use self::helpers::*;
 use std::iter;
-mod helpers;
-
-use super::super::IndexedEntry;
 
 
 // The actual data storing the internal link structure

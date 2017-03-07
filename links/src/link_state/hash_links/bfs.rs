@@ -10,7 +10,6 @@ const MAX_DEPTH: u32 = 10;
 
 enum SearchDirection { Up, Down, }
 
-//impl LinkState<HashLinks> {
 impl HashLinks {
     pub fn print_bfs(&self, src: u32, dst: u32) {
         let bfs = self.bfs(src, dst);
@@ -136,54 +135,3 @@ fn extract_path(src: u32,
     path
 }
 
-/*
-pub fn print_path(res: Result<Vec<u32>, Error>, url: Option<&str>) {
-    match res {
-        Ok(path) => {
-            println!("Found a path with {} steps: ", path.len() - 1);
-            for id in &path {
-                let title = ENTRIES.get(id).unwrap().title;
-                if let Some(prefix) = url {
-                    println!("\t{: >10}: \t{: <16} (https://{}.wikipedia.org/?curid={: <10})",
-                             id,
-                             title,
-                             prefix,
-                             id);
-                } else {
-                    println!("\t{: >12}: \t`{}`", id, title);
-                }
-            }
-        },
-        Err(Error::Terminated(t)) => println!("The search was terminated after {} rounds", t),
-        Err(Error::NoSuchPath) => println!("No such path of any length exists"), 
-    }
-}
-
-pub fn format_path(res: Result<Vec<u32>, Error>, lang: &str) -> String {
-    //output html
-    match res {
-        Ok(path) => {
-            let mut s = String::new();
-            s.push_str(r"<body>");
-            for id in &path {
-                let title = ENTRIES.get(id).unwrap().title;
-                s.push_str(
-                    &format!(r#"<p><a href=\"https://{}.wikipedia.org/?curid={}\">`{}`</a></p>"#,
-                             lang, id, title));
-            }
-            s.push_str(r"</body>");
-            s
-        },
-        Err(Error::Terminated(t)) => format!(r"The search was terminated after {} rounds", t),
-        Err(Error::NoSuchPath) => String::from(r"No such path of any length exists"),
-    }
-}
-
-pub fn annotate_path(res: Vec<u32>, lang: &str) -> Vec<(&'static str, String)> {
-    res.iter().map(|id| (
-            ENTRIES.get(id).unwrap().title,
-            format!("https://{}.wikipedia.org/?curid={}", lang, id)
-            ))
-        .collect()
-}
-*/

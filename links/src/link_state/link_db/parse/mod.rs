@@ -1,3 +1,6 @@
+extern crate regex;
+
+use slog;
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 use std::borrow::Cow;
@@ -7,8 +10,6 @@ mod regexes;
 pub mod database;
 use self::database::*;
 
-extern crate slog;
-extern crate regex;
 
 // Parsing Note:
 //  Most of the [u8] -> &str conversions involve potential errors in which the source

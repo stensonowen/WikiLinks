@@ -1,5 +1,6 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
+//#![allow(needless_pass_by_value)]
 
 // NOTE: when scaling, remember to change bool link_db/parse/regexes.rs/IS_SIMPLE
 
@@ -19,7 +20,6 @@ use std::str::FromStr;
 use links::cache::get_cache;
 use links::web::{self, Context, CacheSort, SortParam, PathRes, Node};
 use links::cache::{self, lookup_addr};
-//type SharedLinks<'a> = State<'a, LinkState<HashLinks>>;
 type SharedLinks<'a> = State<'a, HashLinks>;
 
 const DEFAULT_SORT: CacheSort = CacheSort::Recent;
@@ -28,7 +28,7 @@ const DEFAULT_SIZE: u32 = 15;
 use clap::Arg;
 fn argv<'a>() -> clap::ArgMatches<'a> {
     clap::App::new(crate_name!()).about(crate_description!())
-        .author(crate_authors!("\n")).version(crate_version!())
+        .author(crate_authors!()).version(crate_version!())
         .arg(Arg::with_name("ranks").short("r").long("ranks_dump").takes_value(true)
              .help("Supply location of rank data in csv form"))
         .arg(Arg::with_name("manifest").short("json").takes_value(true)
@@ -54,14 +54,14 @@ fn index(conn: db::Conn, links: SharedLinks) -> Template {
 }
 
 #[get("/bfs", rank = 3)]
-fn bfs_empty<'a>(conn: db::Conn, links: SharedLinks) -> Template {
+fn bfs_empty(conn: db::Conn, links: SharedLinks) -> Template {
     let cache = get_cache(&conn, links.get_links(), &DEFAULT_SORT, DEFAULT_SIZE);
     let context = Context::from_cache(DEFAULT_SORT, cache);
     Template::render("bfs", &context)
 }
 
 #[get("/bfs?<sort>", rank = 2)]
-fn bfs_sort<'a>(sort: SortParam, conn: db::Conn, links: SharedLinks) -> Template {
+fn bfs_sort(sort: SortParam, conn: db::Conn, links: SharedLinks) -> Template {
     let sort = match sort.by {
         Some(s) => CacheSort::from_str(s).unwrap_or(DEFAULT_SORT),
         None => DEFAULT_SORT,
@@ -72,23 +72,21 @@ fn bfs_sort<'a>(sort: SortParam, conn: db::Conn, links: SharedLinks) -> Template
 }
 
 #[get("/bfs?<search>", rank = 1)]
-fn bfs_search<'a>(search: web::SearchParams<'a>, conn: db::Conn, 
+fn bfs_search(search: web::SearchParams, conn: db::Conn, 
                   links: SharedLinks) -> Template 
 {
     let (src_f, dst_f) = search.fix();
-    let src_n = match src_f.is_empty() {
-        false => lookup_addr(&*conn, src_f.as_ref()),
-        true  => {
-            let (id, title) = links.random_id_and_title();
-            Node::Found(id, title)
-        }
+    let src_n = if src_f.is_empty() {
+        let (id, title) = links.random_id_and_title();
+        Node::Found(id, title)
+    } else {
+        lookup_addr(&*conn, src_f.as_ref())
     };
-    let dst_n = match dst_f.is_empty() {
-        false => lookup_addr(&*conn, dst_f.as_ref()),
-        true  => {
-            let (id, title) = links.random_id_and_title();
-            Node::Found(id, title)
-        }
+    let dst_n = if dst_f.is_empty() {
+        let (id, title) = links.random_id_and_title();
+        Node::Found(id, title)
+    } else {
+        lookup_addr(&*conn, dst_f.as_ref())
     };
     let path_res = if let (&Node::Found(s,..), &Node::Found(d,..)) = (&src_n, &dst_n) {
         if let Some(db_path) = cache::lookup_path(&*conn, s, d) {
@@ -116,7 +114,7 @@ fn bfs_search<'a>(search: web::SearchParams<'a>, conn: db::Conn,
         cache:      cache,
         cache_sort: sort,
     };
-    println!("Context: {:?}", context);
+    //println!("Context: {:?}", context);
     Template::render("bfs", &context)
 }
 
