@@ -182,7 +182,9 @@ fn insert_title(conn: &PgConnection, t: String, n: u32) -> DbAddr {
 //pub fn purge_cac
 pub fn populate_addrs(conn: &PgConnection, 
                   links: &FnvHashMap<u32,Entry>,
-                  ranks: &FnvHashMap<u32,f64>)
+                  //ranks: &FnvHashMap<u32,f64>)
+                  ranks: &Vec<(u32,f64)>)
+                  
     -> Result<(),diesel::result::Error>
 {
     use self::schema::titles;
@@ -190,11 +192,16 @@ pub fn populate_addrs(conn: &PgConnection,
     //could use new struct w/ a &str rather than String
     //fine that this involves a lot of copying
     //just a preproc step; it doesn't have to be performant
-    let rows: Vec<_> = links.iter().map(|(&i,e)| DbAddr {
-        title: e.title.clone(),
+    let rows: Vec<_> = ranks.iter().map(|&(i,r)| DbAddr {
+        title: links.get(&i).unwrap().title.clone(),
         page_id: i as i32,
-        pagerank: ranks.get(&i).map(|f| *f),
+        pagerank: Some(r)
     }).collect();
+    //let rows: Vec<_> = links.iter().map(|(&i,e)| DbAddr {
+    //    title: e.title.clone(),
+    //    page_id: i as i32,
+    //    pagerank: ranks.get(&i).map(|f| *f),
+    //}).collect();
     // can't insert more than <65k at a time
     let mut current = 0;
     let incr = 10_000;

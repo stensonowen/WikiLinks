@@ -30,7 +30,7 @@ pub struct LinkState<S: State> {
     state:   S,         // 1 of 4 values that represent development of the data
 }
 
-fn new_logger() -> Logger {
+pub fn new_logger() -> Logger {
     Logger::root(slog_term::streamer().compact().build().fuse(), o!())
 }
 

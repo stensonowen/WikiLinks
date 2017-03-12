@@ -15,6 +15,7 @@ extern crate csv;
 extern crate clap;
 extern crate fnv;
 extern crate chrono;
+//extern crate test;
 // DATABASE
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate diesel_codegen;
@@ -28,6 +29,8 @@ extern crate rocket;
 pub mod link_state;
 pub mod cache;
 pub mod web;
+
+//mod test;
 
 const WIKI_URL_FMT: &'static str = "https://simple.wikipedia.org/?curid=";
 const IS_SIMPLE: bool = true;
