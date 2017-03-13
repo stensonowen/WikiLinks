@@ -7,6 +7,7 @@ use super::{LinkData, new_logger};
 use super::Entry;
 
 use std::path::{self, PathBuf};
+use std::collections::HashMap;
 
 mod bfs;
 
@@ -47,7 +48,8 @@ impl From<LinkState<RankData>> for LinkState<HashLinks> {
             log:        old.log,
             state:      HashLinks {
                 links: old.state.links,
-                ranks: old.state.ranks,
+                //ranks: old.state.ranks,
+                titles: HashMap::new(),
             }
         }
     }
@@ -60,6 +62,7 @@ impl HashLinks {
     pub fn get_links(&self) -> &fnv::FnvHashMap<u32,Entry> {
         &self.links
     }
+    /*
     pub fn get_ranks(&self) -> &Vec<(u32,f64)> {
         &self.ranks
     }
@@ -73,6 +76,7 @@ impl HashLinks {
         let entry = self.links.get(&id).unwrap();
         (id, &entry.title)
     }
+    */
 }
 
 impl LinkState<HashLinks> {
@@ -90,20 +94,45 @@ impl LinkState<HashLinks> {
         {
             LinkState::new(PathBuf::from(p), PathBuf::from(r), PathBuf::from(l))
                 .into()
-        } else if let Some(m) = args.value_of("manifest") {
-            LinkState::<LinkData>::from_file(PathBuf::from(m), new_logger()).unwrap()
+        } else if let Some(m) = args.value_of("import_links") {
+            LinkState::<LinkData>::import(PathBuf::from(m), new_logger()).unwrap()
         } else {
             //clap should make this impossible
             unreachable!()
         };
 
-        //then decide whether to build pagelinks from data or import from backup
-        let ls_rd = match args.value_of("ranks") {
-            Some(r) => LinkState::<RankData>::from_ranks(ls_dt, path::Path::new(r)),
-            None => ls_dt.into(),
-        };
+        if let Some(p) = args.value_of("export_links") {
+            ls_dt.export(PathBuf::from(p)).unwrap();
+        }
+
+        let mut ls_rd: LinkState<RankData> = ls_dt.into();
+
+        if let Some(md) = args.value_of("import_md") {
+            ls_rd.import(path::Path::new(md));
+        } else {
+            ls_rd.build_title_table();
+        }
+        if args.is_present("compute_ranks") {
+            ls_rd.compute_ranks();
+        }
+        if let Some(md) = args.value_of("export_md") {
+            ls_rd.export(&PathBuf::from(md)).unwrap();
+        }
 
         //convert to HashLinks
         ls_rd.into()
     }
 }
+
+
+/*
+ * ARGS:
+ *      Link Data
+ *          3 databases or
+ *          a manifest 
+ *          optional instructions for outputting a manifest
+ *      Rank Data
+ *          optional import manifest
+ *          optional export manifest
+ *          optional "compute_ranks" argument
+ */

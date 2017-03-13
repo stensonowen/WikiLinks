@@ -5,6 +5,7 @@ use slog_term;
 use slog::{Logger, DrainExt};
 
 use std::sync::Mutex;
+use std::collections::HashMap;
 
 pub mod link_db;
 pub mod link_data;
@@ -54,14 +55,17 @@ pub struct RankData {
     /// Store easily searchable link and pagerank data
     /// Pagerank data can be read from, dumped to, or exported to disk 
     links: fnv::FnvHashMap<u32,Entry>,
-    ranks: Vec<(u32, f64)>,
+    ranks: Option<Vec<(u32, f64)>>,
+    //titles: Option<HashMap<String,u32>>,    // TODO: not optional?
+    titles: Option<HashMap<String,rank_data::TitleLookup>>,    // TODO: not optional?
 }
 
 pub struct HashLinks {
     /// Read-only, fast-lookup container for link and rank data
     /// Interact with diesel cache and interface with website
     links: fnv::FnvHashMap<u32,Entry>,
-    ranks: Vec<(u32, f64)>,
+    //ranks: Vec<(u32, f64)>,
+    titles: HashMap<String,rank_data::TitleLookup>,
 }
 
 
@@ -74,3 +78,4 @@ pub struct Entry {
     pub parents:  Vec<u32>,
     pub children: Vec<u32>,
 }
+

@@ -71,40 +71,40 @@ impl From<LinkState<LinkDb>> for LinkState<LinkData> {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct Manifest {
+pub struct LinkManifest {
     threads: usize,
     size:    usize,
     entries: Vec<PathBuf>,
-    addrs: PathBuf,
+    addrs:   PathBuf,
 }
 
+pub fn append_to_pathbuf(p: &PathBuf, addition: &str, extension: &str) -> PathBuf {
+    let mut name = OsString::from(p.file_stem().unwrap());
+    name.push(OsString::from(addition));
+    PathBuf::from(p).with_file_name(name).with_extension(extension)
+}
 
 
 impl LinkState<LinkData> {
     // need to read from or write to files to restore from/to this state
-    pub fn to_file(&self, mn: PathBuf) -> Result<(), io::Error> {
+    fn manifest(&self, mn: &PathBuf) -> LinkManifest {
+        LinkManifest {
+            threads:    self.threads,
+            size:       self.size,
+            addrs:      append_to_pathbuf(mn, "_addr", "csv"),
+            entries:    (0..self.threads).map(|i| {
+                let mut name = String::from("_entry");
+                name.push_str(&i.to_string());
+                append_to_pathbuf(mn, &name, "json")
+            }).collect(),
+        }
+    }
+    //pub fn to_file(&self, mn: PathBuf) -> Result<(), io::Error> {
+    pub fn export(&self, dst: PathBuf) -> Result<(), io::Error> {
         // write output to line-delimited JSON and CSV types
-        let mn_ = mn.clone();
-        let mn_fn = mn_.file_name().unwrap();
-        let manifest = Manifest {
-            threads: self.threads,
-            size:    self.size,
-            addrs:   {
-                let mut name = OsString::from(mn_fn.clone());
-                name.push(OsString::from("_addr"));
-                mn_.with_file_name(name).with_extension("csv")
-            },
-            entries: (0..self.threads)
-                .map(|i| {
-                    let mut name = OsString::from(mn_fn.clone());
-                    name.push(OsString::from("_entry"));
-                    name.push(i.to_string());
-                    mn.clone().with_file_name(name).with_extension("json")
-                })
-                .collect()
-        };
+        let manifest = self.manifest(&dst);
         //write manifest
-        let mut f = File::create(mn)?;
+        let mut f = File::create(dst)?;
         let mn_s = serde_json::to_string(&manifest).unwrap();
         f.write_all(&mn_s.into_bytes())?;
         
@@ -131,12 +131,13 @@ impl LinkState<LinkData> {
         Ok(()) 
     }
 
-    pub fn from_file(src: PathBuf, log: slog::Logger) -> Result<Self,io::Error> { 
+    //pub fn from_file(src: PathBuf, log: slog::Logger) -> Result<Self,io::Error> { 
+    pub fn import(src: PathBuf, log: slog::Logger) -> Result<Self,io::Error> { 
         assert!(src.is_file());
         let mut s = String::new();
         let mut f = File::open(src)?;
         f.read_to_string(&mut s).unwrap();
-        let manifest: Manifest = serde_json::from_str(&s).unwrap();
+        let manifest: LinkManifest = serde_json::from_str(&s).unwrap();
 
         //populate addresses
         let mut addrs: Vec<(String,u32)> = Vec::with_capacity(manifest.size);

@@ -29,18 +29,50 @@ use clap::Arg;
 fn argv<'a>() -> clap::ArgMatches<'a> {
     clap::App::new(crate_name!()).about(crate_description!())
         .author(crate_authors!()).version(crate_version!())
-        .arg(Arg::with_name("ranks").short("r").long("ranks_dump").takes_value(true)
-             .help("Supply location of rank data in csv form"))
-        .arg(Arg::with_name("manifest").short("json").takes_value(true)
-             .help("Supply dump of parsed link data manifest in json form"))
-        .arg(Arg::with_name("page.sql").short("pages").takes_value(true)
-             .conflicts_with("manifest").requires("redirect.sql").requires("pagelinks.sql"))
-        .arg(Arg::with_name("redirect.sql").short("dirs").takes_value(true)
-             .conflicts_with("manifest").requires("page.sql").requires("pagelinks.sql"))
-        .arg(Arg::with_name("pagelinks.sql").short("links").takes_value(true)
-             .conflicts_with("manifest").requires("page.sql").requires("redirect.sql"))
-        .group(clap::ArgGroup::with_name("sources").required(true)
-               .args(&["sql", "manifest", "page.sql", "redirects.sql", "pagelink.sql"]))
+
+        .arg(Arg::with_name("import_links")
+             .long("import_links")
+             .takes_value(true)
+             .help("Import link data from link dumps manifest"))
+        .arg(Arg::with_name("export_links")
+             .long("export_links")
+             .takes_value(true)
+             .help("Export link data to manifest and dumps"))
+        .arg(Arg::with_name("import_md")
+             .long("import_md")
+             .takes_value(true)
+             .help("Import rank/title data from metadata manifest"))
+        .arg(Arg::with_name("export_md")
+             .long("export_md")
+             .takes_value(true)
+             .help("Export rank/title data to manifest and dumps"))
+
+        .arg(Arg::with_name("compute_ranks")
+             .long("compute_ranks")
+             .help("If not provided by a manifest, pageranks will be computed"))
+
+        .arg(Arg::with_name("page.sql")
+             .long("page.sql")
+             .takes_value(true)
+             .conflicts_with("import_links")
+             .requires("redirect.sql")
+             .requires("pagelinks.sql"))
+        .arg(Arg::with_name("redirect.sql")
+             .long("redirect.sql")
+             .takes_value(true)
+             .conflicts_with("import_links")
+             .requires("page.sql")
+             .requires("pagelinks.sql"))
+        .arg(Arg::with_name("pagelinks.sql")
+             .long("pagelinks.sql")
+             .takes_value(true)
+             .conflicts_with("import_links")
+             .requires("page.sql")
+             .requires("redirect.sql"))
+
+        .group(clap::ArgGroup::with_name("sources")
+               .required(true)
+               .args(&["import_links", "page.sql"]))
         .get_matches()
 }
 
@@ -77,14 +109,18 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn,
 {
     let (src_f, dst_f) = search.fix();
     let src_n = if src_f.is_empty() {
-        let (id, title) = links.random_id_and_title();
-        Node::Found(id, title)
+        //TODO
+        unimplemented!()
+        //let (id, title) = links.random_id_and_title();
+        //Node::Found(id, title)
     } else {
         lookup_addr(&*conn, src_f.as_ref())
     };
     let dst_n = if dst_f.is_empty() {
-        let (id, title) = links.random_id_and_title();
-        Node::Found(id, title)
+        //TODO
+        unimplemented!()
+        //let (id, title) = links.random_id_and_title();
+        //Node::Found(id, title)
     } else {
         lookup_addr(&*conn, dst_f.as_ref())
     };
