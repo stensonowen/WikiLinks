@@ -5,6 +5,7 @@ use {clap, fnv};
 use super::{LinkState, RankData, HashLinks};
 use super::{LinkData, new_logger};
 use super::Entry;
+use web::Node;
 
 use std::path::{self, PathBuf};
 use std::collections::HashMap;
@@ -26,6 +27,13 @@ pub enum PathError {
 }
 
 impl Path {
+    pub fn size(&self) -> Option<usize> {
+        if let Ok(ref v) = self.path {
+            Some(v.len())
+        } else {
+            None
+        }
+    }
     fn print(&self, entries: &fnv::FnvHashMap<u32,Entry>) {
         println!("Path from {}\t(\"{}\")", self.src, entries.get(&self.src).unwrap().title);
         println!("  to {}\t(\"{}\") :", self.dst, entries.get(&self.dst).unwrap().title);
@@ -41,7 +49,10 @@ impl Path {
 }
 
 impl From<LinkState<RankData>> for LinkState<HashLinks> {
-    fn from(old: LinkState<RankData>) -> LinkState<HashLinks> {
+    fn from(mut old: LinkState<RankData>) -> LinkState<HashLinks> {
+        if old.state.titles.is_none() {
+            old.build_title_table();
+        }
         LinkState {
             threads:    old.threads,
             size:       old.size,
@@ -49,11 +60,14 @@ impl From<LinkState<RankData>> for LinkState<HashLinks> {
             state:      HashLinks {
                 links: old.state.links,
                 //ranks: old.state.ranks,
-                titles: HashMap::new(),
+                //titles: HashMap::new(),
+                titles: old.state.titles.unwrap(),
             }
         }
     }
 }
+
+use super::rank_data::TitleLookup;
 
 impl HashLinks {
     pub fn size(&self) -> usize {
@@ -61,6 +75,20 @@ impl HashLinks {
     }
     pub fn get_links(&self) -> &fnv::FnvHashMap<u32,Entry> {
         &self.links
+    }
+    pub fn lookup_title<'a>(&'a self, title: &'a str) -> Node<'a> {
+        match self.titles.get(title) {
+            Some(&TitleLookup::Orig(id)) => Node::Found(id, title),
+            Some(&TitleLookup::Caps(id)) => Node::Found(id, title),
+            None => {
+                let caps_ti = title.to_uppercase();
+                match self.titles.get(&caps_ti) {
+                    Some(&TitleLookup::Orig(id)) => Node::Found(id, title), // return None?
+                    Some(&TitleLookup::Caps(id)) => Node::Found(id, title),
+                    None => Node::Unknown(title),
+                }
+            }
+        }
     }
     /*
     pub fn get_ranks(&self) -> &Vec<(u32,f64)> {

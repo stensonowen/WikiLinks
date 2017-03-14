@@ -24,7 +24,7 @@ cargo run --release -- \
 ```
 Starting up the server is much faster after this.
 ```
-cargo run --release -- \
+ROCKET_ENV=production cargo run --release -- \
 --import_links ~/wikidata/links.json \
 --import_md ~/wikidata/metadata.json
 ```

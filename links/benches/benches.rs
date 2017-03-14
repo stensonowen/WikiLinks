@@ -11,8 +11,10 @@ use links::cache;
 
 use std::path::{Path, PathBuf};
 
-const BENCH_MANIFEST_PATH: &'static str = "/home/owen/wikidata/dumps/simple_20170201_dump2";
-const BENCH_RANKS_PATH: &'static str = "/home/owen/wikidata/dumps/simple_20170201_ranks2";
+//const BENCH_MANIFEST_PATH: &'static str = "/home/owen/wikidata/dumps/simple_20170201_dump2";
+//const BENCH_RANKS_PATH: &'static str = "/home/owen/wikidata/dumps/simple_20170201_ranks2";
+const BENCH_MANIFEST_PATH: &'static str = "/home/owen/wikidata/dumps3/links.json";
+const BENCH_RANKS_PATH: &'static str = "/home/owen/wikidata/dumps3/metadata.json";
 const IS_SIMPLE: bool = true;
 
 lazy_static! {
@@ -20,8 +22,13 @@ lazy_static! {
         let m = PathBuf::from(BENCH_MANIFEST_PATH);
         let r = Path::new(BENCH_RANKS_PATH);
 
-        let ls_dt = LinkState::<LinkData>::from_file(m, new_logger()).unwrap();
-        let ls_rd = LinkState::<RankData>::from_ranks(ls_dt, r);
+        //let ls_dt = LinkState::<LinkData>::from_file(m, new_logger()).unwrap();
+        let ls_dt = LinkState::<LinkData>::import(m, new_logger()).unwrap();
+        //let ls_rd = LinkState::<RankData>::from_ranks(ls_dt, r);
+        let mut ls_rd: LinkState<RankData> = ls_dt.into();
+        ls_rd.import(r);
+        //let ls_rd = LinkState::<RankData>::import(ls_dt, r);
+        
         let ls_hl: LinkState<HashLinks> = ls_rd.into();
         ls_hl.extract()
     };
@@ -45,11 +52,22 @@ mod tests {
         //let (_, title) = HL.random_id_and_title();
         // different title every time: 57,918 (-145)
         // same title every time:  55,501 
+        //let title = "Rensselaer Polytechnic Institute";
+        let title = "United States of America";
         b.iter(|| {
-            let (_, title) = HL.random_id_and_title();
+            //let (_, title) = HL.random_id_and_title();
             cache::lookup_addr(&db, title);
         })
     }
+
+    #[bench]
+    fn lookup_titles(b: &mut Bencher) {
+        let title = "United States of America";
+        b.iter(|| {
+            HL.lookup_title(title);
+        })
+    }
+    /*
     #[bench]
     fn lookup_string_db_acceptable_overhead(b: &mut Bencher) {
         // the setup time for `lookup-_string_db`
@@ -57,6 +75,7 @@ mod tests {
             let (_, _title) = HL.random_id_and_title();
         })
     }
+    */
 
     // Times to request history in different orders
     // Results:     Sort,   Microseconds

@@ -17,13 +17,14 @@ use rocket::State;
 use links::link_state::{LinkState, HashLinks};
 
 use std::str::FromStr;
-use links::cache::get_cache;
+use links::cache::{self, get_cache};
 use links::web::{self, Context, CacheSort, SortParam, PathRes, Node};
-use links::cache::{self, lookup_addr};
+//use links::cache::{self, lookup_addr};
 type SharedLinks<'a> = State<'a, HashLinks>;
 
 const DEFAULT_SORT: CacheSort = CacheSort::Recent;
 const DEFAULT_SIZE: u32 = 15;
+const CACHEWORTHY_LENGTH: usize = 5;    // only cache searches longer than this
 
 use clap::Arg;
 fn argv<'a>() -> clap::ArgMatches<'a> {
@@ -108,21 +109,16 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn,
                   links: SharedLinks) -> Template 
 {
     let (src_f, dst_f) = search.fix();
+    // TODO: translate empty query into random?
     let src_n = if src_f.is_empty() {
-        //TODO
-        unimplemented!()
-        //let (id, title) = links.random_id_and_title();
-        //Node::Found(id, title)
+        Node::Unused
     } else {
-        lookup_addr(&*conn, src_f.as_ref())
+        links.lookup_title(src_f.as_ref())
     };
     let dst_n = if dst_f.is_empty() {
-        //TODO
-        unimplemented!()
-        //let (id, title) = links.random_id_and_title();
-        //Node::Found(id, title)
+        Node::Unused
     } else {
-        lookup_addr(&*conn, dst_f.as_ref())
+        links.lookup_title(dst_f.as_ref())
     };
     let path_res = if let (&Node::Found(s,..), &Node::Found(d,..)) = (&src_n, &dst_n) {
         if let Some(db_path) = cache::lookup_path(&*conn, s, d) {
@@ -131,7 +127,12 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn,
         } else {
             // can't find record of previous search; perform for the first time
             let path = links.bfs(s,d);
-            cache::insert_path(&conn, path.clone());    // TODO: kill the clone
+            if let Some(len) = path.size() {
+                if len >= CACHEWORTHY_LENGTH {
+                    // TODO: kill the clone
+                    cache::insert_path(&conn, path.clone());
+                }
+            }
             PathRes::from_path(path, links.get_links())
         }
     } else {
