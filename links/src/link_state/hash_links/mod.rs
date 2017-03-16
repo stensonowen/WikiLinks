@@ -8,7 +8,6 @@ use super::Entry;
 use web::Node;
 
 use std::path::{self, PathBuf};
-use std::collections::HashMap;
 
 mod bfs;
 
@@ -78,12 +77,12 @@ impl HashLinks {
     }
     pub fn lookup_title<'a>(&'a self, title: &'a str) -> Node<'a> {
         match self.titles.get(title) {
-            Some(&TitleLookup::Orig(id)) => Node::Found(id, title),
+            Some(&TitleLookup::Orig(id)) |
             Some(&TitleLookup::Caps(id)) => Node::Found(id, title),
             None => {
                 let caps_ti = title.to_uppercase();
                 match self.titles.get(&caps_ti) {
-                    Some(&TitleLookup::Orig(id)) => Node::Found(id, title), // return None?
+                    Some(&TitleLookup::Orig(id)) | // return None?
                     Some(&TitleLookup::Caps(id)) => Node::Found(id, title),
                     None => Node::Unknown(title),
                 }
@@ -120,7 +119,7 @@ impl LinkState<HashLinks> {
              args.value_of("redirect.sql"), 
              args.value_of("pagelinks.sql")) 
         {
-            LinkState::new(PathBuf::from(p), PathBuf::from(r), PathBuf::from(l))
+            LinkState::new(path::Path::new(p), path::Path::new(r), path::Path::new(l))
                 .into()
         } else if let Some(m) = args.value_of("import_links") {
             LinkState::<LinkData>::import(PathBuf::from(m), new_logger()).unwrap()

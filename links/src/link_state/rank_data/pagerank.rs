@@ -67,8 +67,8 @@ impl<'a> Graph<'a> {
             FnvHashMap::with_capacity_and_hasher(self.ranks.capacity(), Default::default());
         //distribute pagerank
         for (addr,page) in self.pages {
-            let pr = self.ranks.get(&addr).unwrap();
-            if page.children.len() == 0 {
+            let pr = self.ranks[addr];
+            if page.children.is_empty() {
                 //equally distribute our pagerank to every page
                 let n = self.pages.len() as f64;
                 for &a in self.pages.keys() {
@@ -87,7 +87,7 @@ impl<'a> Graph<'a> {
 
         //identify the greatest change that is being made to self.ranks
         let max_change = self.ranks.iter().fold(0f64, |max_change, (addr,&rank)| {
-            max_change.max((rank - new_ranks.get(addr).unwrap()).abs())
+            max_change.max((rank - new_ranks[addr]).abs())
         });
         self.ranks = new_ranks;
         max_change

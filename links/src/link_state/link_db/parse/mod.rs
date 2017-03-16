@@ -4,7 +4,7 @@ use slog;
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 use std::borrow::Cow;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 mod regexes;
 pub mod database;
@@ -25,27 +25,27 @@ use self::database::*;
 const BUFFER_SIZE: usize = 1_250_000;
 
 
-pub fn populate_db(page_sql:   PathBuf,
-                   redirs_sql: PathBuf,
-                   links_sql:  PathBuf,
+pub fn populate_db(page_sql:   &Path,
+                   redirs_sql: &Path,
+                   links_sql:  &Path,
                    log: slog::Logger) -> Database {
 
     let mut db = Database::new(log);
-    let pages = parse_generic(&page_sql,
+    let pages = parse_generic(page_sql,
                               &regexes::pages_regex(),
                               &mut db,
                               |db: &mut Database, data: regex::Captures| {
                                   db.add_page(&data)
                               });
     db.log(format!("Number of page entries: {} / {}", pages.0, pages.1));
-    let redirs = parse_generic(&redirs_sql,
+    let redirs = parse_generic(redirs_sql,
                               &regexes::redirect_regex(),
                               &mut db,
                               |db: &mut Database, data: regex::Captures| {
                                   db.add_redirect(&data)
                               });
     db.log(format!("Number of redirects: {} / {}", redirs.0, redirs.1));
-    let links = parse_generic(&links_sql,
+    let links = parse_generic(links_sql,
                               &regexes::pagelinks_regex(),
                               &mut db,
                               |db: &mut Database, data: regex::Captures| {
@@ -65,7 +65,7 @@ fn parse_generic<F>(filename: &Path, re: &str, db: &mut Database, action: F) -> 
     println!("Opening `{:?}`", filename);
     let f = File::open(filename).unwrap();
     let mut reader = BufReader::new(f);
-    let re = regex::Regex::new(&re).unwrap();
+    let re = regex::Regex::new(re).unwrap();
     let mut buffer = Vec::<u8>::with_capacity(BUFFER_SIZE);
     let mut success = 0u64;
     let mut attempts = 0u64;

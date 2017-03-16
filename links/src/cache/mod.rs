@@ -76,10 +76,10 @@ pub fn get_cache<'a>(conn: &PgConnection, links: &'a FnvHashMap<u32,Entry>,
     use self::schema::paths::dsl as path_row;
     use super::web::CacheSort::*;
     let n = num as i64;
-    let rows_res: Result<Vec<DbPath>,diesel::result::Error> = match sort {
-        &Recent => paths.order(path_row::timestamp.desc()).limit(n).load(conn),
-        &Popular => paths.order(path_row::count.desc()).limit(n).load(conn),
-        &Length => paths.order(path_row::result.desc()).limit(n).load(conn),
+    let rows_res: Result<Vec<DbPath>,diesel::result::Error> = match *sort {
+        Recent => paths.order(path_row::timestamp.desc()).limit(n).load(conn),
+        Popular => paths.order(path_row::count.desc()).limit(n).load(conn),
+        Length => paths.order(path_row::result.desc()).limit(n).load(conn),
         /*&Random => {
             extern crate rand;
             let r = rand::random::<u32>() % 53_000_000;
@@ -93,7 +93,7 @@ pub fn get_cache<'a>(conn: &PgConnection, links: &'a FnvHashMap<u32,Entry>,
         Err(_) => return None,
     };
     let mut cache = Vec::<(&str, i8, &str)>::with_capacity(num as usize);
-    for db_path in rows.into_iter() {
+    for db_path in rows {
         let src = db_path.src as u32;
         let dst = db_path.dst as u32;
         let res = db_path.result;
@@ -183,7 +183,7 @@ fn insert_title(conn: &PgConnection, t: String, n: u32) -> DbAddr {
 pub fn populate_addrs(conn: &PgConnection, 
                   links: &FnvHashMap<u32,Entry>,
                   //ranks: &FnvHashMap<u32,f64>)
-                  ranks: &Vec<(u32,f64)>)
+                  ranks: &[(u32,f64)])
                   
     -> Result<(),diesel::result::Error>
 {

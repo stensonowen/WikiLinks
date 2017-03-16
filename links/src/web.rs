@@ -60,8 +60,8 @@ pub enum Node<'a> {
 
 impl<'a> Node<'a> {
     pub fn valid(&self) -> bool {
-        match self {
-            &Node::Found(..) => true,
+        match *self {
+            Node::Found(..) => true,
             _ => false,
         }
     }
@@ -81,7 +81,7 @@ impl<'a> PathRes<'a> {
     pub fn from_db_path(db_p: DbPath, links: &fnv::FnvHashMap<u32,Entry>) -> PathRes {
         match db_p.result {
             0           => PathRes::NoSuchPath,
-            i if i < 0  => PathRes::Terminated((-1*i) as u32),
+            i if i < 0  => PathRes::Terminated((-i) as u32),
             _ => {
                 PathRes::Success(db_p.path.into_iter().map(|i| {
                     // string manip not super efficient
@@ -151,21 +151,20 @@ impl<'a> SearchParams<'a> {
     }
 }
 
-fn preprocess<'a>(input: &'a str) -> Cow<'a, str> {
+fn preprocess(input: &str) -> Cow<str> {
     // pluses become underscores
     // %20Bs become pluses
     let spaces = if input.contains('+') {
-        Cow::Owned(input.replace('+', &"_"))
+        Cow::Owned(input.replace('+', "_"))
     } else {
         Cow::Borrowed(input)
     };
-    let percents = if input.contains('%') {
+    if input.contains('%') {
         Cow::Owned(
             URI::percent_decode_lossy(
                 spaces.as_ref().as_bytes())
             .to_string())
     } else {
         spaces
-    };
-    percents
+    }
 }

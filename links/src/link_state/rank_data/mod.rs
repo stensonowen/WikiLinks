@@ -7,6 +7,7 @@ use std::cmp::Ordering;
 use std::collections::{HashSet, HashMap};
 use std::fs::File;
 use std::io::{Read, Write};
+use std::f64;
 
 use super::{LinkState, LinkData, RankData};
 use super::Entry;
@@ -235,15 +236,16 @@ impl LinkState<RankData> {
         Ok(())
     }
     */
-    fn pretty_ranks(&self, ranks: &Vec<(u32,f64)>, ranks_path: &Path) -> Result<(),csv::Error> {
+    fn pretty_ranks(&self, ranks: &[(u32,f64)], ranks_path: &Path) -> Result<(),csv::Error> {
         //sort greatest-to-least
         // (RANK, ID, TITLE)
-        let mut sorted_ranks = ranks.clone();
+        let mut sorted_ranks = ranks.to_vec();
         sorted_ranks.sort_by(|&(a_i,a_r),&(b_i,b_r)| {
             //sort by floats, which Ord does not provide
             assert!(!a_r.is_nan(), "Page {} had a NaN rank", a_i);
             assert!(!b_r.is_nan(), "Page {} had a NaN rank", b_i);
-            match (a_r > b_r, a_r == b_r) {
+            //match (a_r > b_r, a_r == b_r) {
+            match (a_r > b_r, (a_r - b_r).abs() < f64::EPSILON) {
                 (true, _) => Ordering::Less,
                 (_, true) => Ordering::Equal,
                 _         => Ordering::Greater,
@@ -253,16 +255,16 @@ impl LinkState<RankData> {
         // write using interesting csv data
         let mut csv_w = csv::Writer::from_file(ranks_path)?;
         for (id,rank) in sorted_ranks {
-            let ref title = self.state.links.get(&id).unwrap().title;
+            let title = &self.state.links[&id].title;
             csv_w.encode((rank,id,title))?;
         }
         Ok(())
     }
     pub fn export(&mut self, path: &PathBuf) -> Result<(),csv::Error> {
         let manifest = MdManifest {
-            titles: Some(append_to_pathbuf(&path, "_titles", "csv")),
+            titles: Some(append_to_pathbuf(path, "_titles", "csv")),
             ranks: if self.state.ranks.is_some() {
-                Some(append_to_pathbuf(&path, "_ranks", "csv"))
+                Some(append_to_pathbuf(path, "_ranks", "csv"))
             } else {
                 None
             }
@@ -293,7 +295,7 @@ impl LinkState<RankData> {
             //    Self::pretty_ranks
             //};
             // lol is this gonnna work?
-            ranks_fn(&self, ranks, &manifest.ranks.unwrap())?;
+            ranks_fn(self, ranks, &manifest.ranks.unwrap())?;
         }
         Ok(())
     }

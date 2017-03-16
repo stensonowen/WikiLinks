@@ -30,7 +30,7 @@ impl From<Path> for DbPath {
             result: match p.path {
                 Ok(ref v) => v.len() as i16,
                 Err(PathError::NoSuchPath) => 0,
-                Err(PathError::Terminated(i)) => -1*i as i16,
+                Err(PathError::Terminated(i)) => -(i as i16),
             },
             path: match p.path {
                 Ok(v) => v.into_iter().map(|i| i as i32).collect(),

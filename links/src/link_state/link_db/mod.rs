@@ -1,4 +1,4 @@
-use std::path::{PathBuf};
+use std::path::Path;
 use std::iter;
 
 use super::link_data::IndexedEntry;
@@ -7,7 +7,7 @@ use super::{LinkState, LinkDb, new_logger};
 pub mod parse;
 
 impl LinkState<LinkDb> {
-    pub fn new(pages_db: PathBuf, redir_db: PathBuf, links_db: PathBuf) -> Self {
+    pub fn new(pages_db: &Path, redir_db: &Path, links_db: &Path) -> Self {
         let root_log = new_logger();
         let db_log = root_log.new(o!(
                 "pages" => format!("{}", pages_db.display()), 

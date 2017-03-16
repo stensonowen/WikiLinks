@@ -89,8 +89,8 @@ impl HashLinks {
         for &i in prev_line {
             // link_start
             let pool = match direction {
-                Up => &self.links.get(&i).unwrap().parents,
-                Down => &self.links.get(&i).unwrap().children,
+                Up => &self.links[&i].parents,
+                Down => &self.links[&i].children,
             };
             for &j in pool {
                 // link_end
