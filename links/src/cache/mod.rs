@@ -19,9 +19,9 @@ use std::ops::Deref;
 use std::env;
 
 pub mod models;
+pub mod stack_cache;
 mod schema;
 
-const PREVIEW_SIZE: u32 = 16;
 
 
 // NOTE: most of the db state stuff stolen from Rocket 'todo' example

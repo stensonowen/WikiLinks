@@ -7,6 +7,7 @@ use link_state::Entry;
 use link_state::hash_links::{Path, PathError};
 use rocket::http::uri::URI;
 
+use super::cache::models::DbPath;
 use super::WIKI_URL_FMT;
 
 #[derive(Debug, Serialize)]
@@ -49,7 +50,6 @@ impl<'a> Context<'a> {
 }
 
 
-
 #[derive(Debug, Serialize)]
 pub enum Node<'a> {
     Found(u32, &'a str),
@@ -76,7 +76,6 @@ pub enum PathRes<'a> {
     NotRun,
 }
 
-use super::cache::models::DbPath;
 impl<'a> PathRes<'a> {
     pub fn from_db_path(db_p: DbPath, links: &fnv::FnvHashMap<u32,Entry>) -> PathRes {
         match db_p.result {
