@@ -18,9 +18,11 @@ use links::link_state::{LinkState, HashLinks};
 
 use std::str::FromStr;
 use links::cache::{self, get_cache};
+use links::cache::stack_cache::StackCache;
 use links::web::{self, Context, CacheSort, SortParam, PathRes, Node};
 //use links::cache::{self, lookup_addr};
 type SharedLinks<'a> = State<'a, HashLinks>;
+type SharedCache<'a, 'b> = State<'a, StackCache<'b>>;
 
 const DEFAULT_SORT: CacheSort = CacheSort::Recent;
 const DEFAULT_SIZE: u32 = 15;
@@ -79,7 +81,9 @@ fn argv<'a>() -> clap::ArgMatches<'a> {
 
 
 #[get("/")]
-fn index(conn: db::Conn, links: SharedLinks) -> Template {
+//fn index(conn: db::Conn, links: SharedLinks, cache: SharedCache) -> Template {
+//fn index(conn: db::Conn, links: SharedLinks) -> Template {
+fn index<'r>(conn: db::Conn, links: SharedLinks, s: State<'r, StackCache<'r>>) -> Template {
     let sort = DEFAULT_SORT;
     let cache = get_cache(&conn, links.get_links(), &sort, DEFAULT_SIZE);
     let context = Context::from_cache(sort, cache);
@@ -165,9 +169,12 @@ fn main() {
     //cache::populate_addrs(&conn, hl_state.get_links(), hl_state.get_ranks()).unwrap();
     let hl = hl_state.extract();
 
+    let cache = StackCache::blank();
+
     rocket::ignite()
         .manage(db::init_pool())
         .manage(hl)
+        .manage(cache)
         .mount("/", routes![index, bfs_empty, bfs_sort, bfs_search])
         .launch();
 

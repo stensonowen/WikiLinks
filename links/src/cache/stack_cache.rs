@@ -1,54 +1,63 @@
-
-use std::collections::{HashSet, HashMap, LinkedList, BTreeSet, BinaryHeap, VecDeque};
+use std::collections::{HashSet, BinaryHeap, VecDeque};
 use std::cmp::{Ord, PartialOrd, Ordering};
 use std::sync::{Mutex, RwLock};
 
 const CACHE_SIZE: usize = 16;
 
+#[derive(Debug)]
 pub struct StackCache<'a> {
+    // very commonly updated
     recent: Mutex<RecentCache<'a>>,
 
     // Very common read op: check smallest length
     // Quite common: random insert, pop last element
-    length: RwLock<LengthCache<'a>>,
+    length: RwLock<LengthCache>,
 }
 
 impl<'a> StackCache<'a> {
-    //fn insert_and_get_recent(&'a mut self, elem: CacheElem<'a>) -> &'a [CacheElem<'a>] {
-    //fn insert(&'a mut self, elem: CacheElem<'a>) {
-    fn insert(&'a mut self, elem: CacheElem<'a>) {
+    pub fn blank() -> Self {
+        StackCache {
+            recent: Mutex::new(RecentCache::new()),
+            length: RwLock::new(LengthCache::new()),
+        }
+    }
+    fn insert(&'a mut self, elem: CacheElem) {
+        // if pertinent, update long list
+        let update_len: bool = match self.length.read() {
+            // uhhh, careful refactoring this that rlock and wlock don't overlap
+            Ok(r) => r.should_insert(&elem),
+            Err(_) => false,
+        };
+        if update_len {
+            if let Ok(mut w) = self.length.write() {
+                w.insert_elem(elem.clone());
+            }
+        }
         // always (try to) update recent list
         if let Ok(r) = self.recent.get_mut() {
             r.insert_elem(elem);
         }
-        // if pertinent, update long list
     }
-    /*
-    fn update_and_get_mut(&'a mut self, elem: CacheElem<'a>) -> Vec<CacheElem<'a>> {
-        if let Ok(r) = self.recent.get_mut() {
-            r.insert_elem(elem)
-        }
-        if let Ok(r) = self.recent.lock() {
-            //r.get().clone().to_vec()
-            vec![]
-        } else {
-            vec![]
-        }
-    }*/
-    //fn insert_and_get_recent(&'a mut self, elem: CacheElem<'a>) -> Vec<CacheElem<'a>> {
-    //fn get_recent(&'a mut self) -> Vec<CacheElem<'a>> {
-    fn get_recent(&'a self) -> Vec<CacheElem<'a>> {
+    fn get_recent(&self) -> Vec<CacheElem> {
         let r = self.recent.lock().unwrap();
-        //r.get().to_vec()
-        unimplemented!()
+        r.get().to_vec()
     }
-    //fn get_longest(&'a self) -> &'a [&'a CacheElem<'a>] {
-    fn get_longest(&'a self) -> Vec<&'a CacheElem<'a>> {
-        let l = self.length.read().unwrap();
-        l.get().to_vec()
+    fn get_longest(&mut self) -> Vec<CacheElem> {
+        if let Some(l) = self.try_get_longest() {
+            l
+        } else {
+            self.rebuild_longest()
+        }
+    }
+    fn try_get_longest(&self) -> Option<Vec<CacheElem>> {
+        self.length.read().unwrap().cache()
+    }
+    fn rebuild_longest(&mut self) -> Vec<CacheElem> {
+        self.length.write().unwrap().get().to_vec()
     }
 }
 
+#[derive(Debug)]
 struct RecentCache<'a> {
     // keep track of all cached elements that appeared most recently
     // every page load will require 
@@ -61,19 +70,13 @@ struct RecentCache<'a> {
     // Most common: pop from the top and push to the bottom
     // Somewhat common: move around
     
-    //list: LinkedList<CacheElem<'a>>,
-    //set:  HashSet<&'a CacheElem<'a>>,
-    //temp: Option<Vec<&'a CacheElem<'a>>>,
-
-    queue: VecDeque<CacheElem<'a>>,
+    queue: VecDeque<CacheElem>,
     // rely on VecDeque.contains() every iteration? Or use a redundant hashset?
-    //set:   HashSet<&'a CacheElem<'a>>,
-    contents:   HashSet<&'a CacheElem<'a>>,
-    //contents: HashMap<(u32,u32), &'a CacheElem<'a>>,
-    //contents: HashMap<CacheElem<'a>, &'a CacheElem<'a>>,
+    contents:   HashSet<&'a CacheElem>,
 }
 
-struct LengthCache<'a> {
+#[derive(Debug)]
+struct LengthCache {
     // keep track of the longest searches we've seen
     // every page load will require
     //  1) lookup of the shortest value contained (can be worked around)
@@ -83,11 +86,17 @@ struct LengthCache<'a> {
     //  2) pop the shortest element from the list
 
     // handle efficient lookups/inserts/etc.
-    heap: BinaryHeap<CacheElem<'a>>,
-    temp: Option<Vec<&'a CacheElem<'a>>>,
+    heap: BinaryHeap<CacheElem>,
+    temp: Option<Vec<CacheElem>>,
 }
 
-impl<'a> LengthCache<'a> {
+impl LengthCache {
+    fn new() -> Self {
+        LengthCache {
+            heap: BinaryHeap::with_capacity(CACHE_SIZE),
+            temp: None,
+        }
+    }
     fn min_len(&self) -> Option<u8> {
         self.heap.peek().map(|e| e.len)
     }
@@ -100,21 +109,21 @@ impl<'a> LengthCache<'a> {
             true 
         }
     }
-    pub fn get(&'a mut self) -> &[&CacheElem] {
+    fn get(&mut self) -> Vec<CacheElem> {
         match self.temp {
-            Some(ref v) => v,
+            Some(ref v) => v.clone(),
             None => self.rebuild_cache(),
         }
     }
-    fn rebuild_cache(&'a mut self) -> &[&CacheElem] {
+    fn rebuild_cache(&mut self) -> Vec<CacheElem> {
         let iter = self.heap.iter();
-        self.temp = Some(iter.collect());
+        self.temp = Some(iter.map(|e| (*e).clone()).collect());
         match self.temp {
-            Some(ref v) => v,
+            Some(ref v) => v.clone(),
             None => unreachable!(),
         }
     }
-    fn insert_elem(&mut self, elem: CacheElem<'a>) {
+    fn insert_elem(&mut self, elem: CacheElem) {
         // ONLY call iff should_insert
         self.temp = None;
         self.heap.push(elem);
@@ -122,20 +131,30 @@ impl<'a> LengthCache<'a> {
             self.heap.pop();
         }
     }
+    fn cache(&self) -> Option<Vec<CacheElem>> {
+        if let Some(ref l) = self.temp {
+            Some(l.clone())
+        } else {
+            None
+        }
+    }
 }
 
 impl<'a> RecentCache<'a> {
-    //fn get(&self) -> &[CacheElem<'a>] {   // elides to what?
-    //pub fn get(&'a self) -> &'a [CacheElem<'a>] {
-    pub fn get(&self) -> &[CacheElem] {
+    fn new() -> Self {
+        RecentCache {
+            queue: VecDeque::with_capacity(CACHE_SIZE),
+            contents: HashSet::with_capacity(CACHE_SIZE),
+        }
+    }
+    fn get(&self) -> &[CacheElem] {
         // we never `push_front()`, so the contents will always be in the first array
         // I think
         let slices = self.queue.as_slices();
         assert!(slices.1.is_empty());
         slices.0
     }
-    //pub fn insert_elem(&'a mut self, elem: CacheElem<'a>) {
-    pub fn insert_elem(&'a mut self, elem: CacheElem<'a>) {
+    fn insert_elem(&'a mut self, elem: CacheElem) {
         // TODO: if elem is already present, move it to the from of the queue??
         // for now, never remove elements except from the back
         if self.contents.contains(&elem) {
@@ -155,73 +174,32 @@ impl<'a> RecentCache<'a> {
     }
 }
 
-/*
-impl<'a> StackCache<'a> {
-    fn blank() -> Self {
-        StackCache {
-            recent_ll: LinkedList::new(),
-            recent_hs: HashSet::new(),
-            recent_tmp:None,
-            length: Vec::new(),
-        }
-    }
-
-    pub fn get_recent(&'a mut self) -> &Vec<&'a CacheElem<'a>> {
-        // get a reference to the `recent` cache
-        // rebuild it iff necessary
-        if let Some(ref v) = self.recent_tmp {
-            v
-        } else {
-            self.rebuild_recent_cache()
-        }
-    }
-    pub fn get_length(&'a mut self) -> &Vec<CacheElem<'a>> {
-        &self.length
-    }
-
-    fn insert_long(&mut self, elem: CacheElem<'a>) {
-        // remove the shortest element
-        // only do this if it's necessary
-        // only do this if it's not already in there
-
-    }
-
-    fn rebuild_recent_cache(&'a mut self) -> &Vec<&'a CacheElem<'a>> {
-        let iter = self.recent_ll.iter();
-        self.recent_tmp = Some(iter.collect());
-        match self.recent_tmp {
-            Some(ref v) => v,
-            None => unreachable!()  // uhhh
-        }
-    }
-
-}
-*/
-
 #[derive(Debug, Serialize, PartialEq, Eq, Hash, Clone)]
-pub struct CacheElem<'a> {
+pub struct CacheElem {
     // TODO: will LLVM optimize equality comparison to compare numbers first?
     // or should we implement PartialEq ourselves?
-    src: &'a str,
-    dst: &'a str,
+    src: String,
+    dst: String,
+    //src: &'a str,
+    //dst: &'a str,
     len: u8,
     // don't bother to store inconclusive searches
 }
 
-impl<'a> PartialOrd for CacheElem<'a> {
+impl PartialOrd for CacheElem {
     fn partial_cmp(&self, othr: &Self) -> Option<Ordering> {
         Some(self.cmp(othr))
     }
 }
 
-impl<'a> Ord for CacheElem<'a> {
+impl Ord for CacheElem {
     fn cmp(&self, othr: &Self) -> Ordering {
         // Sort by length first
         // Longer sizes should be 'less', i.e. first in BTree
         if self.len != othr.len {
             self.len.cmp(&othr.len).reverse()
         } else {
-            (self.src, self.dst).cmp(&(othr.src, othr.dst)).reverse()
+            (&self.src, &self.dst).cmp(&(&othr.src, &othr.dst)).reverse()
         }
     }
 }
