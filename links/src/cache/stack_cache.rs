@@ -1,27 +1,34 @@
 use std::collections::{HashSet, BinaryHeap, VecDeque};
 use std::cmp::{Ord, PartialOrd, Ordering};
 use std::sync::{Mutex, RwLock};
+use super::CacheSort;
 
 const CACHE_SIZE: usize = 16;
 
 #[derive(Debug)]
-pub struct StackCache<'a> {
+pub struct StackCache {
     // very commonly updated
-    recent: Mutex<RecentCache<'a>>,
+    recent: Mutex<RecentCache>,
 
     // Very common read op: check smallest length
     // Quite common: random insert, pop last element
     length: RwLock<LengthCache>,
 }
 
-impl<'a> StackCache<'a> {
+impl StackCache {
     pub fn blank() -> Self {
         StackCache {
             recent: Mutex::new(RecentCache::new()),
             length: RwLock::new(LengthCache::new()),
         }
     }
-    fn insert(&'a mut self, elem: CacheElem) {
+    pub fn get(&mut self, sort: &CacheSort) -> Vec<CacheElem> {
+        match *sort {
+            CacheSort::Recent => self.get_recent(),
+            CacheSort::Length => self.get_longest(),
+        }
+    }
+    fn insert(&mut self, elem: CacheElem) {
         // if pertinent, update long list
         let update_len: bool = match self.length.read() {
             // uhhh, careful refactoring this that rlock and wlock don't overlap
@@ -58,7 +65,7 @@ impl<'a> StackCache<'a> {
 }
 
 #[derive(Debug)]
-struct RecentCache<'a> {
+struct RecentCache {
     // keep track of all cached elements that appeared most recently
     // every page load will require 
     //  1) look up a search result in this collection
@@ -72,7 +79,7 @@ struct RecentCache<'a> {
     
     queue: VecDeque<CacheElem>,
     // rely on VecDeque.contains() every iteration? Or use a redundant hashset?
-    contents:   HashSet<&'a CacheElem>,
+    contents:   HashSet<CacheElem>,
 }
 
 #[derive(Debug)]
@@ -140,7 +147,7 @@ impl LengthCache {
     }
 }
 
-impl<'a> RecentCache<'a> {
+impl RecentCache {
     fn new() -> Self {
         RecentCache {
             queue: VecDeque::with_capacity(CACHE_SIZE),
@@ -154,7 +161,7 @@ impl<'a> RecentCache<'a> {
         assert!(slices.1.is_empty());
         slices.0
     }
-    fn insert_elem(&'a mut self, elem: CacheElem) {
+    fn insert_elem(&mut self, elem: CacheElem) {
         // TODO: if elem is already present, move it to the from of the queue??
         // for now, never remove elements except from the back
         if self.contents.contains(&elem) {
@@ -169,7 +176,7 @@ impl<'a> RecentCache<'a> {
         }
         let index = self.queue.len();
         self.queue.push_back(elem);
-        self.contents.insert(self.queue.get(index).unwrap());
+        self.contents.insert(self.queue.get(index).unwrap().clone());
         //assert_eq!(Some(&elem), self.queue.get(index));
     }
 }

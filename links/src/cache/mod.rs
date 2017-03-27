@@ -78,7 +78,7 @@ pub fn get_cache<'a>(conn: &PgConnection, links: &'a FnvHashMap<u32,Entry>,
     let n = num as i64;
     let rows_res: Result<Vec<DbPath>,diesel::result::Error> = match *sort {
         Recent => paths.order(path_row::timestamp.desc()).limit(n).load(conn),
-        Popular => paths.order(path_row::count.desc()).limit(n).load(conn),
+        //Popular => paths.order(path_row::count.desc()).limit(n).load(conn),
         Length => paths.order(path_row::result.desc()).limit(n).load(conn),
         /*&Random => {
             extern crate rand;

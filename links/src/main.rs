@@ -20,9 +20,13 @@ use std::str::FromStr;
 use links::cache::{self, get_cache};
 use links::cache::stack_cache::StackCache;
 use links::web::{self, Context, CacheSort, SortParam, PathRes, Node};
+
+use std::sync::{Arc, RwLock, Mutex};
+
 //use links::cache::{self, lookup_addr};
 type SharedLinks<'a> = State<'a, HashLinks>;
-type SharedCache<'a, 'b> = State<'a, StackCache<'b>>;
+//type SharedCache<'a, 'b> = State<'a, StackCache<'b>>;
+type SharedCache<'a> = State<'a, StackCache>;
 
 const DEFAULT_SORT: CacheSort = CacheSort::Recent;
 const DEFAULT_SIZE: u32 = 15;
@@ -81,19 +85,20 @@ fn argv<'a>() -> clap::ArgMatches<'a> {
 
 
 #[get("/")]
-//fn index(conn: db::Conn, links: SharedLinks, cache: SharedCache) -> Template {
-//fn index(conn: db::Conn, links: SharedLinks) -> Template {
-fn index<'r>(conn: db::Conn, links: SharedLinks, s: State<'r, StackCache<'r>>) -> Template {
+fn index(conn: db::Conn, links: SharedLinks, cache: SharedCache) -> Template {
     let sort = DEFAULT_SORT;
-    let cache = get_cache(&conn, links.get_links(), &sort, DEFAULT_SIZE);
-    let context = Context::from_cache(sort, cache);
+    //let cache = get_cache(&conn, links.get_links(), &sort, DEFAULT_SIZE);
+    //let history = cache.get(&sort);
+    //let context = Context::from_cache(sort, Some(history));
+    let context = Context::from_cache(sort, None);
     Template::render("bfs", &context)
 }
 
 #[get("/bfs", rank = 3)]
 fn bfs_empty(conn: db::Conn, links: SharedLinks) -> Template {
     let cache = get_cache(&conn, links.get_links(), &DEFAULT_SORT, DEFAULT_SIZE);
-    let context = Context::from_cache(DEFAULT_SORT, cache);
+    //let context = Context::from_cache(DEFAULT_SORT, cache);
+    let context = Context::from_cache(DEFAULT_SORT, None);
     Template::render("bfs", &context)
 }
 
@@ -104,7 +109,8 @@ fn bfs_sort(sort: SortParam, conn: db::Conn, links: SharedLinks) -> Template {
         None => DEFAULT_SORT,
     };
     let cache = get_cache(&conn, links.get_links(), &sort, DEFAULT_SIZE);
-    let context = Context::from_cache(sort, cache);
+    //let context = Context::from_cache(sort, cache);
+    let context = Context::from_cache(sort, None);
     Template::render("bfs", &context)
 }
 
@@ -147,18 +153,28 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn,
         Some(s) => CacheSort::from_str(s).unwrap_or(DEFAULT_SORT),
         None => DEFAULT_SORT,
     };
-    let cache = get_cache(&conn, links.get_links(), &sort, DEFAULT_SIZE);
+    //let cache = get_cache(&conn, links.get_links(), &sort, DEFAULT_SIZE);
     let context = Context {
         path:       path_res,
         src_search: src_n,
         dst_search: dst_n,
-        cache:      cache,
+        //cache:      cache,
+        cache:      None,
         cache_sort: sort,
     };
     //println!("Context: {:?}", context);
     Template::render("bfs", &context)
 }
 
+#[get("/foo")]
+fn foo(s: State<RwLock<i32>>) -> String {
+    //let t = s.read().unwrap();
+    //println!("{:?}", t);
+    let mut t = s.write().unwrap();
+    *t = 0;
+    println!("{:?}", t);
+    String::new()
+}
 
 fn main() {
     // get links hashmap
@@ -170,12 +186,14 @@ fn main() {
     let hl = hl_state.extract();
 
     let cache = StackCache::blank();
+    let x = RwLock::new(42);
 
     rocket::ignite()
         .manage(db::init_pool())
         .manage(hl)
         .manage(cache)
-        .mount("/", routes![index, bfs_empty, bfs_sort, bfs_search])
+        .manage(x)
+        .mount("/", routes![index, bfs_empty, bfs_sort, bfs_search, foo])
         .launch();
 
 }
