@@ -21,7 +21,7 @@ impl NewCacheOuter {
     pub fn get(&self) -> Vec<CacheElem> {
         let rfrn = self.0.clone();
         let lock = rfrn.lock().unwrap();
-        lock.get().to_vec()
+        lock.get()
     }
     pub fn insert_elem(&self, elem: CacheElem) {
         let rfrn = self.0.clone();
@@ -56,12 +56,17 @@ impl NewCacheInner {
             contents: HashSet::with_capacity(CACHE_SIZE),
         }
     }
-    fn get(&self) -> &[CacheElem] {
-        // we never `push_front()`, so the contents will always be in the first array
-        // I think
+    fn get(&self) -> Vec<CacheElem> {
         let slices = self.queue.as_slices();
-        assert!(slices.1.is_empty());
-        slices.0
+        if slices.1.is_empty() {
+            slices.0.to_vec()
+        } else {
+            // using push_front and pop_back makes this pretty common, unfortunately
+            // but it's not worth the impaired readability of reversing inside template
+            let mut v = slices.0.to_vec();
+            v.extend_from_slice(slices.1);
+            v
+        }
     }
     fn insert_elem(&mut self, elem: CacheElem) {
         // TODO: if elem is already present, move it to the from of the queue??
@@ -73,11 +78,11 @@ impl NewCacheInner {
         }
         if self.queue.len() >= CACHE_SIZE {
             // if adding an element will make the queue too long, remove the least recent
-            let rem = self.queue.pop_front().unwrap();
+            let rem = self.queue.pop_back().unwrap();
             self.contents.remove(&rem);
         }
         let index = self.queue.len();
-        self.queue.push_back(elem);
+        self.queue.push_front(elem);
         self.contents.insert(self.queue.get(index).unwrap().clone());
         //assert_eq!(Some(&elem), self.queue.get(index));
     }

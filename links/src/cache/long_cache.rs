@@ -90,7 +90,7 @@ impl LongCacheInner {
     }
     fn rebuild_cache(&mut self) -> Vec<CacheElem> {
         let iter = self.heap.iter();
-        self.temp = Some(iter.map(|e| (*e).clone()).collect());
+        self.temp = Some(iter.rev().map(|e| (*e).clone()).collect());
         match self.temp {
             Some(ref v) => v.clone(),
             None => unreachable!(),
@@ -99,6 +99,12 @@ impl LongCacheInner {
     fn insert_elem(&mut self, elem: CacheElem) {
         // ONLY call iff should_insert
         assert!(self.should_insert(&elem));
+        // Linear search: only add iff necessary
+        // TODO: change data structure so this is faster?
+        // this op is pretty uncommon, and there are max ~15 elements
+        if self.heap.iter().any(|e| e == &elem) {
+            return;
+        }
         self.temp = None;
         self.heap.push(elem);
         if self.heap.len() > CACHE_SIZE {
