@@ -19,9 +19,13 @@ use std::ops::Deref;
 use std::env;
 
 pub mod models;
-pub mod stack_cache;
+//pub mod stack_cache;
+pub mod cache_elem;
+pub mod long_cache;
+pub mod new_cache;
 mod schema;
 
+const CACHE_SIZE: usize = 15;
 
 
 // NOTE: most of the db state stuff stolen from Rocket 'todo' example

@@ -33,13 +33,6 @@
                         selected="selected"
                         {% endif %}
                 >Recent </option>
-
-                <option value="popular"
-                        {% if cache_sort == "Popular" %}
-                        selected="selected"
-                        {% endif %}
-                >Popular</option>
-
                 <option value="length"
                         {% if cache_sort == "Length" %}
                         selected="selected"
@@ -51,9 +44,9 @@
 
             {% for c in cache %}
                 <form action="/bfs" >
-                    <input name="src" value="{{c.0}}" readonly />
-                    &rarr; {{c.1}} &rarr;
-                    <input name="dst" value="{{c.2}}" readonly />
+                    <input name="src" value="{{c.src}}" readonly />
+                    &rarr; {{c.len}} &rarr;
+                    <input name="dst" value="{{c.dst}}" readonly />
                     <input type="submit" value="Submit"/>
                 </form> 
             {% endfor %}

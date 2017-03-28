@@ -17,19 +17,17 @@ use rocket::State;
 use links::link_state::{LinkState, HashLinks};
 
 use std::str::FromStr;
-use links::cache::{self, get_cache};
-use links::cache::stack_cache::StackCache;
+use links::cache;
+use cache::cache_elem::CacheElem;
+use cache::new_cache::NewCacheOuter;
+use cache::long_cache::LongCacheOuter;
 use links::web::{self, Context, CacheSort, SortParam, PathRes, Node};
 
-use std::sync::{Arc, RwLock, Mutex};
-
-//use links::cache::{self, lookup_addr};
-type SharedLinks<'a> = State<'a, HashLinks>;
-//type SharedCache<'a, 'b> = State<'a, StackCache<'b>>;
-type SharedCache<'a> = State<'a, StackCache>;
+type SharedLinks<'a>  = State<'a, HashLinks>;
+type NewCache<'a>  = State<'a, NewCacheOuter>;
+type LongCache<'a> = State<'a, LongCacheOuter>;
 
 const DEFAULT_SORT: CacheSort = CacheSort::Recent;
-const DEFAULT_SIZE: u32 = 15;
 const CACHEWORTHY_LENGTH: usize = 5;    // only cache searches longer than this
 
 use clap::Arg;
@@ -85,38 +83,42 @@ fn argv<'a>() -> clap::ArgMatches<'a> {
 
 
 #[get("/")]
-fn index(conn: db::Conn, links: SharedLinks, cache: SharedCache) -> Template {
-    let sort = DEFAULT_SORT;
-    //let cache = get_cache(&conn, links.get_links(), &sort, DEFAULT_SIZE);
-    //let history = cache.get(&sort);
-    //let context = Context::from_cache(sort, Some(history));
-    let context = Context::from_cache(sort, None);
+fn index(nc: NewCache, lc: LongCache) -> Template {
+    let cache = match DEFAULT_SORT {
+        CacheSort::Recent => nc.get(),
+        CacheSort::Length => lc.get(),
+    };
+    let context = Context::from_cache(DEFAULT_SORT, cache);
     Template::render("bfs", &context)
 }
 
 #[get("/bfs", rank = 3)]
-fn bfs_empty(conn: db::Conn, links: SharedLinks) -> Template {
-    let cache = get_cache(&conn, links.get_links(), &DEFAULT_SORT, DEFAULT_SIZE);
-    //let context = Context::from_cache(DEFAULT_SORT, cache);
-    let context = Context::from_cache(DEFAULT_SORT, None);
+fn bfs_empty(nc: NewCache, lc: LongCache) -> Template {
+    let cache = match DEFAULT_SORT {
+        CacheSort::Recent => nc.get(),
+        CacheSort::Length => lc.get(),
+    };
+    let context = Context::from_cache(DEFAULT_SORT, cache);
     Template::render("bfs", &context)
 }
 
 #[get("/bfs?<sort>", rank = 2)]
-fn bfs_sort(sort: SortParam, conn: db::Conn, links: SharedLinks) -> Template {
+fn bfs_sort(sort: SortParam, nc: NewCache, lc: LongCache) -> Template {
     let sort = match sort.by {
         Some(s) => CacheSort::from_str(s).unwrap_or(DEFAULT_SORT),
         None => DEFAULT_SORT,
     };
-    let cache = get_cache(&conn, links.get_links(), &sort, DEFAULT_SIZE);
-    //let context = Context::from_cache(sort, cache);
-    let context = Context::from_cache(sort, None);
+    let cache = match sort {
+        CacheSort::Recent => nc.get(),
+        CacheSort::Length => lc.get(),
+    };
+    let context = Context::from_cache(sort, cache);
     Template::render("bfs", &context)
 }
 
 #[get("/bfs?<search>", rank = 1)]
-fn bfs_search(search: web::SearchParams, conn: db::Conn, 
-                  links: SharedLinks) -> Template 
+fn bfs_search(search: web::SearchParams, conn: db::Conn, links: SharedLinks, 
+              nc: NewCache, lc: LongCache) -> Template 
 {
     let (src_f, dst_f) = search.fix();
     // TODO: translate empty query into random?
@@ -130,7 +132,11 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn,
     } else {
         links.lookup_title(dst_f.as_ref())
     };
-    let path_res = if let (&Node::Found(s,..), &Node::Found(d,..)) = (&src_n, &dst_n) {
+    let sort = match search.cache_sort {
+        Some(s) => CacheSort::from_str(s).unwrap_or(DEFAULT_SORT),
+        None => DEFAULT_SORT,
+    };
+    let path_res = if let (&Node::Found(s,ss), &Node::Found(d,ds)) = (&src_n, &dst_n) {
         if let Some(db_path) = cache::lookup_path(&*conn, s, d) {
             // return the path that was saved last time
             PathRes::from_db_path(db_path, links.get_links())
@@ -142,6 +148,11 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn,
                     // TODO: kill the clone
                     cache::insert_path(&conn, path.clone());
                 }
+                let ce = CacheElem::new(ss, ds, len);
+                if lc.should_insert(&ce) {
+                    lc.insert_elem(ce.clone());
+                }
+                nc.insert_elem(ce);
             }
             PathRes::from_path(path, links.get_links())
         }
@@ -149,23 +160,21 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn,
         // invalid request; search not run
         PathRes::NotRun
     };
-    let sort = match search.cache_sort {
-        Some(s) => CacheSort::from_str(s).unwrap_or(DEFAULT_SORT),
-        None => DEFAULT_SORT,
+    let cache = match sort {
+        CacheSort::Recent => nc.get(),
+        CacheSort::Length => lc.get(),
     };
-    //let cache = get_cache(&conn, links.get_links(), &sort, DEFAULT_SIZE);
     let context = Context {
         path:       path_res,
         src_search: src_n,
         dst_search: dst_n,
-        //cache:      cache,
-        cache:      None,
+        cache:      cache,
         cache_sort: sort,
     };
-    //println!("Context: {:?}", context);
     Template::render("bfs", &context)
 }
 
+/*
 #[get("/foo")]
 fn foo(s: State<RwLock<i32>>) -> String {
     //let t = s.read().unwrap();
@@ -175,6 +184,7 @@ fn foo(s: State<RwLock<i32>>) -> String {
     println!("{:?}", t);
     String::new()
 }
+*/
 
 fn main() {
     // get links hashmap
@@ -185,17 +195,20 @@ fn main() {
     //cache::populate_addrs(&conn, hl_state.get_links(), hl_state.get_ranks()).unwrap();
     let hl = hl_state.extract();
 
-    let cache = StackCache::blank();
-    let x = RwLock::new(42);
+    let lc = LongCacheOuter::new();
+    let nc = NewCacheOuter::new();
 
     rocket::ignite()
         .manage(db::init_pool())
         .manage(hl)
-        .manage(cache)
-        .manage(x)
-        .mount("/", routes![index, bfs_empty, bfs_sort, bfs_search, foo])
+        //.manage(cache)
+        //.manage(x)
+        .manage(lc)
+        .manage(nc)
+        .mount("/", routes![index, bfs_empty, bfs_sort, bfs_search, /*foo*/])
         .launch();
 
 }
+
 
 

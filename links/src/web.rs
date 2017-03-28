@@ -8,7 +8,8 @@ use link_state::hash_links::{Path, PathError};
 use rocket::http::uri::URI;
 
 use super::cache::models::DbPath;
-use super::cache::stack_cache::CacheElem;
+use super::cache::cache_elem::CacheElem;
+//use super::cache::stack_cache::CacheElem;
 use super::WIKI_URL_FMT;
 
 #[derive(Debug, Serialize)]
@@ -31,15 +32,13 @@ pub struct Context<'a> {
     pub path:       PathRes<'a>,
     pub src_search: Node<'a>,
     pub dst_search: Node<'a>,
-    //pub cache:      Option<Vec<(&'a str, i8, &'a str)>>,
-    pub cache:      Option<Vec<CacheElem>>,
+    pub cache:      Vec<CacheElem>,
     pub cache_sort: CacheSort,
 }
 
 
 impl<'a> Context<'a> {
-    //pub fn from_cache(sort: CacheSort, cache: Option<Vec<(&'a str, i8, &'a str)>>) 
-    pub fn from_cache(sort: CacheSort, cache: Option<Vec<CacheElem>>) -> Context<'a>
+    pub fn from_cache(sort: CacheSort, cache: Vec<CacheElem>) -> Context<'a>
 {
         Context {
             path:       PathRes::NotRun,
