@@ -18,6 +18,13 @@ impl LongCacheOuter {
     pub fn new() -> Self {
         LongCacheOuter(Arc::new(RwLock::new(LongCacheInner::new())))
     }
+    pub fn from(old: Vec<(&str, i8, &str)>) -> Self {
+        let new = Self::new();
+        for (s,l,d) in old {
+            new.insert_elem(CacheElem::new(s,d,l as usize));
+        }
+        new
+    }
     fn fast_get(&self) -> Option<Vec<CacheElem>> {
         // try to get the temporary cache
         let rfrn = self.0.clone();

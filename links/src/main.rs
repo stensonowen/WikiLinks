@@ -17,7 +17,7 @@ use rocket::State;
 use links::link_state::{LinkState, HashLinks};
 
 use std::str::FromStr;
-use links::cache;
+use links::cache::{self, get_cache, CACHE_SIZE};
 use cache::cache_elem::CacheElem;
 use cache::new_cache::NewCacheOuter;
 use cache::long_cache::LongCacheOuter;
@@ -195,8 +195,17 @@ fn main() {
     //cache::populate_addrs(&conn, hl_state.get_links(), hl_state.get_ranks()).unwrap();
     let hl = hl_state.extract();
 
-    let lc = LongCacheOuter::new();
-    let nc = NewCacheOuter::new();
+    let c = cache::establish_connection();
+    let lc = match get_cache(&c, hl.get_links(), &CacheSort::Length, CACHE_SIZE) {
+        Some(l) => LongCacheOuter::from(l),
+        None => LongCacheOuter::new(),
+    };
+    let nc = match get_cache(&c, hl.get_links(), &CacheSort::Recent, CACHE_SIZE) {
+        Some(n) => NewCacheOuter::from(n),
+        None => NewCacheOuter::new(),
+    };
+
+
 
     rocket::ignite()
         .manage(db::init_pool())

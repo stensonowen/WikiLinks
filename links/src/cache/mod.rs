@@ -19,13 +19,12 @@ use std::ops::Deref;
 use std::env;
 
 pub mod models;
-//pub mod stack_cache;
 pub mod cache_elem;
 pub mod long_cache;
 pub mod new_cache;
 mod schema;
 
-const CACHE_SIZE: usize = 15;
+pub const CACHE_SIZE: usize = 15;
 
 
 // NOTE: most of the db state stuff stolen from Rocket 'todo' example
@@ -73,7 +72,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for Conn {
 
 
 pub fn get_cache<'a>(conn: &PgConnection, links: &'a FnvHashMap<u32,Entry>,
-                     sort: &CacheSort, num: u32) 
+                     sort: &CacheSort, num: usize) 
         -> Option<Vec<(&'a str, i8, &'a str)>> 
 {
     use self::schema::paths::dsl::paths;
