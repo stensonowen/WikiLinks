@@ -14,12 +14,14 @@ impl LinkState<LinkDb> {
                 "redir" => format!("{}", redir_db.display()), 
                 "links" => format!("{}", links_db.display())) );
         let db = parse::populate_db(pages_db, redir_db, links_db, db_log);
+        let ti = db.title_table();
         LinkState { 
             size:       db.num_entries(),
             threads:    4,
             log:        root_log,
             state:      LinkDb {
                 db: db,
+                titles: ti,
             }
         }
     }

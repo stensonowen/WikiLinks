@@ -40,6 +40,49 @@ impl Database {
     pub fn num_entries(&self) -> usize {
         self.entries.len()
     }
+    pub fn title_table(&self) -> HashMap<String, u32> {
+        // user can look up multiple variants of a title and get back its page_id
+        //
+        // for now this is mandatory, but it shouldn't be all that expensive
+        //
+        // todo: remove metadata thing; instead replace rankdata w/ analyzedata
+        // all analysis is run by cmd-line args and done on this phase
+        // if no analysis is to be done, then this stage is empty (but still run)
+        // there should only be one dump file
+        
+        let mut starters = HashMap::with_capacity(self.entries.len());
+        let mut capitals = HashMap::new();
+        let mut cap_cols = HashSet::new();  // capital collisions; delete
+        for (&id, entry) in &self.entries {
+            let title = match *entry {
+                Entry::Page{ title: ref ti, .. } => ti,
+                Entry::Redirect{ title: ref ti, target: Some(x) } if id==x => ti,
+                _ => continue,
+            };
+            starters.insert(title.clone(), id);
+        }
+        for (title,id) in &starters {
+            // add to the 'capitals' bin if it wasn't there and the caps version 
+            let ti_caps = title.to_uppercase();
+            if starters.contains_key(&ti_caps) {
+                continue;
+            } 
+            if let Some(&id2) = capitals.get(&ti_caps) {
+                if id != id2 {
+                    // 2 different articles capitalized to the same thing
+                    cap_cols.insert(ti_caps);
+                }
+            } else {
+                // haven't seen this capitalization before
+                capitals.insert(title.clone(), id);
+            }
+        }
+        for del in cap_cols {
+            capitals.remove(&del);
+        }
+
+        HashMap::new()
+    }
     pub fn explode(self) -> 
         (Box<iter::Iterator<Item=IndexedEntry>>,
          Box<iter::Iterator<Item=(String,u32)>>)

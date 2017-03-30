@@ -42,6 +42,7 @@ pub fn new_logger() -> Logger {
 pub struct LinkDb {
     /// Store parsed collection of links from sql dumps
     db: link_db::parse::database::Database,
+    titles: HashMap<String,u32>,
 }
 
 pub struct LinkData {
@@ -79,3 +80,10 @@ pub struct Entry {
     pub children: Vec<u32>,
 }
 
+/*
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Title {
+    Caps(u32),
+    Orig(u32),
+}
+*/
