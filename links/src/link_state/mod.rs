@@ -21,7 +21,7 @@ const IS_SIMPLE: bool = true;
 pub trait State { }
 impl State for LinkDb { }
 impl State for LinkData { }
-impl State for RankData { }
+impl State for ProcData { }
 impl State for HashLinks { }
 
 pub struct LinkState<S: State> {
@@ -50,15 +50,17 @@ pub struct LinkData {
     /// Link data can be quickly written to or read from disk
     dumps: Vec<Mutex<Vec<link_data::IndexedEntry>>>,
     addrs: Vec<(String,u32)>,
+    titles: HashMap<String,u32>,
 }
 
-pub struct RankData {
+pub struct ProcData {
     /// Store easily searchable link and pagerank data
     /// Pagerank data can be read from, dumped to, or exported to disk 
     links: fnv::FnvHashMap<u32,Entry>,
-    ranks: Option<Vec<(u32, f64)>>,
+    //ranks: Option<Vec<(u32, f64)>>,
     //titles: Option<HashMap<String,u32>>,    // TODO: not optional?
-    titles: Option<HashMap<String,rank_data::TitleLookup>>,    // TODO: not optional?
+    //titles: Option<HashMap<String,rank_data::TitleLookup>>,    // TODO: not optional?
+    titles: HashMap<String,u32>,
 }
 
 pub struct HashLinks {
@@ -66,7 +68,8 @@ pub struct HashLinks {
     /// Interact with diesel cache and interface with website
     links: fnv::FnvHashMap<u32,Entry>,
     //ranks: Vec<(u32, f64)>,
-    titles: HashMap<String,rank_data::TitleLookup>,
+    //titles: HashMap<String,rank_data::TitleLookup>,
+    titles: HashMap<String,u32>,
 }
 
 

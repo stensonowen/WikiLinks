@@ -6,7 +6,7 @@ extern crate fnv;
 extern crate links;
 extern crate test;
 
-use links::link_state::{LinkState, LinkData, RankData, HashLinks, new_logger};
+use links::link_state::{LinkState, LinkData, ProcData, HashLinks, new_logger};
 use links::cache;
 
 use std::path::{Path, PathBuf};
@@ -24,10 +24,10 @@ lazy_static! {
 
         //let ls_dt = LinkState::<LinkData>::from_file(m, new_logger()).unwrap();
         let ls_dt = LinkState::<LinkData>::import(m, new_logger()).unwrap();
-        //let ls_rd = LinkState::<RankData>::from_ranks(ls_dt, r);
-        let mut ls_rd: LinkState<RankData> = ls_dt.into();
+        //let ls_rd = LinkState::<ProcData>::from_ranks(ls_dt, r);
+        let mut ls_rd: LinkState<ProcData> = ls_dt.into();
         ls_rd.import(r);
-        //let ls_rd = LinkState::<RankData>::import(ls_dt, r);
+        //let ls_rd = LinkState::<ProcData>::import(ls_dt, r);
         
         let ls_hl: LinkState<HashLinks> = ls_rd.into();
         ls_hl.extract()

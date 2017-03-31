@@ -50,8 +50,11 @@ impl Database {
         // if no analysis is to be done, then this stage is empty (but still run)
         // there should only be one dump file
         
+        // list of all titles originally
         let mut starters = HashMap::with_capacity(self.entries.len());
+        // list of all capitalized versions of titles
         let mut capitals = HashMap::new();
+        // terms that two non-caps titles both capitalize to
         let mut cap_cols = HashSet::new();  // capital collisions; delete
         for (&id, entry) in &self.entries {
             let title = match *entry {
@@ -61,7 +64,7 @@ impl Database {
             };
             starters.insert(title.clone(), id);
         }
-        for (title,id) in &starters {
+        for (title,&id) in &starters {
             // add to the 'capitals' bin if it wasn't there and the caps version 
             let ti_caps = title.to_uppercase();
             if starters.contains_key(&ti_caps) {
@@ -77,11 +80,13 @@ impl Database {
                 capitals.insert(title.clone(), id);
             }
         }
-        for del in cap_cols {
-            capitals.remove(&del);
+        let mut titles = starters;
+        for (ti,id) in capitals {
+            if cap_cols.contains(&ti) == false {
+                titles.insert(ti, id);
+            }
         }
-
-        HashMap::new()
+        titles
     }
     pub fn explode(self) -> 
         (Box<iter::Iterator<Item=IndexedEntry>>,

@@ -5,6 +5,7 @@ use std::io::{self, Read, Write, BufRead, BufReader};
 use std::path::PathBuf;
 use std::fs::File;
 use std::ffi::OsString;
+use std::collections::HashMap;
 
 use super::{LinkState, LinkDb, LinkData};
 use super::Entry;
@@ -40,6 +41,7 @@ impl From<LinkState<LinkDb>> for LinkState<LinkData> {
         // entries will become into lookup table
         // addresses and ranks feed into PostgreSQL
         
+        let titles = old.state.titles.clone();
         let (entries_i, addrs_i) = old.state.parts();
         let mut entries: Vec<Mutex<Vec<IndexedEntry>>> = Vec::with_capacity(old.threads);
         let addrs: Vec<(String,u32)> = addrs_i.collect();
@@ -65,6 +67,7 @@ impl From<LinkState<LinkDb>> for LinkState<LinkData> {
             state:      LinkData {
                 dumps: entries,
                 addrs: addrs,
+                titles: titles,
             }
         }
     }
@@ -168,6 +171,7 @@ impl LinkState<LinkData> {
             state:      LinkData {
                 dumps: entries,
                 addrs: addrs,
+                titles: HashMap::new(),
             }
         })
     }

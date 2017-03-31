@@ -9,7 +9,7 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::f64;
 
-use super::{LinkState, LinkData, RankData};
+use super::{LinkState, LinkData, ProcData};
 use super::Entry;
 use super::link_data::IndexedEntry;
 use super::link_data::append_to_pathbuf;
@@ -32,8 +32,8 @@ pub enum TitleLookup {
 }
 
 
-impl From<LinkState<LinkData>> for LinkState<RankData> {
-    fn from(old: LinkState<LinkData>) -> LinkState<RankData> {
+impl From<LinkState<LinkData>> for LinkState<ProcData> {
+    fn from(old: LinkState<LinkData>) -> LinkState<ProcData> {
         // move addrs and entries from LinkData and compute pageranks
         
         // single threaded population
@@ -43,19 +43,19 @@ impl From<LinkState<LinkData>> for LinkState<RankData> {
             threads:    old.threads,
             size:       old.size,
             log:        old.log,
-            state:      RankData {
+            state:      ProcData {
                 //links:  links,
                 //ranks: r.into_iter().collect(),
-                ranks:  None,
+                //ranks:  None,
                 //titles: Self::build_title_table(&links),
-                titles: None,
+                titles: old.state.titles,
                 links:  links,
             }
         }
     }
 }
 
-impl LinkState<RankData> {
+impl LinkState<ProcData> {
     pub fn import(&mut self, src: &Path) {
         assert!(src.is_file());
         let mut s = String::new();
@@ -64,10 +64,10 @@ impl LinkState<RankData> {
         let manifest: MdManifest = serde_json::from_str(&s).unwrap();
         // ranks will ONLY be computed iff we call self.build_ranks
         if let Some(p) = manifest.ranks {
-            self.state.ranks = Some(Self::import_ranks(&p));
+            //self.state.ranks = Some(Self::import_ranks(&p));
         }
         if let Some(p) = manifest.titles {
-            self.state.titles = Some(Self::import_titles(&p));
+            self.state.titles = Self::import_titles(&p);
         } else {
             // ALWAYS compute titles if they weren't given
             //self.state.titles = Some(Self::build_title_table(&self.state.links));
@@ -75,15 +75,16 @@ impl LinkState<RankData> {
         }
     }
     
-    fn import_titles(src: &Path) -> HashMap<String, TitleLookup> {
+    fn import_titles(src: &Path) -> HashMap<String, u32> {
         let mut titles = HashMap::new();
 
         let mut csv_r = csv::Reader::from_file(src)
             .unwrap().has_headers(false);
         for line in csv_r.decode() {
-            let (title, id): (String, String) = line.unwrap();
-            let lookup: TitleLookup = serde_json::from_str(&id).unwrap();
-            titles.insert(title, lookup);
+            //let (title, id): (String, String) = line.unwrap();
+            //let lookup: TitleLookup = serde_json::from_str(&id).unwrap();
+            let (title, id): (String, u32) = line.unwrap();
+            titles.insert(title, id);
         }
         titles
     }
@@ -104,6 +105,8 @@ impl LinkState<RankData> {
 
     //fn build_title_table(links: &FnvHashMap<u32,Entry>) -> HashMap<String,u32> {
     pub fn build_title_table(&mut self) {
+        unimplemented!();
+        /*
         let links = &self.state.links;
         let mut titles = HashMap::with_capacity(links.len());
         let mut chopping_block = HashSet::new();
@@ -128,7 +131,8 @@ impl LinkState<RankData> {
             titles.remove(del);
         }
 
-        self.state.titles = Some(titles);
+        self.state.titles = titles;
+        */
     }
     /*
     pub fn build_title_table_(&mut self) {
@@ -168,12 +172,12 @@ impl LinkState<RankData> {
                 "damping" => pagerank::DAMPING_FACTOR,
                 "epsilon" => pagerank::MAX_ERROR));
         let r = pagerank::Graph::new(&self.state.links).get_ranks(pr_log);
-        self.state.ranks = Some(r.into_iter().collect());
+        //self.state.ranks = Some(r.into_iter().collect());
     }
 
     /*
     fn build_ranks(old: LinkState<LinkData>, output: &Path) -> Self {
-        let mut this: LinkState<RankData> = old.into();
+        let mut this: LinkState<ProcData> = old.into();
         // compute ranks
         let pr_log = this.log.new(o!(
                 "damping" => pagerank::DAMPING_FACTOR,
@@ -216,7 +220,7 @@ impl LinkState<RankData> {
             threads: old.threads,
             size:    old.size,
             log:     old.log,
-            state:   RankData {
+            state:   ProcData {
                 titles: Self::build_title_table(&links),
                 links: links,
                 ranks: Some(ranks.into_iter().collect()),
@@ -260,20 +264,22 @@ impl LinkState<RankData> {
         }
         Ok(())
     }
+        /*
     pub fn export(&mut self, path: &PathBuf) -> Result<(),csv::Error> {
         let manifest = MdManifest {
             titles: Some(append_to_pathbuf(path, "_titles", "csv")),
-            ranks: if self.state.ranks.is_some() {
+            /*ranks: if self.state.ranks.is_some() {
                 Some(append_to_pathbuf(path, "_ranks", "csv"))
             } else {
                 None
-            }
+            }*/
         };
         let mut f = File::create(path).unwrap();
         let mn_s = serde_json::to_string(&manifest).unwrap();
         f.write_all(&mn_s.into_bytes()).unwrap();
 
         // save ranks and titles
+        /*
         if self.state.titles.is_none() {
             self.build_title_table();
         }
@@ -297,10 +303,13 @@ impl LinkState<RankData> {
             // lol is this gonnna work?
             ranks_fn(self, ranks, &manifest.ranks.unwrap())?;
         }
+        */
         Ok(())
     }
+*/
+    /*
     fn data(&self) {
-        info!(self.log, "State of RankData:");
+        info!(self.log, "State of ProcData:");
         info!(self.log, "Number of entries: {}", self.state.links.len());
         if let Some(ref r) = self.state.ranks {
             info!(self.log, "Number of ranks: {}", r.len());
@@ -320,4 +329,5 @@ impl LinkState<RankData> {
             info!(self.log, "Number of links:    {}", total_links);
         }
     }
+    */
 }

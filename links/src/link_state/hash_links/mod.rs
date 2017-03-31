@@ -2,7 +2,7 @@ extern crate rand;
 
 use {clap, fnv};
 
-use super::{LinkState, RankData, HashLinks};
+use super::{LinkState, ProcData, HashLinks};
 use super::{LinkData, new_logger};
 use super::Entry;
 use web::Node;
@@ -47,11 +47,11 @@ impl Path {
     }
 }
 
-impl From<LinkState<RankData>> for LinkState<HashLinks> {
-    fn from(mut old: LinkState<RankData>) -> LinkState<HashLinks> {
-        if old.state.titles.is_none() {
-            old.build_title_table();
-        }
+impl From<LinkState<ProcData>> for LinkState<HashLinks> {
+    fn from(mut old: LinkState<ProcData>) -> LinkState<HashLinks> {
+        //if old.state.titles.is_none() {
+        //    old.build_title_table();
+        //}
         LinkState {
             threads:    old.threads,
             size:       old.size,
@@ -60,7 +60,7 @@ impl From<LinkState<RankData>> for LinkState<HashLinks> {
                 links: old.state.links,
                 //ranks: old.state.ranks,
                 //titles: HashMap::new(),
-                titles: old.state.titles.unwrap(),
+                titles: old.state.titles,
             }
         }
     }
@@ -76,6 +76,7 @@ impl HashLinks {
         &self.links
     }
     pub fn lookup_title<'a>(&'a self, title: &'a str) -> Node<'a> {
+        /*
         match self.titles.get(title) {
             Some(&TitleLookup::Orig(id)) |
             Some(&TitleLookup::Caps(id)) => Node::Found(id, title),
@@ -87,6 +88,11 @@ impl HashLinks {
                     None => Node::Unknown(title),
                 }
             }
+        }
+        */
+        match self.titles.get(title) {
+            Some(&id) => Node::Found(id, title),
+            None => Node::Unknown(title),
         }
     }
     /*
@@ -132,7 +138,7 @@ impl LinkState<HashLinks> {
             ls_dt.export(PathBuf::from(p)).unwrap();
         }
 
-        let mut ls_rd: LinkState<RankData> = ls_dt.into();
+        let mut ls_rd: LinkState<ProcData> = ls_dt.into();
 
         if let Some(md) = args.value_of("import_md") {
             ls_rd.import(path::Path::new(md));
@@ -143,7 +149,8 @@ impl LinkState<HashLinks> {
             ls_rd.compute_ranks();
         }
         if let Some(md) = args.value_of("export_md") {
-            ls_rd.export(&PathBuf::from(md)).unwrap();
+            unimplemented!()
+            //ls_rd.export(&PathBuf::from(md)).unwrap();
         }
 
         //convert to HashLinks
