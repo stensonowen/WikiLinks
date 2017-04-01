@@ -76,11 +76,3 @@ pub struct Entry {
     pub parents:  Vec<u32>,
     pub children: Vec<u32>,
 }
-
-/*
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Title {
-    Caps(u32),
-    Orig(u32),
-}
-*/

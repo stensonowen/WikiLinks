@@ -82,7 +82,7 @@ impl Database {
                 }
             } else {
                 // haven't seen this capitalization before
-                capitals.insert(title.clone(), id);
+                capitals.insert(ti_caps, id);
             }
         }
         let mut titles = starters;

@@ -57,9 +57,7 @@ impl From<LinkState<ProcData>> for LinkState<HashLinks> {
             size:       old.size,
             log:        old.log,
             state:      HashLinks {
-                links: old.state.links,
-                //ranks: old.state.ranks,
-                //titles: HashMap::new(),
+                links:  old.state.links,
                 titles: old.state.titles,
             }
         }
@@ -73,10 +71,16 @@ impl HashLinks {
     pub fn get_links(&self) -> &fnv::FnvHashMap<u32,Entry> {
         &self.links
     }
-    pub fn lookup_title<'a>(&'a self, title: &'a str) -> Node<'a> {
-        match self.titles.get(title) {
-            Some(&id) => Node::Found(id, title),
-            None => Node::Unknown(title),
+    pub fn lookup_title<'a>(&'a self, q: &'a str) -> Node<'a> {
+        // Empty: unused (maybe should mean 'random'?
+        // Absent: try case-insensitive version
+        if q.is_empty() {
+            Node::Unused
+        } else {
+            match self.titles.get(q).or(self.titles.get(&q.to_uppercase())) {
+                Some(&id) => Node::Found(id, q),
+                None => Node::Unknown(q),
+            }
         }
     }
 }
@@ -121,16 +125,3 @@ impl LinkState<HashLinks> {
         }
     }
 }
-
-
-/*
- * ARGS:
- *      Link Data
- *          3 databases or
- *          a manifest 
- *          optional instructions for outputting a manifest
- *      Rank Data
- *          optional import manifest
- *          optional export manifest
- *          optional "compute_ranks" argument
- */

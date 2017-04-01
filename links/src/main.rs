@@ -117,16 +117,8 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn, links: SharedLinks,
 {
     let (src_f, dst_f) = search.fix();
     // TODO: translate empty query into random?
-    let src_n = if src_f.is_empty() {
-        Node::Unused
-    } else {
-        links.lookup_title(src_f.as_ref())
-    };
-    let dst_n = if dst_f.is_empty() {
-        Node::Unused
-    } else {
-        links.lookup_title(dst_f.as_ref())
-    };
+    let src_n = links.lookup_title(src_f.as_ref());
+    let dst_n = links.lookup_title(dst_f.as_ref());
     let sort = match search.cache_sort {
         Some(s) => CacheSort::from_str(s).unwrap_or(DEFAULT_SORT),
         None => DEFAULT_SORT,
@@ -181,15 +173,6 @@ fn foo(s: State<RwLock<i32>>) -> String {
 }
 */
 
-fn main() {
-    let hl_state = LinkState::<HashLinks>::from_args(argv());
-    if let Some(hl) = hl_state {
-        server(hl);
-    } else {
-        println!("Finished analytics; not starting a web server");
-    }
-}
-
 fn server(hl_state: LinkState<HashLinks>) {
     // use Arc around this?
     let hl = hl_state.extract();
@@ -214,5 +197,12 @@ fn server(hl_state: LinkState<HashLinks>) {
 
 }
 
-
+fn main() {
+    let hl_state = LinkState::<HashLinks>::from_args(argv());
+    if let Some(hl) = hl_state {
+        server(hl);
+    } else {
+        println!("Finished analytics; not starting a web server");
+    }
+}
 
