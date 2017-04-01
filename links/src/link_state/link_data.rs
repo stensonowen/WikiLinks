@@ -41,10 +41,8 @@ impl From<LinkState<LinkDb>> for LinkState<LinkData> {
         // entries will become into lookup table
         // addresses and ranks feed into PostgreSQL
         
-        let titles = old.state.titles.clone();
-        let (entries_i, addrs_i) = old.state.parts();
+        let (entries_i, titles) = old.state.parts();
         let mut entries: Vec<Mutex<Vec<IndexedEntry>>> = Vec::with_capacity(old.threads);
-        let addrs: Vec<(String,u32)> = addrs_i.collect();
 
         //seems like there should be a more functional way to do this
         //  if .take() didn't consume?  doesn't shallow copy??
@@ -66,7 +64,6 @@ impl From<LinkState<LinkDb>> for LinkState<LinkData> {
             log:        old.log,
             state:      LinkData {
                 dumps: entries,
-                addrs: addrs,
                 titles: titles,
             }
         }
@@ -78,7 +75,7 @@ pub struct LinkManifest {
     threads: usize,
     size:    usize,
     entries: Vec<PathBuf>,
-    addrs:   PathBuf,
+    titles:   PathBuf,
 }
 
 pub fn append_to_pathbuf(p: &PathBuf, addition: &str, extension: &str) -> PathBuf {
@@ -94,7 +91,7 @@ impl LinkState<LinkData> {
         LinkManifest {
             threads:    self.threads,
             size:       self.size,
-            addrs:      append_to_pathbuf(mn, "_addr", "csv"),
+            titles:      append_to_pathbuf(mn, "_titles", "csv"),
             entries:    (0..self.threads).map(|i| {
                 let mut name = String::from("_entry");
                 name.push_str(&i.to_string());
@@ -102,7 +99,6 @@ impl LinkState<LinkData> {
             }).collect(),
         }
     }
-    //pub fn to_file(&self, mn: PathBuf) -> Result<(), io::Error> {
     pub fn export(&self, dst: PathBuf) -> Result<(), io::Error> {
         // write output to line-delimited JSON and CSV types
         let manifest = self.manifest(&dst);
@@ -114,8 +110,8 @@ impl LinkState<LinkData> {
         println!("Manifest: `{:?}`", manifest);
 
         //write addrs to csv
-        let mut csv_w = csv::Writer::from_file(manifest.addrs).unwrap();
-        for &(ref title, id) in &self.state.addrs { 
+        let mut csv_w = csv::Writer::from_file(manifest.titles).unwrap();
+        for (ref title, id) in &self.state.titles { 
             csv_w.encode((id,title)).unwrap(); 
         }
 
@@ -130,11 +126,9 @@ impl LinkState<LinkData> {
                 f.write_all(&serial.into_bytes())?;
             }
         }
-
         Ok(()) 
     }
 
-    //pub fn from_file(src: PathBuf, log: slog::Logger) -> Result<Self,io::Error> { 
     pub fn import(src: PathBuf, log: slog::Logger) -> Result<Self,io::Error> { 
         assert!(src.is_file());
         let mut s = String::new();
@@ -142,13 +136,13 @@ impl LinkState<LinkData> {
         f.read_to_string(&mut s).unwrap();
         let manifest: LinkManifest = serde_json::from_str(&s).unwrap();
 
-        //populate addresses
-        let mut addrs: Vec<(String,u32)> = Vec::with_capacity(manifest.size);
-        let mut csv_r = csv::Reader::from_file(&manifest.addrs)
+        //populate titles
+        let mut titles: HashMap<String,u32> = HashMap::with_capacity(manifest.size);
+        let mut csv_r = csv::Reader::from_file(&manifest.titles)
             .unwrap().has_headers(false);
         for line in csv_r.decode() {
              let (id, title): (u32, String) = line.unwrap();
-             addrs.push((title,id));
+             titles.insert(title,id);
         }
 
         //populate entries
@@ -170,8 +164,7 @@ impl LinkState<LinkData> {
             log:     log,
             state:      LinkData {
                 dumps: entries,
-                addrs: addrs,
-                titles: HashMap::new(),
+                titles: titles,
             }
         })
     }

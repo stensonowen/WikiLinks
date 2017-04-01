@@ -35,49 +35,44 @@ fn argv<'a>() -> clap::ArgMatches<'a> {
     clap::App::new(crate_name!()).about(crate_description!())
         .author(crate_authors!()).version(crate_version!())
 
-        .arg(Arg::with_name("import_links")
-             .long("import_links")
+        .arg(Arg::with_name("import")
+             .long("import")
+             .short("i")
              .takes_value(true)
-             .help("Import link data from link dumps manifest"))
-        .arg(Arg::with_name("export_links")
-             .long("export_links")
+             .help("Import link and title data from link dumps manifest"))
+        .arg(Arg::with_name("export")
+             .long("output")
+             .short("o")
              .takes_value(true)
-             .help("Export link data to manifest and dumps"))
-        .arg(Arg::with_name("import_md")
-             .long("import_md")
-             .takes_value(true)
-             .help("Import rank/title data from metadata manifest"))
-        .arg(Arg::with_name("export_md")
-             .long("export_md")
-             .takes_value(true)
-             .help("Export rank/title data to manifest and dumps"))
+             .help("Export link and title data to manifest and dumps"))
 
-        .arg(Arg::with_name("compute_ranks")
-             .long("compute_ranks")
-             .help("If not provided by a manifest, pageranks will be computed"))
+        .arg(Arg::with_name("compute-ranks")
+             .long("ranks")
+             .takes_value(true)
+             .help("After loading data, compute and save the pageranks")) 
+        .arg(Arg::with_name("web-server")
+             .short("w")
+             .help("Run web server; program will otherwise terminate after analysis"))
 
         .arg(Arg::with_name("page.sql")
-             .long("page.sql")
+             .short("p")
              .takes_value(true)
-             .conflicts_with("import_links")
              .requires("redirect.sql")
-             .requires("pagelinks.sql"))
+             .requires("pagelinks.sql")
+             .help("Pages db from wikipedia dump"))
         .arg(Arg::with_name("redirect.sql")
-             .long("redirect.sql")
+             .short("r")
              .takes_value(true)
-             .conflicts_with("import_links")
              .requires("page.sql")
-             .requires("pagelinks.sql"))
+             .requires("pagelinks.sql")
+             .help("Internal links db from wikipedia dump"))
         .arg(Arg::with_name("pagelinks.sql")
-             .long("pagelinks.sql")
+             .short("l")
              .takes_value(true)
-             .conflicts_with("import_links")
              .requires("page.sql")
-             .requires("redirect.sql"))
+             .requires("redirect.sql")
+             .help("Internal links db from wikipedia dump"))
 
-        .group(clap::ArgGroup::with_name("sources")
-               .required(true)
-               .args(&["import_links", "page.sql"]))
         .get_matches()
 }
 
@@ -187,12 +182,16 @@ fn foo(s: State<RwLock<i32>>) -> String {
 */
 
 fn main() {
-    // get links hashmap
-    // uhhhh, will .manage() do a bunch of memmoves?? sure hope not
-    // use an Arc/Rc/Cell/ something?
     let hl_state = LinkState::<HashLinks>::from_args(argv());
-    //let conn = cache::establish_connection();
-    //cache::populate_addrs(&conn, hl_state.get_links(), hl_state.get_ranks()).unwrap();
+    if let Some(hl) = hl_state {
+        server(hl);
+    } else {
+        println!("Finished analytics; not starting a web server");
+    }
+}
+
+fn server(hl_state: LinkState<HashLinks>) {
+    // use Arc around this?
     let hl = hl_state.extract();
 
     let c = cache::establish_connection();
@@ -205,13 +204,9 @@ fn main() {
         None => NewCacheOuter::new(),
     };
 
-
-
     rocket::ignite()
         .manage(db::init_pool())
         .manage(hl)
-        //.manage(cache)
-        //.manage(x)
         .manage(lc)
         .manage(nc)
         .mount("/", routes![index, bfs_empty, bfs_sort, bfs_search, /*foo*/])

@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 pub mod link_db;
 pub mod link_data;
-pub mod rank_data;
+pub mod proc_data;
 pub mod hash_links;
 
 const IS_SIMPLE: bool = true;
@@ -49,7 +49,6 @@ pub struct LinkData {
     /// Store parsed and converted links and addresses
     /// Link data can be quickly written to or read from disk
     dumps: Vec<Mutex<Vec<link_data::IndexedEntry>>>,
-    addrs: Vec<(String,u32)>,
     titles: HashMap<String,u32>,
 }
 
@@ -57,18 +56,13 @@ pub struct ProcData {
     /// Store easily searchable link and pagerank data
     /// Pagerank data can be read from, dumped to, or exported to disk 
     links: fnv::FnvHashMap<u32,Entry>,
-    //ranks: Option<Vec<(u32, f64)>>,
-    //titles: Option<HashMap<String,u32>>,    // TODO: not optional?
-    //titles: Option<HashMap<String,rank_data::TitleLookup>>,    // TODO: not optional?
     titles: HashMap<String,u32>,
 }
 
 pub struct HashLinks {
-    /// Read-only, fast-lookup container for link and rank data
+    /// Read-only, fast-lookup container for link and proc data
     /// Interact with diesel cache and interface with website
     links: fnv::FnvHashMap<u32,Entry>,
-    //ranks: Vec<(u32, f64)>,
-    //titles: HashMap<String,rank_data::TitleLookup>,
     titles: HashMap<String,u32>,
 }
 

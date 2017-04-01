@@ -23,6 +23,7 @@ pub struct Database {
     state: State,
     //logging
     log: slog::Logger,
+    // keep track of all valid titles that map to valid page_ids
 }
 
 impl Database {
@@ -64,6 +65,10 @@ impl Database {
             };
             starters.insert(title.clone(), id);
         }
+        for (title, &id) in &self.addresses {
+            // redirect isn't present, might as well add it
+            starters.entry(title.clone()).or_insert(id);
+        }
         for (title,&id) in &starters {
             // add to the 'capitals' bin if it wasn't there and the caps version 
             let ti_caps = title.to_uppercase();
@@ -88,10 +93,10 @@ impl Database {
         }
         titles
     }
-    pub fn explode(self) -> 
-        (Box<iter::Iterator<Item=IndexedEntry>>,
-         Box<iter::Iterator<Item=(String,u32)>>)
-    {
+    //pub fn explode(self) -> 
+    //    (Box<iter::Iterator<Item=IndexedEntry>>,
+    //     Box<iter::Iterator<Item=(String,u32)>>)
+    pub fn explode(self) -> Box<iter::Iterator<Item=IndexedEntry>> {
         // destroy ourSelf and yield our contents
         // they will go in totally different data structures so yield iterators
         let entry_iter = self.entries.into_iter().map(|e: (u32,Entry)| {
@@ -100,8 +105,7 @@ impl Database {
                 Entry::Page{ title: ti, parents: p, children: c } => 
                     IndexedEntry::from(e.0, ti, p, c)
             }});
-        let addr_iter = self.addresses.into_iter();
-        (Box::new(entry_iter), Box::new(addr_iter))
+        Box::new(entry_iter)
     }
     pub fn add_page(&mut self, data: &regex::Captures) -> bool {
         //must finish before links/redirects start
@@ -373,7 +377,6 @@ impl Database {
                 p.shrink_to_fit();
             }
         }
-
         // delete redirects in page.sql that didn't show up in redirects.sql
         //debug!(self.log, "Delete unconfirmed redirects...");
         //self.tidy_entries();
@@ -388,12 +391,19 @@ impl Database {
 
         // make sure links from addresses to entries go both ways
         // delete those that don't
+        /*
         let asymmetric_references = self.asymmetric_references();
         println!("Done collecting asymmetric refs");
         info!(self.log, 
                "\tDelete {} unrequited addresseses (not echoed in Entries)...",
                asymmetric_references.len());
-        self.pop_asymmetric_references(asymmetric_references);
+        self.pop_addresses(asymmetric_references);
+               */
+        let empty_refs = self.incomplete_addresses();
+        println!("Done collecting incomplete refs");
+        info!(self.log, "\tDelete {} incomplete addrs (absent in Entries)...",
+               empty_refs.len());
+        self.pop_addresses(empty_refs);
 
         // BEFORE HERE
         //make sure no children or parents links contain redirects
@@ -581,7 +591,7 @@ impl Database {
 
     }
 
-    fn pop_asymmetric_references(&mut self, chopping_block: Vec<String>) {
+    fn pop_addresses(&mut self, chopping_block: Vec<String>) {
         //mut/immut workaround :/
         for title in chopping_block {
             self.addresses.remove(&title);
@@ -643,5 +653,15 @@ impl Database {
             }
         }
         chopping_block
+    }
+
+    fn incomplete_addresses(&self) -> Vec<String> {
+        // a list of all `addresses` that point to nothing
+        self.addresses.iter()
+            .filter_map(|(s,i)| match self.entries.get(i) {
+                Some(_) => None,
+                None => Some(s.clone())
+            })
+            .collect() 
     }
 }

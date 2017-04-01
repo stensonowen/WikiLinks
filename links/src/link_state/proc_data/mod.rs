@@ -1,35 +1,26 @@
 use csv;
-use serde_json;
 use fnv::FnvHashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::cmp::Ordering;
-use std::collections::{HashSet, HashMap};
-use std::fs::File;
-use std::io::{Read, Write};
-use std::f64;
+use std::{f64, u64};
 
 use super::{LinkState, LinkData, ProcData};
 use super::Entry;
 use super::link_data::IndexedEntry;
-use super::link_data::append_to_pathbuf;
 
 mod pagerank;
 
 //const PRETTY_RANK_DUMPS: bool = true;
 
+/*
 // Store table metadata to be used at this step
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MdManifest {
     ranks:  Option<PathBuf>,
     titles: Option<PathBuf>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum TitleLookup {
-    Caps(u32),
-    Orig(u32),
-}
+*/
 
 
 impl From<LinkState<LinkData>> for LinkState<ProcData> {
@@ -56,6 +47,7 @@ impl From<LinkState<LinkData>> for LinkState<ProcData> {
 }
 
 impl LinkState<ProcData> {
+    /*
     pub fn import(&mut self, src: &Path) {
         assert!(src.is_file());
         let mut s = String::new();
@@ -81,8 +73,6 @@ impl LinkState<ProcData> {
         let mut csv_r = csv::Reader::from_file(src)
             .unwrap().has_headers(false);
         for line in csv_r.decode() {
-            //let (title, id): (String, String) = line.unwrap();
-            //let lookup: TitleLookup = serde_json::from_str(&id).unwrap();
             let (title, id): (String, u32) = line.unwrap();
             titles.insert(title, id);
         }
@@ -134,6 +124,7 @@ impl LinkState<ProcData> {
         self.state.titles = titles;
         */
     }
+    */
     /*
     pub fn build_title_table_(&mut self) {
         let links = &self.state.links;
@@ -167,12 +158,27 @@ impl LinkState<ProcData> {
     }
     */
 
-    pub fn compute_ranks(&mut self) {
+        // TODO: write data
+    pub fn compute_ranks(&mut self, path: &PathBuf) -> Result<(), csv::Error> {
         let pr_log = self.log.new(o!(
                 "damping" => pagerank::DAMPING_FACTOR,
                 "epsilon" => pagerank::MAX_ERROR));
         let r = pagerank::Graph::new(&self.state.links).get_ranks(pr_log);
-        //self.state.ranks = Some(r.into_iter().collect());
+        // sort floats; will all be less than 
+        // so should be the same as sorting by the negative reciprocal
+        let mut sorted_r: Vec<_> = r.into_iter().collect();
+        sorted_r.sort_by_key(|&(_,r)| {
+            assert!(r.is_normal());
+            assert!(r.is_sign_positive());
+            assert!(r <= 1.0);
+            u64::MAX - r.recip() as u64
+        });
+        let mut csv_w = csv::Writer::from_file(path)?;
+        for (id,rank) in sorted_r {
+            let ref title = self.state.links.get(&id).unwrap().title;
+            csv_w.encode((rank,id,title))?;
+        }
+        Ok(())
     }
 
     /*

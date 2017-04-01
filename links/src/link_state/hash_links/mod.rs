@@ -48,7 +48,7 @@ impl Path {
 }
 
 impl From<LinkState<ProcData>> for LinkState<HashLinks> {
-    fn from(mut old: LinkState<ProcData>) -> LinkState<HashLinks> {
+    fn from(old: LinkState<ProcData>) -> LinkState<HashLinks> {
         //if old.state.titles.is_none() {
         //    old.build_title_table();
         //}
@@ -66,8 +66,6 @@ impl From<LinkState<ProcData>> for LinkState<HashLinks> {
     }
 }
 
-use super::rank_data::TitleLookup;
-
 impl HashLinks {
     pub fn size(&self) -> usize {
         self.links.len()
@@ -76,47 +74,18 @@ impl HashLinks {
         &self.links
     }
     pub fn lookup_title<'a>(&'a self, title: &'a str) -> Node<'a> {
-        /*
-        match self.titles.get(title) {
-            Some(&TitleLookup::Orig(id)) |
-            Some(&TitleLookup::Caps(id)) => Node::Found(id, title),
-            None => {
-                let caps_ti = title.to_uppercase();
-                match self.titles.get(&caps_ti) {
-                    Some(&TitleLookup::Orig(id)) | // return None?
-                    Some(&TitleLookup::Caps(id)) => Node::Found(id, title),
-                    None => Node::Unknown(title),
-                }
-            }
-        }
-        */
         match self.titles.get(title) {
             Some(&id) => Node::Found(id, title),
             None => Node::Unknown(title),
         }
     }
-    /*
-    pub fn get_ranks(&self) -> &Vec<(u32,f64)> {
-        &self.ranks
-    }
-    pub fn random_id(&self) -> u32 {
-        //find random element in table; return its id
-        let index = rand::random::<usize>() % self.ranks.len();
-        self.ranks[index].0
-    }
-    pub fn random_id_and_title(&self) -> (u32, &str) {
-        let id = self.random_id();
-        let entry = self.links.get(&id).unwrap();
-        (id, &entry.title)
-    }
-    */
 }
 
 impl LinkState<HashLinks> {
     pub fn extract(self) -> HashLinks {
         self.state
     }
-    pub fn from_args(args: clap::ArgMatches) -> Self {
+    pub fn from_args(args: clap::ArgMatches) -> Option<Self> {
         //populate complete HashLinks from command-line args
 
         //first, decide whether to build links from source sql or previous backup
@@ -127,34 +96,29 @@ impl LinkState<HashLinks> {
         {
             LinkState::new(path::Path::new(p), path::Path::new(r), path::Path::new(l))
                 .into()
-        } else if let Some(m) = args.value_of("import_links") {
+        } else if let Some(m) = args.value_of("import") {
             LinkState::<LinkData>::import(PathBuf::from(m), new_logger()).unwrap()
         } else {
             //clap should make this impossible
             unreachable!()
         };
 
-        if let Some(p) = args.value_of("export_links") {
+        if let Some(p) = args.value_of("export") {
             ls_dt.export(PathBuf::from(p)).unwrap();
         }
 
         let mut ls_rd: LinkState<ProcData> = ls_dt.into();
 
-        if let Some(md) = args.value_of("import_md") {
-            ls_rd.import(path::Path::new(md));
-        } else {
-            ls_rd.build_title_table();
-        }
-        if args.is_present("compute_ranks") {
-            ls_rd.compute_ranks();
-        }
-        if let Some(md) = args.value_of("export_md") {
-            unimplemented!()
-            //ls_rd.export(&PathBuf::from(md)).unwrap();
+        if let Some(r) = args.value_of("compute-ranks") {
+            ls_rd.compute_ranks(&PathBuf::from(r)).unwrap();
         }
 
-        //convert to HashLinks
-        ls_rd.into()
+        //convert to HashLinks if starting a web server
+        if args.is_present("web-server") {
+            Some(ls_rd.into())
+        } else {
+            None
+        }
     }
 }
 

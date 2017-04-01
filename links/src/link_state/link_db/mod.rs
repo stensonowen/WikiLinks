@@ -1,5 +1,6 @@
 use std::path::Path;
-use std::iter;
+use std::iter::Iterator;
+use std::collections::HashMap;
 
 use super::link_data::IndexedEntry;
 use super::{LinkState, LinkDb, new_logger};
@@ -28,11 +29,8 @@ impl LinkState<LinkDb> {
 }
 
 impl LinkDb {
-    pub fn parts(self) -> 
-        (Box<iter::Iterator<Item=IndexedEntry>>,
-         Box<iter::Iterator<Item=(String,u32)>>) 
-    {
-        self.db.explode()
+    pub fn parts(self) -> (Box<Iterator<Item=IndexedEntry>>, HashMap<String,u32>) {
+        (self.db.explode(), self.titles)
     }
 }
 
