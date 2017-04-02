@@ -5,7 +5,7 @@
 // TODO: verify none of my code used here can panic!
 // don't want to poison lock, which would be bad
 
-use std::collections::{BinaryHeap};
+//use std::collections::{BinaryHeap};
 use std::sync::{Arc, RwLock};
 
 use super::cache_elem::CacheElem;
@@ -25,22 +25,11 @@ impl LongCacheOuter {
         }
         new
     }
-    fn fast_get(&self) -> Option<Vec<CacheElem>> {
-        // try to get the temporary cache
+    pub fn get(&self) -> Vec<CacheElem> {
+        println!("Current Status:  {:?}", self);
         let rfrn = self.0.clone();
         let lock = rfrn.read().unwrap();
-        lock.cache()
-    }
-    fn slow_get(&self) -> Vec<CacheElem> {
-        let rfrn = self.0.clone();
-        let mut lock = rfrn.write().unwrap();
-        lock.rebuild_cache()
-    }
-    pub fn get(&self) -> Vec<CacheElem> {
-        match self.fast_get() {
-            Some(v) => v,
-            None => self.slow_get(),
-        }
+        lock.get()
     }
     pub fn should_insert(&self, new: &CacheElem) -> bool {
         let rfrn = self.0.clone();
@@ -61,47 +50,32 @@ pub struct LongCacheInner {
     // every page load will require
     //  1) lookup of the shortest value contained (can be worked around)
     //  2) get a list of the cache elements in order
-    // occasional modifications require
-    //  1) insert into middle of the list (maintain in sorted order)
-    //  2) pop the shortest element from the list
-
-    // handle efficient lookups/inserts/etc.
-    heap: BinaryHeap<CacheElem>,
-    temp: Option<Vec<CacheElem>>,
+    // This is almost entirely going to be read, not written
+    // so a sorted vector is probably fine
+    elems: Vec<CacheElem>,
+    // could alternately use a BTreeSet and a temp vec cache
 }
 
 impl LongCacheInner {
     fn new() -> Self {
         LongCacheInner {
-            heap: BinaryHeap::with_capacity(CACHE_SIZE),
-            temp: None,
+            elems: Vec::with_capacity(CACHE_SIZE),
         }
     }
     fn min_len(&self) -> Option<u8> {
-        self.heap.peek().map(|e| e.len())
+        self.elems.last().map(|e| e.len())
     }
     fn should_insert(&self, new: &CacheElem) -> bool {
-        if self.heap.len() < CACHE_SIZE {
-            true
-        } else if let Some(shortest) = self.heap.peek() {
-            new.len() > shortest.len() 
+        if self.elems.len() < CACHE_SIZE {
+            self.elems.contains(new) == false
+        } else if let Some(shortest) = self.min_len() {
+            new.len() > shortest && self.elems.contains(new) == false
         } else {
-            true 
+            self.elems.contains(new) == false
         }
     }
-    fn get(&mut self) -> Vec<CacheElem> {
-        match self.temp {
-            Some(ref v) => v.clone(),
-            None => self.rebuild_cache(),
-        }
-    }
-    fn rebuild_cache(&mut self) -> Vec<CacheElem> {
-        let iter = self.heap.iter();
-        self.temp = Some(iter.rev().map(|e| (*e).clone()).collect());
-        match self.temp {
-            Some(ref v) => v.clone(),
-            None => unreachable!(),
-        }
+    fn get(&self) -> Vec<CacheElem> {
+        self.elems.clone()
     }
     fn insert_elem(&mut self, elem: CacheElem) {
         // ONLY call iff should_insert
@@ -109,16 +83,12 @@ impl LongCacheInner {
         // Linear search: only add iff necessary
         // TODO: change data structure so this is faster?
         // this op is pretty uncommon, and there are max ~15 elements
-        if self.heap.iter().any(|e| e == &elem) {
-            return;
+        self.elems.push(elem);
+        //self.elems.sort_by_key(|e| e.len());
+        self.elems.sort();
+        self.elems.dedup();
+        while self.elems.len() > CACHE_SIZE {
+            self.elems.pop();
         }
-        self.temp = None;
-        self.heap.push(elem);
-        if self.heap.len() > CACHE_SIZE {
-            self.heap.pop();
-        }
-    }
-    fn cache(&self) -> Option<Vec<CacheElem>> {
-        self.temp.clone()
     }
 }

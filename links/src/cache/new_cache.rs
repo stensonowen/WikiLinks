@@ -91,7 +91,6 @@ impl NewCacheInner {
         let index = self.queue.len();
         self.queue.push_front(elem);
         self.contents.insert(self.queue.get(index).unwrap().clone());
-        //assert_eq!(Some(&elem), self.queue.get(index));
     }
 }
 

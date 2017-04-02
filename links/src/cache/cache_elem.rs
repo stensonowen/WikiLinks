@@ -22,7 +22,7 @@ impl PartialOrd for CacheElem {
 impl Ord for CacheElem {
     fn cmp(&self, othr: &Self) -> Ordering {
         // Sort by length first
-        // Longer sizes should be 'less', i.e. first in BTree
+        // Longer sizes should be 'less', i.e. first when sorted
         if self.len != othr.len {
             self.len.cmp(&othr.len).reverse()
         } else {
