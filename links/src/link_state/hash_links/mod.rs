@@ -8,6 +8,9 @@ use super::Entry;
 use web::Node;
 
 use std::path::{self, PathBuf};
+use std::collections::HashMap;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 
 mod bfs;
 
@@ -58,7 +61,8 @@ impl From<LinkState<ProcData>> for LinkState<HashLinks> {
             log:        old.log,
             state:      HashLinks {
                 links:  old.state.links,
-                titles: old.state.titles,
+                //titles: old.state.titles,
+                titles: HashLinks::hash_titles(old.state.titles),
             }
         }
     }
@@ -71,17 +75,34 @@ impl HashLinks {
     pub fn get_links(&self) -> &fnv::FnvHashMap<u32,Entry> {
         &self.links
     }
-    pub fn lookup_title<'a>(&'a self, q: &'a str) -> Node<'a> {
+    pub fn lookup_title<'a>(&'a self, query: &'a str) -> Node<'a> {
         // Empty: unused (maybe should mean 'random'?
         // Absent: try case-insensitive version
-        if q.is_empty() {
+        if query.is_empty() {
             Node::Unused
         } else {
-            match self.titles.get(q).or(self.titles.get(&q.to_uppercase())) {
-                Some(&id) => Node::Found(id, q),
-                None => Node::Unknown(q),
+            let curr_hash = HashLinks::hash_title(query);
+            //match self.titles.get(q).or(self.titles.get(&q.to_uppercase())) {
+            match self.titles.get(&curr_hash) {
+                Some(&id) => Node::Found(id, query),
+                //None => Node::Unknown(q),
+                None => {
+                    let caps_hash = HashLinks::hash_title(&query.to_uppercase());
+                    match self.titles.get(&caps_hash) {
+                        Some(&id) => Node::Found(id, query),
+                        None => Node::Unknown(query)
+                    }
+                }
             }
         }
+    }
+    fn hash_title(t: &str) -> u64 {
+        let mut s = DefaultHasher::new();
+        t.hash(&mut s);
+        s.finish()
+    }
+    fn hash_titles(old: HashMap<String,u32>) -> HashMap<u64,u32> {
+        old.into_iter().map(|(q,i)| (HashLinks::hash_title(&q),i)).collect()
     }
 }
 

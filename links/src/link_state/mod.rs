@@ -63,7 +63,7 @@ pub struct HashLinks {
     /// Read-only, fast-lookup container for link and proc data
     /// Interact with diesel cache and interface with website
     links: fnv::FnvHashMap<u32,Entry>,
-    titles: HashMap<String,u32>,
+    titles: HashMap<u64,u32>,
 }
 
 
