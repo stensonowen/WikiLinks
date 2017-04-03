@@ -1,5 +1,6 @@
 
 use {slog, csv, serde_json};
+use fnv::FnvHashMap;
 use std::sync::Mutex;
 use std::io::{self, Read, Write, BufRead, BufReader};
 use std::path::PathBuf;
@@ -99,6 +100,19 @@ impl LinkState<LinkData> {
             }).collect(),
         }
     }
+    pub fn break_down(self) -> 
+        (FnvHashMap<u32,Entry>, slog::Logger, HashMap<String,u32>)
+    {
+        let mut hm: FnvHashMap<u32,Entry> = 
+            FnvHashMap::with_capacity_and_hasher(self.size, Default::default());
+        for bucket in self.state.dumps {
+            for ie in bucket.into_inner().unwrap() {
+                let (id, entry) = ie.decompose();
+                hm.insert(id, entry);
+            }
+        }
+        (hm, self.log, self.state.titles)
+    }
     pub fn export(&self, dst: PathBuf) -> Result<(), io::Error> {
         // write output to line-delimited JSON and CSV types
         let manifest = self.manifest(&dst);
@@ -171,3 +185,18 @@ impl LinkState<LinkData> {
 
 }
 
+impl LinkData {
+    pub fn consolidate_links(links: Vec<Mutex<Vec<IndexedEntry>>>, size: usize) 
+        -> FnvHashMap<u32,Entry> 
+    {
+        let mut hm: FnvHashMap<u32,Entry> = 
+            FnvHashMap::with_capacity_and_hasher(size, Default::default());
+        for bucket in links {
+            for ie in bucket.into_inner().unwrap() {
+                let (id, entry) = ie.decompose();
+                hm.insert(id, entry);
+            }
+        }
+        hm
+    }
+}

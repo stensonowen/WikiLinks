@@ -26,7 +26,6 @@ impl LongCacheOuter {
         new
     }
     pub fn get(&self) -> Vec<CacheElem> {
-        println!("Current Status:  {:?}", self);
         let rfrn = self.0.clone();
         let lock = rfrn.read().unwrap();
         lock.get()
@@ -59,7 +58,7 @@ pub struct LongCacheInner {
 impl LongCacheInner {
     fn new() -> Self {
         LongCacheInner {
-            elems: Vec::with_capacity(CACHE_SIZE),
+            elems: Vec::with_capacity(CACHE_SIZE+1),
         }
     }
     fn min_len(&self) -> Option<u8> {

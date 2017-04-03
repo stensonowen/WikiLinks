@@ -50,19 +50,23 @@ impl Path {
     }
 }
 
-impl From<LinkState<ProcData>> for LinkState<HashLinks> {
-    fn from(old: LinkState<ProcData>) -> LinkState<HashLinks> {
-        //if old.state.titles.is_none() {
-        //    old.build_title_table();
-        //}
+//impl From<LinkState<ProcData>> for LinkState<HashLinks> {
+//    fn from(old: LinkState<ProcData>) -> LinkState<HashLinks> {
+impl From<LinkState<LinkData>> for LinkState<HashLinks> {
+    fn from(old: LinkState<LinkData>) -> LinkState<HashLinks> {
+        let (threads, size) = (old.threads, old.size);
+        let (links, log, titles) = old.break_down();
         LinkState {
-            threads:    old.threads,
-            size:       old.size,
-            log:        old.log,
+            threads:    threads,
+            size:       size,
+            log:        log,
             state:      HashLinks {
-                links:  old.state.links,
+                //links:  LinkState::<ProcData>::consolidate_links(old.state.dumps, old.size),
+                //links:  LinkData::consolidate_links(old.state.dumps, old.size),
                 //titles: old.state.titles,
-                titles: HashLinks::hash_titles(old.state.titles),
+                //titles: HashLinks::hash_titles(old.state.titles),
+                links:  links,
+                titles: HashLinks::hash_titles(titles),
             }
         }
     }
@@ -124,24 +128,29 @@ impl LinkState<HashLinks> {
         } else if let Some(m) = args.value_of("import") {
             LinkState::<LinkData>::import(PathBuf::from(m), new_logger()).unwrap()
         } else {
-            //clap should make this impossible
-            unreachable!()
+            panic!("The data has to come from somewhere; {}", 
+                   "supply either a manifest or 3 sql dumps");
         };
 
         if let Some(p) = args.value_of("export") {
             ls_dt.export(PathBuf::from(p)).unwrap();
         }
 
-        let mut ls_rd: LinkState<ProcData> = ls_dt.into();
-
-        if let Some(r) = args.value_of("compute-ranks") {
-            ls_rd.compute_ranks(&PathBuf::from(r)).unwrap();
-        }
-
-        //convert to HashLinks if starting a web server
         if args.is_present("web-server") {
-            Some(ls_rd.into())
+            Some(ls_dt.into())
         } else {
+            // do analytics
+            let mut ls_rd: LinkState<ProcData> = ls_dt.into();
+
+            if let Some(r) = args.value_of("compute_ranks") {
+                ls_rd.compute_ranks(&PathBuf::from(r)).unwrap();
+            }
+
+            if let Some(i) = args.value_of("farthest_ancestor") {
+                let id: u32 = i.parse().unwrap();
+                ls_rd.longest_path(id);
+            }
+
             None
         }
     }

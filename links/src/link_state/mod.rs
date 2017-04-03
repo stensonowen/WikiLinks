@@ -56,7 +56,6 @@ pub struct ProcData {
     /// Store easily searchable link and pagerank data
     /// Pagerank data can be read from, dumped to, or exported to disk 
     links: fnv::FnvHashMap<u32,Entry>,
-    titles: HashMap<String,u32>,
 }
 
 pub struct HashLinks {

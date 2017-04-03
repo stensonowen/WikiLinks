@@ -1,28 +1,25 @@
 use csv;
-use fnv::FnvHashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 use std::cmp::Ordering;
 use std::{f64, u64};
 
 use super::{LinkState, LinkData, ProcData};
-use super::Entry;
-use super::link_data::IndexedEntry;
 
 mod pagerank;
+mod longest_path;
 
 
 impl From<LinkState<LinkData>> for LinkState<ProcData> {
     fn from(old: LinkState<LinkData>) -> LinkState<ProcData> {
         // move addrs and entries from LinkData and compute pageranks
         // single threaded population for now
-        let links = Self::consolidate_links(old.state.dumps, old.size);
+        let (threads, size) = (old.threads, old.size);
+        let (links, log, _) = old.break_down();
         LinkState {
-            threads:    old.threads,
-            size:       old.size,
-            log:        old.log,
+            threads:    threads,
+            size:       size,
+            log:        log,
             state:      ProcData {
-                titles: old.state.titles,
                 links:  links,
             }
         }
@@ -42,7 +39,7 @@ impl LinkState<ProcData> {
             assert!(r.is_normal());
             assert!(r.is_sign_positive());
             assert!(r <= 1.0);
-            u64::MAX - r.recip() as u64
+            r.recip() as u64
         });
         let mut csv_w = csv::Writer::from_file(path)?;
         for (id,rank) in sorted_r {
@@ -52,19 +49,10 @@ impl LinkState<ProcData> {
         Ok(())
     }
 
-    fn consolidate_links(links: Vec<Mutex<Vec<IndexedEntry>>>, size: usize) 
-        -> FnvHashMap<u32,Entry> 
-    {
-        let mut hm: FnvHashMap<u32,Entry> = 
-            FnvHashMap::with_capacity_and_hasher(size, Default::default());
-        for bucket in links {
-            for ie in bucket.into_inner().unwrap() {
-                let (id, entry) = ie.decompose();
-                hm.insert(id, entry);
-            }
-        }
-        hm
+    pub fn longest_path(&self, dst: u32) -> u8 {
+        self.state.longest_path(dst)
     }
+
     fn _pretty_ranks(&self, ranks: &[(u32,f64)], ranks_path: &Path) -> Result<(),csv::Error> {
         //sort greatest-to-least
         // (RANK, ID, TITLE)
@@ -73,7 +61,6 @@ impl LinkState<ProcData> {
             //sort by floats, which Ord does not provide
             assert!(!a_r.is_nan(), "Page {} had a NaN rank", a_i);
             assert!(!b_r.is_nan(), "Page {} had a NaN rank", b_i);
-            //match (a_r > b_r, a_r == b_r) {
             match (a_r > b_r, (a_r - b_r).abs() < f64::EPSILON) {
                 (true, _) => Ordering::Less,
                 (_, true) => Ordering::Equal,
