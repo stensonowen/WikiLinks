@@ -33,9 +33,9 @@ fn argv<'a>() -> clap::ArgMatches<'a> {
              .takes_value(true)
              .conflicts_with("web_server")
              .help("Find the maximum links required to get from any link to the given one"))
-        .arg(Arg::with_name("web-server")
-             .short("w")
-             .help("Run web server; program will otherwise terminate after analysis"))
+        //.arg(Arg::with_name("web-server")
+        //     .short("w")
+        //     .help("Run web server; program will otherwise terminate after analysis"))
 
         .arg(Arg::with_name("page.sql")
              .short("p")

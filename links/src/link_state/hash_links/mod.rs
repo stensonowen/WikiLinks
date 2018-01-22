@@ -66,7 +66,7 @@ impl From<LinkState<LinkData>> for LinkState<HashLinks> {
                 //titles: old.state.titles,
                 //titles: HashLinks::hash_titles(old.state.titles),
                 links:  links,
-                titles: HashLinks::hash_titles(titles),
+                _titles: HashLinks::hash_titles(titles),
             }
         }
     }

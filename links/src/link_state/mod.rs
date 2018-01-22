@@ -12,8 +12,6 @@ pub mod link_data;
 pub mod proc_data;
 pub mod hash_links;
 
-const IS_SIMPLE: bool = true;
-
 
 //  ------STATE--MACHINE------
 
@@ -62,7 +60,7 @@ pub struct HashLinks {
     /// Read-only, fast-lookup container for link and proc data
     /// Interact with diesel cache and interface with website
     links: fnv::FnvHashMap<u32,Entry>,
-    titles: HashMap<u64,u32>,
+    _titles: HashMap<u64,u32>,
 }
 
 

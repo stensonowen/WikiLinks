@@ -597,7 +597,7 @@ impl Database {
             self.addresses.remove(&title);
         }
     }
-    fn asymmetric_references(&self) -> Vec<String> {
+    fn _asymmetric_references(&self) -> Vec<String> {
         /*
          * Welp. There are some redirects that have the redirect flag in page.sql
          *  but are not in redirects.sql. I guess it's not too bad to just purge them
@@ -633,7 +633,10 @@ impl Database {
             let corresponding_entry = match self.entries.get(id) {
                 Some(id_) => id_,
                 None => {
-                    error!(self.log, 
+                    // TODO: turn this back into a log entry
+                    //  (a slog macro causes an irritating warning :/)
+                    //error!(self.log, 
+                    println!(
                      "Found an addr whose id ({}) wasn't in entries; deleting it.",
                          id);
                     chopping_block.push(title.to_owned());
