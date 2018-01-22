@@ -153,6 +153,10 @@ impl LinkState<HashLinks> {
                 ls_rd.longest_path(id);
             }
 
+            // COMPUTE NEIGHBOR REDUNDANCY: TODO
+            let dupes = ls_rd.neighbor_redundancy();
+            println!("REDUNDANT u32 LINKS: {}", dupes);
+
             None
         }
     }

@@ -1,4 +1,4 @@
-#!/bin/dash
+#!/bin/sh
 # simplewiki: takes ~25 seconds, unzips to ~2.1M
 
 date=`date +%Y%0m01`
