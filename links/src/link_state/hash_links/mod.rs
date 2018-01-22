@@ -5,7 +5,7 @@ use {clap, fnv};
 use super::{LinkState, ProcData, HashLinks};
 use super::{LinkData, new_logger};
 use super::Entry;
-use web::Node;
+//use web::Node;
 
 use std::path::{self, PathBuf};
 use std::collections::HashMap;
@@ -79,6 +79,7 @@ impl HashLinks {
     pub fn get_links(&self) -> &fnv::FnvHashMap<u32,Entry> {
         &self.links
     }
+    /*
     pub fn lookup_title<'a>(&'a self, query: &'a str) -> Node<'a> {
         // Empty: unused (maybe should mean 'random'?
         // Absent: try case-insensitive version
@@ -100,6 +101,7 @@ impl HashLinks {
             }
         }
     }
+        */
     fn hash_title(t: &str) -> u64 {
         let mut s = DefaultHasher::new();
         t.hash(&mut s);

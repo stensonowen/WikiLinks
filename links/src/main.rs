@@ -1,34 +1,11 @@
-#![feature(plugin)]
-#![plugin(rocket_codegen)]
-//#![allow(needless_pass_by_value)]
 
 // NOTE: when scaling, remember to change bool link_db/parse/regexes.rs/IS_SIMPLE
 
 #[macro_use]
 extern crate clap;
 extern crate links;
-use links::cache as db;
-
-extern crate rocket;
-extern crate rocket_contrib;
-use rocket_contrib::Template;
-use rocket::State;
 
 use links::link_state::{LinkState, HashLinks};
-
-use std::str::FromStr;
-use links::cache::{self, get_cache, CACHE_SIZE};
-use cache::cache_elem::CacheElem;
-use cache::new_cache::NewCacheOuter;
-use cache::long_cache::LongCacheOuter;
-use links::web::{self, Context, CacheSort, SortParam, PathRes, Node};
-
-type SharedLinks<'a>  = State<'a, HashLinks>;
-type NewCache<'a>  = State<'a, NewCacheOuter>;
-type LongCache<'a> = State<'a, LongCacheOuter>;
-
-const DEFAULT_SORT: CacheSort = CacheSort::Recent;
-const CACHEWORTHY_LENGTH: usize = 5;    // only cache searches longer than this
 
 use clap::Arg;
 fn argv<'a>() -> clap::ArgMatches<'a> {
@@ -82,41 +59,7 @@ fn argv<'a>() -> clap::ArgMatches<'a> {
         .get_matches()
 }
 
-
-#[get("/")]
-fn index(nc: NewCache, lc: LongCache) -> Template {
-    let cache = match DEFAULT_SORT {
-        CacheSort::Recent => nc.get(),
-        CacheSort::Length => lc.get(),
-    };
-    let context = Context::from_cache(DEFAULT_SORT, cache);
-    Template::render("bfs", &context)
-}
-
-#[get("/bfs", rank = 3)]
-fn bfs_empty(nc: NewCache, lc: LongCache) -> Template {
-    let cache = match DEFAULT_SORT {
-        CacheSort::Recent => nc.get(),
-        CacheSort::Length => lc.get(),
-    };
-    let context = Context::from_cache(DEFAULT_SORT, cache);
-    Template::render("bfs", &context)
-}
-
-#[get("/bfs?<sort>", rank = 2)]
-fn bfs_sort(sort: SortParam, nc: NewCache, lc: LongCache) -> Template {
-    let sort = match sort.by {
-        Some(s) => CacheSort::from_str(s).unwrap_or(DEFAULT_SORT),
-        None => DEFAULT_SORT,
-    };
-    let cache = match sort {
-        CacheSort::Recent => nc.get(),
-        CacheSort::Length => lc.get(),
-    };
-    let context = Context::from_cache(sort, cache);
-    Template::render("bfs", &context)
-}
-
+/*
 #[get("/bfs?<search>", rank = 1)]
 fn bfs_search(search: web::SearchParams, conn: db::Conn, links: SharedLinks, 
               nc: NewCache, lc: LongCache) -> Template 
@@ -166,49 +109,9 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn, links: SharedLinks,
     };
     Template::render("bfs", &context)
 }
-
-/*
-#[get("/foo")]
-fn foo(s: State<RwLock<i32>>) -> String {
-    //let t = s.read().unwrap();
-    //println!("{:?}", t);
-    let mut t = s.write().unwrap();
-    *t = 0;
-    println!("{:?}", t);
-    String::new()
-}
 */
 
-fn server(hl_state: LinkState<HashLinks>) {
-    // use Arc around this?
-    let hl = hl_state.extract();
-
-    let c = cache::establish_connection();
-    let lc = match get_cache(&c, hl.get_links(), &CacheSort::Length, CACHE_SIZE) {
-        Some(l) => LongCacheOuter::from(l),
-        None => LongCacheOuter::new(),
-    };
-    let nc = match get_cache(&c, hl.get_links(), &CacheSort::Recent, CACHE_SIZE) {
-        Some(n) => NewCacheOuter::from(n),
-        None => NewCacheOuter::new(),
-    };
-
-    rocket::ignite()
-        .manage(db::init_pool())
-        .manage(hl)
-        .manage(lc)
-        .manage(nc)
-        .mount("/", routes![index, bfs_empty, bfs_sort, bfs_search, /*foo*/])
-        .launch();
-
-}
-
 fn main() {
-    let hl_state = LinkState::<HashLinks>::from_args(argv());
-    if let Some(hl) = hl_state {
-        server(hl);
-    } else {
-        println!("Finished analytics; not starting a web server");
-    }
+    LinkState::<HashLinks>::from_args(argv());
 }
 
