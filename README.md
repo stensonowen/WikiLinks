@@ -1,5 +1,8 @@
 ## Current Status
 
+**NOTE**: For now, development on [*master*](/stensonowen/WikiLinks/master) will focus on cool graph stuff and the website will live at [*rust_web*](/stensonowen/WikiLinks/rust_web). It's being bumped from master for now because it needs some maintenance (update for diesel 1.0, fix Rocket breaking changes, organization, etc.). Ideally these would live behind a non-default feature gate, which would mean the code is still included but building wouldn't take forever. Maybe in the future I'll put web stuff back into *master*, but currently it's just complicating things.
+
+
 Currently the fastest form of the project is a pure Rust rewrite of parsing, storing, searching, computing pageranks, and serving web requests. 
 
 The link data is parsed from sql dumps published monthly, adapting for redirects and dead pages. It is saved to disk and loaded into a hash table where the [pagerank](https://en.wikipedia.org/wiki/Pagerank) of each page can be computed and saved. A bidirectional breadth-first search can then be run on the link table, searching the children and grandchildren of the source and the parents and grandparents of the destination until the sets intersect, a process which completes relatively quickly in the worst case even with an ugly order notation. Searches are cached using [Postgres](https://www.postgresql.org/) with [Diesel](https://diesel.rs), and [Rocket](https://rocket.rs) processes requests to serve up saved searches or perform new ones.
