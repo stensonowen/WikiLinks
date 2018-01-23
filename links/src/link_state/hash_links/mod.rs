@@ -1,4 +1,5 @@
 extern crate rand;
+extern crate heapsize;
 
 use {clap, fnv};
 
@@ -154,8 +155,29 @@ impl LinkState<HashLinks> {
             }
 
             // COMPUTE NEIGHBOR REDUNDANCY: TODO
+            info!(ls_rd.log, "Checking neighbor redundancy...");
             let dupes = ls_rd.neighbor_redundancy();
-            println!("REDUNDANT u32 LINKS: {}", dupes);
+            info!(ls_rd.log, "REDUNDANT u32 LINKS: {}", dupes);
+
+            let num_children: usize = ls_rd.state.links.values()
+                .map(|e| e.get_children().len()).sum();
+            let num_parents: usize = ls_rd.state.links.values()
+                .map(|e| e.get_parents().len()).sum();
+            info!(ls_rd.log, "Total number of children:  {}", num_children);
+            info!(ls_rd.log, "Total number of parents :  {}", num_parents);
+            // SIMPLE
+            //      BEFORE OPT: 
+            //          CHILDREN = PARENTS = 5,067,702
+            //          MEMORY: total = 154,184 K
+            //          
+
+
+            // pmap -x <PID>
+            println!("\n\n\nMEMORY USED:\n");
+            ::std::process::Command::new("/usr/bin/pmap")
+                .arg(format!("{}", ::std::process::id()))
+                .spawn().unwrap();
+            //loop {}
 
             None
         }

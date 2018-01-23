@@ -68,7 +68,7 @@ impl<'a> Graph<'a> {
         //distribute pagerank
         for (addr,page) in self.pages {
             let pr = self.ranks[addr];
-            if page.children.is_empty() {
+            if page.get_children().is_empty() {
                 //equally distribute our pagerank to every page
                 let n = self.pages.len() as f64;
                 for &a in self.pages.keys() {
@@ -77,8 +77,8 @@ impl<'a> Graph<'a> {
                 }
             } else {
                 //equally distribute our pagerank to all our children
-                let n = page.children.len() as f64;
-                for &a in &page.children {
+                let n = page.get_children().len() as f64;
+                for &a in page.get_children() {
                     let mut x = new_ranks.entry(a).or_insert(starting_val);
                     *x += DAMPING_FACTOR * (pr / n);
                 }

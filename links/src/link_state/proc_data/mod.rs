@@ -80,10 +80,10 @@ impl LinkState<ProcData> {
         use std::collections::HashSet;
         // count number of nodes that are present in both `children` and `parents`
         self.state.links.values().map(|e| {
-            let children: HashSet<u32> = e.children.iter().map(|&i| i).collect();
-            assert_eq!(e.children.len(), children.len());
-            let parents: HashSet<u32> = e.parents.iter().map(|&i| i).collect();
-            assert_eq!(e.parents.len(), parents.len());
+            let children: HashSet<u32> = e.get_children().iter().map(|&i| i).collect();
+            assert_eq!(e.get_children().len(), children.len());
+            let parents: HashSet<u32> = e.get_parents().iter().map(|&i| i).collect();
+            assert_eq!(e.get_parents().len(), parents.len());
             children.intersection(&parents).count()
         }).sum()
     }

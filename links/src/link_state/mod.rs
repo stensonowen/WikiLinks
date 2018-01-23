@@ -12,6 +12,9 @@ pub mod link_data;
 pub mod proc_data;
 pub mod hash_links;
 
+pub mod entry;
+use self::entry::Entry;
+
 
 //  ------STATE--MACHINE------
 
@@ -67,9 +70,11 @@ pub struct HashLinks {
 // ------COMMON-OBJECTS------
 
 
+/*
 #[derive(Serialize, Deserialize)]
 pub struct Entry {
     pub title: String,
     pub parents:  Vec<u32>,
     pub children: Vec<u32>,
 }
+*/

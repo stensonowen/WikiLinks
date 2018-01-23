@@ -37,7 +37,7 @@ impl ProcData {
             height += 1;
             for last in &last_row {
                 // put all
-                for next in &self.links.get(last).unwrap().parents {
+                for next in self.links.get(last).unwrap().get_parents() {
                     if all_seen.contains(next) == false {
                         tmp.insert(*next);
                         all_seen.insert(*next);

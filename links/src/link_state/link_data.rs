@@ -29,11 +29,7 @@ impl IndexedEntry {
         }
     }
     pub fn decompose(self) -> (u32,Entry) {
-        (self.id, Entry {
-            title: self.title,
-            parents: self.parents,
-            children: self.children,
-        })
+        (self.id, Entry::from(self.title, self.parents, self.children))
     }
 }
 
