@@ -25,6 +25,12 @@ pub struct IndexedEntry {
 impl IndexedEntry {
     pub fn from(i: u32, t: String, parents: Vec<u32>, children: Vec<u32>) -> Self {
         use std::collections::HashSet;
+        assert!(parents.len() < u16::max_value() as usize);
+        assert!(children.len() < u16::max_value() as usize);
+        let parent_set: HashSet<u32> = parents.iter().map(|&i| i).collect();
+        assert_eq!(parent_set.len(), parents.len());
+        let child_set: HashSet<u32> = children.iter().map(|&i| i).collect();
+        assert_eq!(child_set.len(), children.len());
         let last_parent = parents.len() as u16;
         let num_children = children.len();
         let parents_hm: HashSet<u32> = parents.iter().map(|&i| i).collect();

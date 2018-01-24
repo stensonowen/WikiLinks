@@ -181,6 +181,8 @@ impl LinkState<HashLinks> {
             //      BEFORE OPT:
             //          CHILDREN = PARENTS = 426,766,968
             //          MEMORY: total = 8,724,828 K
+            //      AFTER OPT:
+            //          CHILDREN = 438891128 != PARENTS = 414315128
 
 
             // pmap -x <PID>
