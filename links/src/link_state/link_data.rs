@@ -11,25 +11,38 @@ use std::collections::HashMap;
 use super::{LinkState, LinkDb, LinkData};
 use super::Entry;
 
+// TODO replace IndexedEntry with (u32, Entry) ?
 #[derive(Debug, Serialize, Deserialize)]
 pub struct IndexedEntry {
-    id: u32,
-    title: String,
-    parents: Vec<u32>,
-    children: Vec<u32>,
+    pub id: u32,
+    pub title: String,
+    // See representation of Entry
+    pub neighbors: Vec<u32>,
+    pub last_parent: u16,
+    pub first_child: u16,
 }
 
 impl IndexedEntry {
-    pub fn from(i: u32, t: String, p: Vec<u32>, c: Vec<u32>) -> Self {
+    pub fn from(i: u32, t: String, parents: Vec<u32>, children: Vec<u32>) -> Self {
+        use std::collections::HashSet;
+        let last_parent = parents.len() as u16;
+        let num_children = children.len();
+        let parents_hm: HashSet<u32> = parents.iter().map(|&i| i).collect();
+        let common: HashSet<u32> = children.iter().map(|&i| i).filter(|i| {
+            parents_hm.contains(&i)
+        }).collect();
+        let unique_pars =  parents.into_iter().filter(|i| !common.contains(&i));
+        let unique_kids = children.into_iter().filter(|i| !common.contains(&i));
+        let neighbors: Vec<u32> = unique_pars
+            .chain(common.iter().map(|&i| i))
+            .chain(unique_kids).collect();
+        let first_child = (neighbors.len() - num_children) as u16;
+
         IndexedEntry {
             id: i,
             title: t,
-            parents: p,
-            children: c,
+            neighbors, last_parent, first_child
         }
-    }
-    pub fn decompose(self) -> (u32,Entry) {
-        (self.id, Entry::from(self.title, self.parents, self.children))
     }
 }
 
@@ -103,7 +116,8 @@ impl LinkState<LinkData> {
             FnvHashMap::with_capacity_and_hasher(self.size, Default::default());
         for bucket in self.state.dumps {
             for ie in bucket.into_inner().unwrap() {
-                let (id, entry) = ie.decompose();
+                let id = ie.id;
+                let entry: Entry = ie.into();
                 hm.insert(id, entry);
             }
         }
@@ -189,7 +203,8 @@ impl LinkData {
             FnvHashMap::with_capacity_and_hasher(size, Default::default());
         for bucket in links {
             for ie in bucket.into_inner().unwrap() {
-                let (id, entry) = ie.decompose();
+                let id = ie.id;
+                let entry: Entry = ie.into();
                 hm.insert(id, entry);
             }
         }

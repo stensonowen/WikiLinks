@@ -1,5 +1,4 @@
 extern crate rand;
-extern crate heapsize;
 
 use {clap, fnv};
 
@@ -155,9 +154,11 @@ impl LinkState<HashLinks> {
             }
 
             // COMPUTE NEIGHBOR REDUNDANCY: TODO
+            /*
             info!(ls_rd.log, "Checking neighbor redundancy...");
             let dupes = ls_rd.neighbor_redundancy();
             info!(ls_rd.log, "REDUNDANT u32 LINKS: {}", dupes);
+            */
 
             let num_children: usize = ls_rd.state.links.values()
                 .map(|e| e.get_children().len()).sum();
@@ -166,10 +167,20 @@ impl LinkState<HashLinks> {
             info!(ls_rd.log, "Total number of children:  {}", num_children);
             info!(ls_rd.log, "Total number of parents :  {}", num_parents);
             // SIMPLE
+            //      Redundancy: 2,754,583
             //      BEFORE OPT: 
             //          CHILDREN = PARENTS = 5,067,702
             //          MEMORY: total = 154,184 K
+            //      AFTER OPT:
+            //          CHILDREN = PARENTS = 5,067,702
+            //          MEMORY: total = 197,104 K (parse run)
+            //                  total = 129,516 K (load run)
             //          
+            // ENWIKI
+            //      Redundancy: 229,711,548
+            //      BEFORE OPT:
+            //          CHILDREN = PARENTS = 426,766,968
+            //          MEMORY: total = 8,724,828 K
 
 
             // pmap -x <PID>
