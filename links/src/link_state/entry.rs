@@ -9,8 +9,8 @@
 pub struct Entry {
     pub title: String,
     neighbors: Vec<u32>,
-    last_parent: u16,
-    first_child: u16,
+    last_parent: u32,
+    first_child: u32,
 }
 
 use link_state::link_data::IndexedEntry;

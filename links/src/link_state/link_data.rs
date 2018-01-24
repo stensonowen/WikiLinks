@@ -18,20 +18,22 @@ pub struct IndexedEntry {
     pub title: String,
     // See representation of Entry
     pub neighbors: Vec<u32>,
-    pub last_parent: u16,
-    pub first_child: u16,
+    pub last_parent: u32,
+    pub first_child: u32,
 }
 
 impl IndexedEntry {
     pub fn from(i: u32, t: String, parents: Vec<u32>, children: Vec<u32>) -> Self {
         use std::collections::HashSet;
-        assert!(parents.len() < u16::max_value() as usize);
-        assert!(children.len() < u16::max_value() as usize);
         let parent_set: HashSet<u32> = parents.iter().map(|&i| i).collect();
-        assert_eq!(parent_set.len(), parents.len());
+        assert_eq!(parent_set.len(), parents.len(), "Entry `{}`", t);
+        assert!(parents.len() < u32::max_value() as usize, 
+                "Entry `{}` has {} parents", t, parents.len());
         let child_set: HashSet<u32> = children.iter().map(|&i| i).collect();
-        assert_eq!(child_set.len(), children.len());
-        let last_parent = parents.len() as u16;
+        assert_eq!(child_set.len(), children.len(), "Entry `{}`", t);
+        assert!(children.len() < u32::max_value() as usize, 
+                "Entry `{}` has {} children", t, children.len());
+        let last_parent = parents.len() as u32;
         let num_children = children.len();
         let parents_hm: HashSet<u32> = parents.iter().map(|&i| i).collect();
         let common: HashSet<u32> = children.iter().map(|&i| i).filter(|i| {
@@ -42,7 +44,7 @@ impl IndexedEntry {
         let neighbors: Vec<u32> = unique_pars
             .chain(common.iter().map(|&i| i))
             .chain(unique_kids).collect();
-        let first_child = (neighbors.len() - num_children) as u16;
+        let first_child = (neighbors.len() - num_children) as u32;
 
         IndexedEntry {
             id: i,
