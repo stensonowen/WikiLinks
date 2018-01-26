@@ -4,7 +4,7 @@ use fnv;
 use slog_term;
 use slog::{Logger, DrainExt};
 
-use std::sync::Mutex;
+//use std::sync::Mutex;
 use std::collections::HashMap;
 
 pub mod link_db;
@@ -49,7 +49,8 @@ pub struct LinkDb {
 pub struct LinkData {
     /// Store parsed and converted links and addresses
     /// Link data can be quickly written to or read from disk
-    dumps: Vec<Mutex<Vec<link_data::IndexedEntry>>>,
+    //dumps: Vec<Mutex<Vec<link_data::IndexedEntry>>>,
+    dumps: Vec<Vec<link_data::IndexedEntry>>,
     titles: HashMap<String,u32>,
 }
 

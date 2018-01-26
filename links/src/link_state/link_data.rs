@@ -1,7 +1,7 @@
 
 use {slog, csv, serde_json};
 use fnv::FnvHashMap;
-use std::sync::Mutex;
+//use std::sync::Mutex;
 use std::io::{self, Read, Write, BufRead, BufReader};
 use std::path::PathBuf;
 use std::fs::File;
@@ -62,18 +62,21 @@ impl From<LinkState<LinkDb>> for LinkState<LinkData> {
         // addresses and ranks feed into PostgreSQL
         
         let (entries_i, titles) = old.state.parts();
-        let mut entries: Vec<Mutex<Vec<IndexedEntry>>> = Vec::with_capacity(old.threads);
+        //let mut entries: Vec<Mutex<Vec<IndexedEntry>>> = Vec::with_capacity(old.threads);
+        let mut entries: Vec<Vec<IndexedEntry>> = Vec::with_capacity(old.threads);
 
         //seems like there should be a more functional way to do this
         //  if .take() didn't consume?  doesn't shallow copy??
         // could stand to be refactored
         let size = old.size / old.threads + 1;
         for _ in 0..old.threads+1 {
-            entries.push(Mutex::new(Vec::with_capacity(size)));
+            //entries.push(Mutex::new(Vec::with_capacity(size)));
+            entries.push(Vec::with_capacity(size));
         }
         let mut count = 0usize;
         for entry in entries_i {
-            entries[count/size].get_mut().unwrap().push(entry);
+            //entries[count/size].get_mut().unwrap().push(entry);
+            entries[count/size].push(entry);
             count += 1;
         }
         assert_eq!(count, old.size, "Lost elements populating LinkDb");
@@ -125,7 +128,7 @@ impl LinkState<LinkData> {
         let mut hm: FnvHashMap<u32,Entry> = 
             FnvHashMap::with_capacity_and_hasher(self.size, Default::default());
         for bucket in self.state.dumps {
-            for ie in bucket.into_inner().unwrap() {
+            for ie in bucket {
                 let id = ie.id;
                 let entry: Entry = ie.into();
                 hm.insert(id, entry);
@@ -154,7 +157,7 @@ impl LinkState<LinkData> {
             println!("Writing to `{:?}`", p);
             let mut f = File::create(p)?;
             let dump = &self.state.dumps[i];
-            for i in dump.lock().unwrap().iter() {
+            for i in dump {
                 let mut serial = serde_json::to_string(i).unwrap();
                 serial.push('\n');
                 f.write_all(&serial.into_bytes())?;
@@ -163,6 +166,7 @@ impl LinkState<LinkData> {
         Ok(()) 
     }
 
+    /*
     pub fn import(src: PathBuf, log: slog::Logger) -> Result<Self,io::Error> { 
         assert!(src.is_file());
         let mut s = String::new();
@@ -202,8 +206,9 @@ impl LinkState<LinkData> {
             }
         })
     }
+    */
 
-    pub fn import2(src: PathBuf, log: slog::Logger) -> Result<Self,io::Error> { 
+    pub fn import(src: PathBuf, log: slog::Logger) -> Result<Self,io::Error> { 
         assert!(src.is_file());
         let mut s = String::new();
         File::open(src).and_then(|mut f: File| f.read_to_string(&mut s))?;
@@ -218,20 +223,6 @@ impl LinkState<LinkData> {
              titles.insert(title,id);
         }
 
-        //populate entries
-        /*
-        let mut entries: Vec<Mutex<Vec<IndexedEntry>>> = Vec::with_capacity(manifest.threads);
-        for i in 0..manifest.threads {
-            let mut entries_v = Vec::with_capacity(manifest.size/manifest.threads);
-            let f = File::open(&manifest.entries[i])?;
-            let r = BufReader::new(f);
-            for line in r.lines() {
-                let e: IndexedEntry = serde_json::from_str(&line?).unwrap();
-                entries_v.push(e);
-            }
-            entries.push(Mutex::new(entries_v));
-        }
-        */
         let threads = manifest.entries.into_iter().map(|p| {
             thread::spawn(move || {
                 let f = File::open(p)?;
@@ -239,14 +230,11 @@ impl LinkState<LinkData> {
                 let err = "Deserializing data";
                 r.lines().map(|l| l.map(|s| serde_json::from_str(&s).expect(err)))
                     .collect::<io::Result<Vec<IndexedEntry>>>()
-                    //.map(Mutex::new)
             })
         }).collect::<Vec<thread::JoinHandle<io::Result<Vec<IndexedEntry>>>>>();
         // handle these unwraps better? look into `failure`?
-        //let data: Vec<Vec<IndexedEntry>> = threads.into_iter()
-        let data: Vec<Mutex<Vec<IndexedEntry>>> = threads.into_iter()
+        let data: Vec<Vec<IndexedEntry>> = threads.into_iter()
             .map(|t| t.join().unwrap().unwrap())
-            .map(Mutex::new)
             .collect();
 
         Ok(LinkState {
@@ -254,7 +242,6 @@ impl LinkState<LinkData> {
             size:    manifest.size,
             log:     log,
             state:      LinkData {
-                //dumps: entries,
                 dumps: data,
                 titles: titles,
             }
@@ -263,13 +250,14 @@ impl LinkState<LinkData> {
 }
 
 impl LinkData {
-    pub fn consolidate_links(links: Vec<Mutex<Vec<IndexedEntry>>>, size: usize) 
+    //pub fn consolidate_links(links: Vec<Mutex<Vec<IndexedEntry>>>, size: usize) 
+    pub fn consolidate_links(links: Vec<Vec<IndexedEntry>>, size: usize) 
         -> FnvHashMap<u32,Entry> 
     {
         let mut hm: FnvHashMap<u32,Entry> = 
             FnvHashMap::with_capacity_and_hasher(size, Default::default());
         for bucket in links {
-            for ie in bucket.into_inner().unwrap() {
+            for ie in bucket {
                 let id = ie.id;
                 let entry: Entry = ie.into();
                 hm.insert(id, entry);
