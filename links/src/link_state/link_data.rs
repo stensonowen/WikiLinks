@@ -11,6 +11,8 @@ use std::collections::HashMap;
 use super::{LinkState, LinkDb, LinkData};
 use super::Entry;
 
+use std::thread;
+
 // TODO replace IndexedEntry with (u32, Entry) ?
 #[derive(Debug, Serialize, Deserialize)]
 pub struct IndexedEntry {
@@ -201,6 +203,63 @@ impl LinkState<LinkData> {
         })
     }
 
+    pub fn import2(src: PathBuf, log: slog::Logger) -> Result<Self,io::Error> { 
+        assert!(src.is_file());
+        let mut s = String::new();
+        File::open(src).and_then(|mut f: File| f.read_to_string(&mut s))?;
+        let manifest: LinkManifest = serde_json::from_str(&s).unwrap();
+
+        //populate titles
+        let mut titles: HashMap<String,u32> = HashMap::with_capacity(manifest.size);
+        let mut csv_r = csv::Reader::from_file(&manifest.titles)
+            .unwrap().has_headers(false);
+        for line in csv_r.decode() {
+             let (id, title): (u32, String) = line.unwrap();
+             titles.insert(title,id);
+        }
+
+        //populate entries
+        /*
+        let mut entries: Vec<Mutex<Vec<IndexedEntry>>> = Vec::with_capacity(manifest.threads);
+        for i in 0..manifest.threads {
+            let mut entries_v = Vec::with_capacity(manifest.size/manifest.threads);
+            let f = File::open(&manifest.entries[i])?;
+            let r = BufReader::new(f);
+            for line in r.lines() {
+                let e: IndexedEntry = serde_json::from_str(&line?).unwrap();
+                entries_v.push(e);
+            }
+            entries.push(Mutex::new(entries_v));
+        }
+        */
+        let threads = manifest.entries.into_iter().map(|p| {
+            thread::spawn(move || {
+                let f = File::open(p)?;
+                let r = BufReader::new(f);
+                let err = "Deserializing data";
+                r.lines().map(|l| l.map(|s| serde_json::from_str(&s).expect(err)))
+                    .collect::<io::Result<Vec<IndexedEntry>>>()
+                    //.map(Mutex::new)
+            })
+        }).collect::<Vec<thread::JoinHandle<io::Result<Vec<IndexedEntry>>>>>();
+        // handle these unwraps better? look into `failure`?
+        //let data: Vec<Vec<IndexedEntry>> = threads.into_iter()
+        let data: Vec<Mutex<Vec<IndexedEntry>>> = threads.into_iter()
+            .map(|t| t.join().unwrap().unwrap())
+            .map(Mutex::new)
+            .collect();
+
+        Ok(LinkState {
+            threads: manifest.threads,
+            size:    manifest.size,
+            log:     log,
+            state:      LinkData {
+                //dumps: entries,
+                dumps: data,
+                titles: titles,
+            }
+        })
+    }
 }
 
 impl LinkData {
