@@ -1,7 +1,6 @@
 
 use {slog, csv, serde_json};
 use fnv::FnvHashMap;
-//use std::sync::Mutex;
 use std::io::{self, Read, Write, BufRead, BufReader};
 use std::path::PathBuf;
 use std::fs::File;
@@ -62,7 +61,6 @@ impl From<LinkState<LinkDb>> for LinkState<LinkData> {
         // addresses and ranks feed into PostgreSQL
         
         let (entries_i, titles) = old.state.parts();
-        //let mut entries: Vec<Mutex<Vec<IndexedEntry>>> = Vec::with_capacity(old.threads);
         let mut entries: Vec<Vec<IndexedEntry>> = Vec::with_capacity(old.threads);
 
         //seems like there should be a more functional way to do this
@@ -70,12 +68,10 @@ impl From<LinkState<LinkDb>> for LinkState<LinkData> {
         // could stand to be refactored
         let size = old.size / old.threads + 1;
         for _ in 0..old.threads+1 {
-            //entries.push(Mutex::new(Vec::with_capacity(size)));
             entries.push(Vec::with_capacity(size));
         }
         let mut count = 0usize;
         for entry in entries_i {
-            //entries[count/size].get_mut().unwrap().push(entry);
             entries[count/size].push(entry);
             count += 1;
         }
@@ -166,47 +162,6 @@ impl LinkState<LinkData> {
         Ok(()) 
     }
 
-    /*
-    pub fn import(src: PathBuf, log: slog::Logger) -> Result<Self,io::Error> { 
-        assert!(src.is_file());
-        let mut s = String::new();
-        let mut f = File::open(src)?;
-        f.read_to_string(&mut s).unwrap();
-        let manifest: LinkManifest = serde_json::from_str(&s).unwrap();
-
-        //populate titles
-        let mut titles: HashMap<String,u32> = HashMap::with_capacity(manifest.size);
-        let mut csv_r = csv::Reader::from_file(&manifest.titles)
-            .unwrap().has_headers(false);
-        for line in csv_r.decode() {
-             let (id, title): (u32, String) = line.unwrap();
-             titles.insert(title,id);
-        }
-
-        //populate entries
-        let mut entries: Vec<Mutex<Vec<IndexedEntry>>> = Vec::with_capacity(manifest.threads);
-        for i in 0..manifest.threads {
-            let mut entries_v = Vec::with_capacity(manifest.size/manifest.threads);
-            let f = File::open(&manifest.entries[i])?;
-            let r = BufReader::new(f);
-            for line in r.lines() {
-                let e: IndexedEntry = serde_json::from_str(&line?).unwrap();
-                entries_v.push(e);
-            }
-            entries.push(Mutex::new(entries_v));
-        }
-
-        Ok(LinkState {
-            threads: manifest.threads,
-            size:    manifest.size,
-            log:     log,
-            state:      LinkData {
-                dumps: entries,
-                titles: titles,
-            }
-        })
-    }
-    */
 
     pub fn import(src: PathBuf, log: slog::Logger) -> Result<Self,io::Error> { 
         assert!(src.is_file());
@@ -250,7 +205,6 @@ impl LinkState<LinkData> {
 }
 
 impl LinkData {
-    //pub fn consolidate_links(links: Vec<Mutex<Vec<IndexedEntry>>>, size: usize) 
     pub fn consolidate_links(links: Vec<Vec<IndexedEntry>>, size: usize) 
         -> FnvHashMap<u32,Entry> 
     {

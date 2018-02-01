@@ -11,10 +11,10 @@ use fnv::FnvHashMap;
 use std::f64;
 pub const DAMPING_FACTOR: f64 = 0.85;
 //pub const MAX_ERROR: f64 = f64::EPSILON * 10f64;
-pub const MAX_ERROR: f64 = 0.00000001;  // for testing: ~55 iters, ~4 mins
+pub const MAX_ERROR: f64 = 0.000_000_01;  // for testing: ~55 iters, ~4 mins
 pub const MAX_ITER: usize = 500;   //iterations to panic! after 
 //  (max_err = 10ε usually finishes after ~150 for simplewiki)
-//  (max_err = 0.00000001 takes about 50 iters for enwiki)
+//  (max_err = 0.000_000_01 takes about 50 iters for enwiki)
 
 
 use super::super::Entry as Page;
@@ -46,11 +46,8 @@ impl<'a> Graph<'a> {
         self.ranks
     }
     fn sum(&self) -> f64 {
-        let mut sum = 0f64;
-        for &v in self.ranks.values() {
-            sum += v;
-        }
-        sum
+        // is there a reason I didn't do this?
+        self.ranks.values().sum()
     }
     fn iterate(&mut self) -> f64 {
         // Sub-optimal solution, but easiest to understand
