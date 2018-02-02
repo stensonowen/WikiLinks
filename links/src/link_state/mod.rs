@@ -13,6 +13,7 @@ pub mod link_data;
 pub mod proc_data;
 pub mod hash_links;
 
+pub mod bfs;
 pub mod entry;
 use self::entry::Entry;
 

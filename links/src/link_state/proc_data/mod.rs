@@ -8,7 +8,6 @@ use super::{LinkState, LinkData, ProcData};
 mod pagerank;
 mod longest_path;
 
-
 impl From<LinkState<LinkData>> for LinkState<ProcData> {
     fn from(old: LinkState<LinkData>) -> LinkState<ProcData> {
         // move addrs and entries from LinkData and compute pageranks

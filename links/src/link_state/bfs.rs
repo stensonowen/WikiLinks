@@ -3,7 +3,8 @@ use fnv;
 use fnv::FnvHashMap;
 
 use std::collections::{HashSet, HashMap};
-use super::{Path, PathError, HashLinks};
+//use super::{Path, PathError, HashLinks};
+use link_state::hash_links::{Path, PathError};
 use std::mem::{self, swap};
 use link_state::entry::Entry;
 // links: fnv::FnvHashMap<u32,Entry>
@@ -18,12 +19,14 @@ const MAX_DEPTH: u32 = 10;
 // TODO swap out naive iter functions
 // TODO perf profiling :)
 
+/*
 impl HashLinks {
     fn do_bfs(&self, src: u32, dst: u32) -> Path {
         let mut bfs = BFS::new(&self.links, src, dst);
         bfs.search() // .print(&self.links);
     }
 }
+*/
 
 /*
  *                    * ------------------------ `src`
@@ -218,6 +221,7 @@ impl<'a> BFS<'a> {
 }
 
 
+/*
 enum SearchDirection { Up, Down, }
 
 impl HashLinks {
@@ -343,4 +347,4 @@ fn extract_path(src: u32,
     }
     path
 }
-
+*/
