@@ -1,13 +1,10 @@
 extern crate rand;
 
-use {clap, fnv};
+use fnv;
 
-use super::{LinkState, ProcData, HashLinks};
-use super::{LinkData, new_logger};
+use super::{LinkState, LinkData, HashLinks};
 use super::Entry;
-//use web::Node;
 
-use std::path::{self, PathBuf};
 use std::collections::HashMap;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -112,90 +109,3 @@ impl HashLinks {
     }
 }
 
-impl LinkState<HashLinks> {
-    pub fn extract(self) -> HashLinks {
-        self.state
-    }
-    pub fn from_args(args: clap::ArgMatches) -> Option<Self> {
-        //populate complete HashLinks from command-line args
-
-        //first, decide whether to build links from source sql or previous backup
-        let ls_dt: LinkState<LinkData> = if let (Some(p), Some(r), Some(l)) = 
-            (args.value_of("page.sql"), 
-             args.value_of("redirect.sql"), 
-             args.value_of("pagelinks.sql")) 
-        {
-            LinkState::new(path::Path::new(p), path::Path::new(r), path::Path::new(l))
-                .into()
-        } else if let Some(m) = args.value_of("import") {
-            LinkState::<LinkData>::import(PathBuf::from(m), new_logger()).unwrap()
-        } else {
-            panic!("The data has to come from somewhere; {}", 
-                   "supply either a manifest or 3 sql dumps");
-        };
-
-        if let Some(p) = args.value_of("export") {
-            ls_dt.export(PathBuf::from(p)).unwrap();
-        }
-
-        if args.is_present("web-server") {
-            Some(ls_dt.into())
-        } else {
-            // do analytics
-            let mut ls_rd: LinkState<ProcData> = ls_dt.into();
-
-            if let Some(r) = args.value_of("compute_ranks") {
-                ls_rd.compute_ranks(&PathBuf::from(r)).unwrap();
-            }
-
-            if let Some(i) = args.value_of("farthest_ancestor") {
-                let id: u32 = i.parse().unwrap();
-                ls_rd.longest_path(id);
-            }
-
-            // COMPUTE NEIGHBOR REDUNDANCY: TODO
-            /*
-            info!(ls_rd.log, "Checking neighbor redundancy...");
-            let dupes = ls_rd.neighbor_redundancy();
-            info!(ls_rd.log, "REDUNDANT u32 LINKS: {}", dupes);
-            */
-
-            let num_children: usize = ls_rd.state.links.values()
-                .map(|e| e.get_children().len()).sum();
-            let num_parents: usize = ls_rd.state.links.values()
-                .map(|e| e.get_parents().len()).sum();
-            info!(ls_rd.log, "Total number of children:  {}", num_children);
-            info!(ls_rd.log, "Total number of parents :  {}", num_parents);
-            // SIMPLE
-            //      Redundancy: 2,754,583
-            //      BEFORE OPT: 
-            //          CHILDREN = PARENTS = 5,067,702
-            //          MEMORY: total = 154,184 K
-            //      AFTER OPT:
-            //          CHILDREN = PARENTS = 5,067,702
-            //          MEMORY: total = 197,104 K (parse run)
-            //                  total = 129,516 K (load run)
-            //          
-            // ENWIKI
-            //      Redundancy: 229,711,548
-            //      BEFORE OPT:
-            //          CHILDREN = PARENTS = 426,766,968
-            //          MEMORY: total = 8,724,828 K
-            //      AFTER OPT:
-            //          CHILDREN = PARENTS = 426,766,968
-            //          MEMORY: total = 7,158,108 K
-            //
-            //
-
-
-            // pmap -x <PID>
-            println!("\n\n\nMEMORY USED:\n");
-            ::std::process::Command::new("/usr/bin/pmap")
-                .arg(format!("{}", ::std::process::id()))
-                .spawn().unwrap();
-            //loop {}
-
-            None
-        }
-    }
-}

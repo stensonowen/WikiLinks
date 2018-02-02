@@ -1,11 +1,12 @@
 
 // NOTE: when scaling, remember to change bool link_db/parse/regexes.rs/IS_SIMPLE
+// TODO make this a build flag
 
 #[macro_use]
 extern crate clap;
 extern crate links;
 
-use links::link_state::{LinkState, HashLinks};
+use links::link_state::{self, LinkState};
 
 use clap::Arg;
 fn argv<'a>() -> clap::ArgMatches<'a> {
@@ -111,7 +112,11 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn, links: SharedLinks,
 }
 */
 
+
 fn main() {
-    LinkState::<HashLinks>::from_args(argv());
+    let argv = argv();
+    let ls: LinkState<link_state::ProcData> = LinkState::from_args(&argv);
+    //let ls: LinkState<link_state::HashLinks> = LinkState::from_args(&argv);
+
 }
 
