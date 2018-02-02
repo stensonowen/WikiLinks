@@ -1,5 +1,6 @@
 
 use fnv::FnvHashMap;
+use slog::Logger;
 
 use std::collections::{HashSet, HashMap};
 //use super::{Path, PathError, HashLinks};
@@ -55,11 +56,12 @@ impl HashLinks {
  *
  */
 
-struct BFS<'a> {
+pub struct BFS<'a> {
     // where parent/children data is found
     // use member instead of whole HashLinks?
     //links: &'a HashLinks,
     links: &'a Links,
+    log: Logger,
 
     // indices of src and dst
     src: u32,
@@ -83,15 +85,18 @@ type Set = HashSet<u32>;
 type Map = HashMap<u32, u32>;
 
 impl<'a> BFS<'a> {
-    fn new(links: &Links, src: u32, dst: u32) -> BFS {
+
+    pub fn new(log: Logger, links: &Links, src: u32, dst: u32) -> BFS {
         BFS {
-            links, src, dst,
+            links, log,
+            src, dst,
             src_seen: HashMap::new(),
             dst_seen: HashMap::new(),
             row_down: HashSet::new(),
             row_up:   HashSet::new(),
         }
     }
+
     fn path_from(&self, p: Result<Vec<u32>, PathError>) -> Path {
         Path {
             src: self.src,
@@ -100,7 +105,7 @@ impl<'a> BFS<'a> {
         }
     }
 
-    fn extract_path(&self, common: u32) -> Path {
+    pub fn extract_path(&self, common: u32) -> Path {
         // `common` is the first entry reachable from src's children and dst's parents
         // path includes both src and dst
         let mut path = vec![common];
@@ -123,8 +128,9 @@ impl<'a> BFS<'a> {
         }
     }
 
-    fn search(&mut self) -> Path {
-        //info!(self.links.log, "foo");
+    // FIX: page 480637 "Norbergs_BK" has 1 parent that is itself
+    pub fn search(mut self) -> Path {
+        info!(self.log, "Beginning search from {} to {}", self.src, self.dst);
         if self.src == self.dst {
             return Path { src: self.src, dst: self.dst, path: Ok(vec![self.src]) }
         }
@@ -137,20 +143,29 @@ impl<'a> BFS<'a> {
         // TODO speed test
         let mut tmp: HashSet<u32> = HashSet::new();
 
-        for _ in 0..MAX_DEPTH {
+        for i in 0..MAX_DEPTH {
             if let Some(common) = self.iter_down_2(&mut tmp) {
+                info!(self.log, "Found mid {} when down row len = {}", common, tmp.len());
                 return self.extract_path(common);
             }
             mem::swap(&mut self.row_down, &mut tmp);
             tmp.clear();
+            info!(self.log, "Iter #{}: down row size = {}", i, self.row_down.len());
 
             if let Some(common) = self.iter_up_2(&mut tmp) {
+                info!(self.log, "Found mid {} when up row len = {}", common, tmp.len());
                 return self.extract_path(common);
             }
             mem::swap(&mut self.row_up, &mut tmp);
             tmp.clear();
+            info!(self.log, "Iter #{}: up row size = {}", i, self.row_up.len());
 
             if self.row_up.is_empty() || self.row_down.is_empty() {
+                if self.row_up.is_empty() {
+                    info!(self.log, "No such path: No more parents to check");
+                } else {
+                    info!(self.log, "No such path: No more children to check");
+                }
                 return self.path_from(Err(PathError::NoSuchPath));
             }
         }

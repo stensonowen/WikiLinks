@@ -4,10 +4,13 @@ use fnv;
 
 use super::{LinkState, LinkData, HashLinks};
 use super::Entry;
+use super::bfs::BFS;
 
 use std::collections::HashMap;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
+use std::io;
+
 
 /*
 #[derive(Debug, Clone)]
@@ -45,6 +48,43 @@ impl Path {
     }
 }
 */
+
+impl LinkState<HashLinks> {
+    fn resolve_title(&self, t: &str) -> Option<u32> {
+        let t = t.trim();
+        if t.is_empty() {
+            return Some(self.state.select_random());
+        }
+        let t = t.to_uppercase();
+        let t = t.replace(' ', "_");
+        let hash = HashLinks::hash_title(&t);
+        self.state._titles.get(&hash).map(|&i| i)
+    }
+    pub fn cli_bfs(&self) -> io::Result<()> { 
+        let mut buf = String::new();
+        println!("Starting bfs");
+        loop {
+            println!("\nEnter source title:  ");
+            buf.clear();
+            io::stdin().read_line(&mut buf)?;
+            // TODO replace spaces with underscored?
+            let src = match self.resolve_title(&buf) {
+                Some(id) => id,
+                None => { println!("No such title"); continue },
+            };
+            println!("Enter destination title:  ");
+            buf.clear();
+            io::stdin().read_line(&mut buf)?;
+            let dst = match self.resolve_title(&buf) {
+                Some(id) => id,
+                None => { println!("No such title"); continue },
+            };
+            let bfs = BFS::new(self.log.clone(), &self.state.links, src, dst);
+            let path = bfs.search();
+            path.print(&self.state.links);
+        }
+    }
+}
 
 //impl From<LinkState<ProcData>> for LinkState<HashLinks> {
 //    fn from(old: LinkState<ProcData>) -> LinkState<HashLinks> {
@@ -106,5 +146,18 @@ impl HashLinks {
     fn hash_titles(old: HashMap<String,u32>) -> HashMap<u64,u32> {
         old.into_iter().map(|(q,i)| (HashLinks::hash_title(&q),i)).collect()
     }
+    fn select_random(&self) -> u32 {
+        let mut guess: u32;
+        let mut count = 0;
+        loop {
+            count += 1;
+            guess = rand::random();
+            if self.links.contains_key(&guess) {
+                println!("rand took {} iters", count);
+                return guess;
+            }
+        }
+    }
+
 }
 

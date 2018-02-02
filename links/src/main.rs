@@ -34,6 +34,9 @@ fn argv<'a>() -> clap::ArgMatches<'a> {
              .takes_value(true)
              .conflicts_with("web_server")
              .help("Find the maximum links required to get from any link to the given one"))
+        .arg(Arg::with_name("cli-bfs")
+             .long("cli-bfs")
+             .help("Command-line bfs"))
         //.arg(Arg::with_name("web-server")
         //     .short("w")
         //     .help("Run web server; program will otherwise terminate after analysis"))
@@ -112,10 +115,17 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn, links: SharedLinks,
 }
 */
 
+//use links::link_state::bfs::BFS;
+//fn loop_bfs(pd: &
 
 fn main() {
     let argv = argv();
-    let ls: LinkState<link_state::ProcData> = LinkState::from_args(&argv);
+    //let ls: LinkState<link_state::ProcData> = LinkState::from_args(&argv);
+    if argv.is_present("cli-bfs") {
+        let ls: LinkState<link_state::HashLinks> = LinkState::from_args(&argv);
+        ls.cli_bfs().expect("io error");
+    }
+    //let x = ls.state.links;
     //let ls: LinkState<link_state::HashLinks> = LinkState::from_args(&argv);
 
 }

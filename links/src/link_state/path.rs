@@ -22,7 +22,7 @@ impl Path {
             None
         }
     }
-    fn print(&self, entries: &fnv::FnvHashMap<u32,Entry>) {
+    pub fn print(&self, entries: &fnv::FnvHashMap<u32,Entry>) {
         println!("Path from {}\t(\"{}\")", self.src, entries.get(&self.src).unwrap().title);
         println!("  to {}\t(\"{}\") :", self.dst, entries.get(&self.dst).unwrap().title);
         match self.path {
