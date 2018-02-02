@@ -1,11 +1,13 @@
 
-use fnv;
 use fnv::FnvHashMap;
 
 use std::collections::{HashSet, HashMap};
 //use super::{Path, PathError, HashLinks};
-use link_state::hash_links::{Path, PathError};
-use std::mem::{self, swap};
+//use link_state::hash_links::{Path, PathError};
+//use link_state::path::{Path, PathError};
+use super::path::{Path, PathError};
+//use super::path::Foo;
+use std::mem;
 use link_state::entry::Entry;
 // links: fnv::FnvHashMap<u32,Entry>
 

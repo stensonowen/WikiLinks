@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
-
+/*
 #[derive(Debug, Clone)]
 pub struct Path {
     pub src: u32,
@@ -44,6 +44,7 @@ impl Path {
         }
     }
 }
+*/
 
 //impl From<LinkState<ProcData>> for LinkState<HashLinks> {
 //    fn from(old: LinkState<ProcData>) -> LinkState<HashLinks> {

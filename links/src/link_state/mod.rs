@@ -5,7 +5,7 @@ use clap;
 use slog_term;
 use slog::{Logger, DrainExt};
 
-use std::path::{self, PathBuf};
+use std::path::{Path as FsPath, PathBuf};
 use std::collections::HashMap;
 
 pub mod link_db;
@@ -14,6 +14,7 @@ pub mod proc_data;
 pub mod hash_links;
 
 pub mod bfs;
+pub mod path;
 pub mod entry;
 use self::entry::Entry;
 
@@ -80,7 +81,7 @@ impl<T: State> LinkState<T> where LinkState<T>: From<LinkState<LinkData>> {
              args.value_of("redirect.sql"), 
              args.value_of("pagelinks.sql")) 
         {
-            LinkState::new(path::Path::new(p), path::Path::new(r), path::Path::new(l))
+            LinkState::new(FsPath::new(p), FsPath::new(r), FsPath::new(l))
                 .into()
         } else if let Some(m) = args.value_of("import") {
             LinkState::<LinkData>::import(PathBuf::from(m), new_logger()).unwrap()

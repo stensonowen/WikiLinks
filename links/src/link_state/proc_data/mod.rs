@@ -1,5 +1,5 @@
 use csv;
-use std::path::{Path, PathBuf};
+use std::path::{self, PathBuf};
 use std::cmp::Ordering;
 use std::{f64, u64};
 
@@ -52,7 +52,9 @@ impl LinkState<ProcData> {
         self.state.longest_path(dst)
     }
 
-    fn _pretty_ranks(&self, ranks: &[(u32,f64)], ranks_path: &Path) -> Result<(),csv::Error> {
+    fn _pretty_ranks(&self, ranks: &[(u32,f64)], ranks_path: &path::Path) 
+        -> Result<(),csv::Error> 
+    {
         //sort greatest-to-least
         // (RANK, ID, TITLE)
         let mut sorted_ranks = ranks.to_vec();
@@ -86,4 +88,6 @@ impl LinkState<ProcData> {
             children.intersection(&parents).count()
         }).sum()
     }
+    //pub fn random_select(&self) -> u32 { }
+    //pub fn bfs(&self, src: u32, dst: u32) -> {}
 }
