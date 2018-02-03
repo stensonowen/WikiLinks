@@ -10,6 +10,9 @@ use link_state::entry::Entry;
 
 const MAX_DEPTH: u32 = 10;
 
+mod bloom;
+use self::bloom::Bloom;
+
 // Find the shortest path between articles
 
 // speed tests:
@@ -167,13 +170,13 @@ impl<'a> BFS<'a> {
     fn iter_down(&mut self, tmp: &mut Set) -> Option<u32> {
         Self::iter(self.links, &mut self.row_down, tmp, 
                    &mut self.src_seen, &self.dst_seen, 
-                   |e| e.get_children())
+                   Entry::get_children)
     }
 
     fn iter_up(&mut self, tmp: &mut Set) -> Option<u32> {
         Self::iter(self.links, &mut self.row_up, tmp,
                    &mut self.dst_seen, &self.src_seen,
-                   |e| e.get_parents())
+                   Entry::get_parents)
     }
 
     fn iter<F>(links: &'a Links, old_line: &Set, new_line: &mut Set,
@@ -215,6 +218,8 @@ pub struct BFS2<'a> {
     dst: u32,
     src_seen: FnvHashMap<u32, u32>,
     dst_seen: FnvHashMap<u32, u32>,
+    src_seen_b: Bloom,
+    dst_seen_b: Bloom,
     row_down: FnvHashSet<u32>,
     row_up: FnvHashSet<u32>,
 }
@@ -229,6 +234,7 @@ impl<'a> BFS2<'a> {
             links, log, src, dst,
             src_seen: FnvHashMap::default(), dst_seen: FnvHashMap::default(),
             row_down: FnvHashSet::default(), row_up:   FnvHashSet::default(),
+            src_seen_b: Bloom::new(),        dst_seen_b: Bloom::new(),
         }
     }
 
@@ -295,18 +301,18 @@ impl<'a> BFS2<'a> {
 
     fn iter_down(&mut self, tmp: &mut Set2) -> Option<u32> {
         Self::iter(self.links, &mut self.row_down, tmp, 
-                   &mut self.src_seen, &self.dst_seen, 
-                   |e| e.get_children())
+                   &mut self.src_seen, &self.dst_seen, &mut self.dst_seen_b,
+                   Entry::get_children)
     }
 
     fn iter_up(&mut self, tmp: &mut Set2) -> Option<u32> {
         Self::iter(self.links, &mut self.row_up, tmp,
-                   &mut self.dst_seen, &self.src_seen,
-                   |e| e.get_parents())
+                   &mut self.dst_seen, &self.src_seen, &mut self.src_seen_b,
+                   Entry::get_parents)
     }
 
     fn iter<F>(links: &'a Links, old_line: &Set2, new_line: &mut Set2,
-               seen: &mut Map2, targets: &Map2, next: F)
+               seen: &mut Map2, targets: &Map2, targets_b: &mut Bloom, next: F)
         -> Option<u32> 
         where F: Fn(&'a Entry) -> &'a [u32]
     {
@@ -314,7 +320,8 @@ impl<'a> BFS2<'a> {
             for &new in next(&links[&old]) {
                 if let hash_map::Entry::Vacant(v) = seen.entry(new) {
                     v.insert(old);
-                    if targets.contains_key(&new) {
+                    if targets_b.get_and_set(new) && targets.contains_key(&new) {
+                    //if targets.contains_key(&new) {
                         return Some(new);
                     }
                     new_line.insert(new);
