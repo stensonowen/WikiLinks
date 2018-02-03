@@ -24,7 +24,7 @@ impl Path {
     }
     pub fn print(&self, entries: &fnv::FnvHashMap<u32,Entry>) {
         println!("Path from {}\t(\"{}\")", self.src, entries.get(&self.src).unwrap().title);
-        println!("  to {}\t(\"{}\") :", self.dst, entries.get(&self.dst).unwrap().title);
+        println!("\t  to {}\t(\"{}\") :", self.dst, entries.get(&self.dst).unwrap().title);
         match self.path {
             Ok(ref v) => for i in v {
                 println!("\t{}:\t\"{}\"", i, entries.get(&i).unwrap().title);

@@ -1,3 +1,6 @@
+/*
+ * NOTE: this is mostly testing web/db stuff
+ * should be re-added when the web stuff is
 #![feature(test)]
 
 #[macro_use] 
@@ -178,3 +181,4 @@ mod tests {
     }
 
 }
+*/

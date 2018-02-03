@@ -44,11 +44,15 @@ impl ProcData {
                     }
                 }
             }
+            if tmp.is_empty() && last_row.len() < 20 {
+                println!("Last row: {:?}", last_row);
+            }
             last_row.clear();
             swap(&mut tmp, &mut last_row);
             if last_row.is_empty() {
                 println!("All {} ancestors can reach in a maximum of {} steps",
                          all_seen.len(), height);
+                //if tmp.len() < 20 { println!("Last row: {:?}", tmp); }
                 return height;
             }
             println!("There are {:>8} articles that reach in no fewer than {} steps",

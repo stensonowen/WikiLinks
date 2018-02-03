@@ -5,6 +5,7 @@
 #[macro_use]
 extern crate clap;
 extern crate links;
+extern crate rand;
 
 use links::link_state::{self, LinkState};
 
@@ -120,13 +121,30 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn, links: SharedLinks,
 
 fn main() {
     let argv = argv();
-    //let ls: LinkState<link_state::ProcData> = LinkState::from_args(&argv);
     if argv.is_present("cli-bfs") {
         let ls: LinkState<link_state::HashLinks> = LinkState::from_args(&argv);
         ls.cli_bfs().expect("io error");
     }
-    //let x = ls.state.links;
-    //let ls: LinkState<link_state::HashLinks> = LinkState::from_args(&argv);
+
+    //let ls: LinkState<link_state::ProcData> = LinkState::from_args(&argv);
+    //ls.longest_path(309528); // "1961–62_AHL_season"
+    // Yobibyte: 401967  →  1961-62_AHL_season: 309528
+
+    /*
+    let mut guess: u32;
+    let mut count = 0;
+    loop {
+        guess = rand::random();
+        if ls.contains(guess) {
+            count += 1;
+            ls.longest_path(guess);
+            if count > 25 {
+                break;
+            }
+            println!("\n\n\n");
+        }
+    }
+    */
 
 }
 

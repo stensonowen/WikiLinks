@@ -88,6 +88,9 @@ impl LinkState<ProcData> {
             children.intersection(&parents).count()
         }).sum()
     }
+    pub fn contains(&self, n: u32) -> bool {
+        self.state.links.contains_key(&n)
+    }
     //pub fn random_select(&self) -> u32 { }
     //pub fn bfs(&self, src: u32, dst: u32) -> {}
 }

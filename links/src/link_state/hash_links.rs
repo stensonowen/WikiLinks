@@ -1,10 +1,12 @@
 extern crate rand;
 
 use fnv;
+use slog;
 
 use super::{LinkState, LinkData, HashLinks};
 use super::Entry;
-use super::bfs::BFS;
+use super::bfs::{BFS,BFS2};
+use super::path::Path;
 
 use std::collections::HashMap;
 use std::collections::hash_map::DefaultHasher;
@@ -50,15 +52,15 @@ impl Path {
 */
 
 impl LinkState<HashLinks> {
-    fn resolve_title(&self, t: &str) -> Option<u32> {
-        let t = t.trim();
-        if t.is_empty() {
-            return Some(self.state.select_random());
-        }
-        let t = t.to_uppercase();
-        let t = t.replace(' ', "_");
-        let hash = HashLinks::hash_title(&t);
-        self.state._titles.get(&hash).map(|&i| i)
+    pub fn bfs(&self, src: u32, dst: u32) -> Path {
+        let null = slog::Logger::root(slog::Discard, o!());
+        let bfs = BFS::new(null, &self.state.links, src, dst);
+        bfs.search()
+    }
+    pub fn bfs2(&self, src: u32, dst: u32) -> Path {
+        let null = slog::Logger::root(slog::Discard, o!());
+        let bfs = BFS2::new(null, &self.state.links, src, dst);
+        bfs.search()
     }
     pub fn cli_bfs(&self) -> io::Result<()> { 
         let mut buf = String::new();
@@ -68,14 +70,14 @@ impl LinkState<HashLinks> {
             buf.clear();
             io::stdin().read_line(&mut buf)?;
             // TODO replace spaces with underscored?
-            let src = match self.resolve_title(&buf) {
+            let src = match self.state.resolve_title(&buf) {
                 Some(id) => id,
                 None => { println!("No such title"); continue },
             };
             println!("Enter destination title:  ");
             buf.clear();
             io::stdin().read_line(&mut buf)?;
-            let dst = match self.resolve_title(&buf) {
+            let dst = match self.state.resolve_title(&buf) {
                 Some(id) => id,
                 None => { println!("No such title"); continue },
             };
@@ -145,6 +147,16 @@ impl HashLinks {
     }
     fn hash_titles(old: HashMap<String,u32>) -> HashMap<u64,u32> {
         old.into_iter().map(|(q,i)| (HashLinks::hash_title(&q),i)).collect()
+    }
+    fn resolve_title(&self, t: &str) -> Option<u32> {
+        let t = t.trim();
+        if t.is_empty() {
+            return Some(self.select_random());
+        }
+        let t = t.to_uppercase();
+        let t = t.replace(' ', "_");
+        let hash = HashLinks::hash_title(&t);
+        self._titles.get(&hash).map(|&i| i)
     }
     fn select_random(&self) -> u32 {
         let mut guess: u32;
