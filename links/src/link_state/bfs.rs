@@ -15,7 +15,8 @@ const MAX_DEPTH: u32 = 10;
 // speed tests:
 // DONE use fnv sets
 // TODO replace sets w/ bloom filters
-// TODO swap out naive iter functions
+// TODO swap out generic function with 2 concrete ones
+//          this seems to be a little faster :/ maybe later
 // TODO perf profiling :)
 
 /* Optimizations
@@ -55,7 +56,6 @@ type Map = FnvHashMap<u32, u32>;
 pub struct BFS<'a> {
     // where parent/children data is found
     // use member instead of whole HashLinks?
-    //links: &'a HashLinks,
     links: &'a Links,
     log: Logger,
 
@@ -136,7 +136,7 @@ impl<'a> BFS<'a> {
         let mut tmp: FnvHashSet<u32> = FnvHashSet::default();
 
         for i in 0..MAX_DEPTH {
-            if let Some(common) = self.iter_down_2(&mut tmp) {
+            if let Some(common) = self.iter_down(&mut tmp) {
                 info!(self.log, "Found mid {} when down row len = {}", common, tmp.len());
                 return self.extract_path(common);
             }
@@ -164,11 +164,13 @@ impl<'a> BFS<'a> {
         self.path_from(Err(PathError::Terminated(MAX_DEPTH)))
     }
 
+    /*
     fn iter_down_2(&mut self, tmp: &mut Set) -> Option<u32> {
         Self::iter(self.links, &mut self.row_down, tmp, 
                    &mut self.src_seen, &self.dst_seen, 
                    |e| e.get_children())
     }
+    */
 
     fn iter_up_2(&mut self, tmp: &mut Set) -> Option<u32> {
         Self::iter(self.links, &mut self.row_up, tmp,
@@ -203,16 +205,16 @@ impl<'a> BFS<'a> {
         None
     }
 
-    /*
     /// Create a new `row_down` composed of all unseen nodes reachable from current `row_down`
-    fn iter_down(&mut self) -> Option<u32> { 
+    fn iter_down(&mut self, new_row_down: &mut FnvHashSet<u32>) -> Option<u32> { 
         // for each node that is newly reachable from src's descendents
-        let mut new_row_down: HashSet<u32> = HashSet::new(); // TODO add capacity guess
         for &old in &self.row_down { 
             // for each of its children
-            for &new in self.links.links[&old].get_children() {
+            for &new in self.links[&old].get_children() {
                 // if it hasn't been seen before 
-                if *self.src_seen.entry(new).or_insert(old) == old {
+                if let hash_map::Entry::Vacant(v) = self.src_seen.entry(new) {
+                    v.insert(old);
+                //if *self.src_seen.entry(new).or_insert(old) == old {
                     // we just inserted seen[new] = old (wasn't there before)
                     if self.dst_seen.contains_key(&new) {
                         // found an element reachable from both src and dst
@@ -226,8 +228,6 @@ impl<'a> BFS<'a> {
         None
     }
 
-    fn iter_up(&mut self) -> Option<u32> { None }
-    */
 }
 
 
