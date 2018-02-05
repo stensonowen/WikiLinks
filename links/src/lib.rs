@@ -1,4 +1,4 @@
-#![feature(getpid)]
+//#![feature(getpid)]
 // NOTE: when scaling, remember to change bool link_db/parse/regexes.rs/IS_SIMPLE
 
 // LOGGING

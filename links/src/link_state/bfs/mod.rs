@@ -5,11 +5,13 @@ use slog::Logger;
 use std::mem;
 use std::collections::hash_map;
 
-use link_state::path::{Path, PathError};
+//use link_state::path::{Path, PathError};
 use link_state::entry::Entry;
 
 const MAX_DEPTH: u32 = 10;
 
+pub mod path;
+use self::path::{Path, PathError};
 mod bloom;
 use self::bloom::Bloom;
 
@@ -299,18 +301,21 @@ impl<'a> BFS2<'a> {
         self.path_from(Err(PathError::Terminated(MAX_DEPTH)))
     }
 
+    #[inline]
     fn iter_down(&mut self, tmp: &mut Set2) -> Option<u32> {
         Self::iter(self.links, &mut self.row_down, tmp, 
                    &mut self.src_seen, &self.dst_seen, &mut self.dst_seen_b,
                    Entry::get_children)
     }
 
+    #[inline]
     fn iter_up(&mut self, tmp: &mut Set2) -> Option<u32> {
         Self::iter(self.links, &mut self.row_up, tmp,
                    &mut self.dst_seen, &self.src_seen, &mut self.src_seen_b,
                    Entry::get_parents)
     }
 
+    #[inline]
     fn iter<F>(links: &'a Links, old_line: &Set2, new_line: &mut Set2,
                seen: &mut Map2, targets: &Map2, targets_b: &mut Bloom, next: F)
         -> Option<u32> 

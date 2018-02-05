@@ -26,10 +26,12 @@ impl From<IndexedEntry> for Entry {
 }
 
 impl Entry {
+    #[inline]
     pub fn get_children(&self) -> &[u32] {
         let i = self.first_child as usize;
         &self.neighbors[i..]
     }
+    #[inline]
     pub fn get_parents(&self) -> &[u32] {
         let i = self.last_parent as usize;
         &self.neighbors[..i]

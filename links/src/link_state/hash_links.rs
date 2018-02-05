@@ -6,50 +6,13 @@ use slog;
 use super::{LinkState, LinkData, HashLinks};
 use super::Entry;
 use super::bfs::{BFS,BFS2};
-use super::path::Path;
+use super::Path;
 
 use std::collections::HashMap;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::io;
 
-
-/*
-#[derive(Debug, Clone)]
-pub struct Path {
-    pub src: u32,
-    pub dst: u32,
-    pub path: Result<Vec<u32>,PathError>,
-}
-
-#[derive(Debug, Clone)]
-pub enum PathError {
-    NoSuchPath,
-    Terminated(u32)
-}
-
-impl Path {
-    pub fn size(&self) -> Option<usize> {
-        if let Ok(ref v) = self.path {
-            Some(v.len())
-        } else {
-            None
-        }
-    }
-    fn print(&self, entries: &fnv::FnvHashMap<u32,Entry>) {
-        println!("Path from {}\t(\"{}\")", self.src, entries.get(&self.src).unwrap().title);
-        println!("  to {}\t(\"{}\") :", self.dst, entries.get(&self.dst).unwrap().title);
-        match self.path {
-            Ok(ref v) => for i in v {
-                println!("\t{}:\t\"{}\"", i, entries.get(&i).unwrap().title);
-            },
-            Err(PathError::NoSuchPath) => println!("\tNo such path exists"),
-            Err(PathError::Terminated(i)) => 
-                println!("\tSearch expired after {} iterations", i),
-        }
-    }
-}
-*/
 
 impl LinkState<HashLinks> {
     pub fn bfs(&self, src: u32, dst: u32) -> Path {

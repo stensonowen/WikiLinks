@@ -14,9 +14,9 @@ pub mod proc_data;
 pub mod hash_links;
 
 pub mod bfs;
-pub mod path;
 pub mod entry;
-use self::entry::Entry;
+pub use self::entry::Entry;
+use self::bfs::path::Path;
 
 
 //  ------STATE--MACHINE------

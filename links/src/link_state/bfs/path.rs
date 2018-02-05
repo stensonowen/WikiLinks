@@ -15,9 +15,9 @@ pub enum PathError {
 }
 
 impl Path {
-    pub fn size(&self) -> Option<usize> {
+    pub fn len(&self) -> Option<usize> {
         if let Ok(ref v) = self.path {
-            Some(v.len())
+            Some(v.len()-1)
         } else {
             None
         }
