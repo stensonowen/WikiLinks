@@ -1,7 +1,4 @@
 
-//const IS_SIMPLE: bool = true;   //small parsing differences between simple and English wikis
-use super::super::super::super::IS_SIMPLE; //a little awkward, but this is harder to forget
-
 // NOTE about namespaces:
 //  Namespaces complicate things. The 0 namespace (i.e. Main, "real" articles) is the
 //  overwhelmingly most relevant one; others represent User pages, help pages, etc.
@@ -16,6 +13,7 @@ pub fn pagelinks_regex() -> String {
 }
 
 pub fn redirect_regex() -> String {
+    // (figures from 02-2017)
     // matches all 9278254 english wiki entries
     // matches all   58130  simple wiki entries
     let page_id = r"(\d+)";
@@ -42,28 +40,25 @@ pub fn pages_regex() -> String {
     let page_ln_upd = r"(?:'\d+'|NULL)"; //another irrelevant timestamp, but it can be null
     let page_latest = r"\d+";       //unsigned int: latest revision number
     let page_len = r"\d+";       //unsigned int: page len (or weird value)
-    let page_ntc = r"(?:0|1)";   //what is this? it's only in the Simple wiki dump
+    let _page_ntc = r"(?:0|1)";  //what is this? it's only in the Simple wiki dump
     let page_cont_md = r"(?:'.*?'|NULL)"; //probably never contains escaped quotes?
     let page_lang = r"NULL";  	//think it'll always be null?
 
-    let mut re_body = vec![page_id,
-                           page_nmsp,
-                           page_title,
-                           page_restrs,
-                           page_counter,
-                           page_is_redr,
-                           page_is_new,
-                           page_random,
-                           page_tchd,
-                           page_ln_upd,
-                           page_latest,
-                           page_len,
-                           // page_ntc,
-                           page_cont_md,
-                           page_lang];
-    if IS_SIMPLE {
-        re_body.insert(12, page_ntc);
-    }
+    let re_body = vec![page_id, 
+                       page_nmsp,
+                       page_title,
+                       page_restrs,
+                       page_counter,
+                       page_is_redr,
+                       page_is_new,
+                       page_random,
+                       page_tchd,
+                       page_ln_upd,
+                       page_latest,
+                       page_len,
+                       #[cfg(feature="simple")] _page_ntc,
+                       page_cont_md,
+                       page_lang];
 
     format!(r"\({}\)", re_body.join(","))
 }

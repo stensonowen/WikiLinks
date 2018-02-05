@@ -21,3 +21,7 @@ rand = "0.4.2"
 
 lazy_static = "0.2.4"
 
+
+[features]
+simple = []
+

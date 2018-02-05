@@ -1,6 +1,5 @@
 
-// NOTE: when scaling, remember to change bool link_db/parse/regexes.rs/IS_SIMPLE
-// TODO make this a build flag
+// NOTE: when running on simple wiki, use `--features=simple` flag
 
 #[macro_use]
 extern crate clap;

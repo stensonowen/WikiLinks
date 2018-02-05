@@ -1,5 +1,7 @@
 //#![feature(getpid)]
-// NOTE: when scaling, remember to change bool link_db/parse/regexes.rs/IS_SIMPLE
+
+// NOTE: when running on the simple wiki, parsing is slightly different
+// run with `cargo build --features=simple`
 
 // LOGGING
 #[macro_use] extern crate slog;
@@ -16,5 +18,4 @@ extern crate chrono;
 // COMPONENTS
 pub mod link_state;
 
-const IS_SIMPLE: bool = true;
 
