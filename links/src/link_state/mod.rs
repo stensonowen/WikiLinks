@@ -16,7 +16,7 @@ pub mod hash_links;
 pub mod bfs;
 pub mod entry;
 pub use self::entry::Entry;
-use self::bfs::path::Path;
+pub use self::bfs::path::Path;
 
 
 //  ------STATE--MACHINE------

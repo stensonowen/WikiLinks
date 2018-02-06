@@ -1,9 +1,12 @@
 use csv;
+use slog;
 use std::path::{self, PathBuf};
 use std::cmp::Ordering;
 use std::{f64, u64};
 
 use super::{LinkState, LinkData, ProcData};
+use super::{bfs, Path};
+use self::bfs::BFS;
 
 mod pagerank;
 mod longest_path;
@@ -90,6 +93,14 @@ impl LinkState<ProcData> {
     }
     pub fn contains(&self, n: u32) -> bool {
         self.state.links.contains_key(&n)
+    }
+    pub fn bfs(&self, src: u32, dst: u32) -> Path {
+        let null = slog::Logger::root(slog::Discard, o!());
+        let bfs = BFS::new(null, &self.state.links, src, dst);
+        bfs.search()
+    }
+    pub fn get(&self, i: u32) -> &String {
+        self.state.links.get(&i).map(|n| &n.title).unwrap()
     }
     //pub fn random_select(&self) -> u32 { }
     //pub fn bfs(&self, src: u32, dst: u32) -> {}

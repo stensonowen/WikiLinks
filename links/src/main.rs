@@ -118,16 +118,54 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn, links: SharedLinks,
 //use links::link_state::bfs::BFS;
 //fn loop_bfs(pd: &
 
+extern crate chrono;
+use chrono::Local;
+use links::link_state::Path;
+
+fn time_search(ls: &LinkState<link_state::ProcData>, src: u32, dst: u32) -> (i64,Path) {
+    let start = Local::now();
+    let p = ls.bfs(src, dst);
+    let dur = Local::now().signed_duration_since(start);
+    (dur.num_nanoseconds().unwrap(), p)
+}
+
+fn random_elem(ls: &LinkState<link_state::ProcData>) -> u32 {
+    let mut guess: u32;
+    loop {
+        guess = rand::random();
+        if ls.contains(guess) {
+            return guess;
+        }
+    }
+}
+
 fn main() {
     let argv = argv();
+    /*
     if argv.is_present("cli-bfs") {
         let ls: LinkState<link_state::HashLinks> = LinkState::from_args(&argv);
         ls.cli_bfs().expect("io error");
     }
+    */
 
-    //let ls: LinkState<link_state::ProcData> = LinkState::from_args(&argv);
+    let ls: LinkState<link_state::ProcData> = LinkState::from_args(&argv);
+    //let ls: LinkState<link_state::HashLinks> = LinkState::from_args(&argv);
     //ls.longest_path(309528); // "1961–62_AHL_season"
     // Yobibyte: 401967  →  1961-62_AHL_season: 309528
+
+    let mut random_walk = (0..10_000).map(|_| {
+        let (src, dst) = (random_elem(&ls), random_elem(&ls));
+        time_search(&ls, src, dst)
+    }).collect::<Vec<(i64,Path)>>();
+    random_walk.sort_by(|i,j| i.0.cmp(&j.0));
+
+    for (i,p) in random_walk {
+        if let Ok(ref v) = p.path {
+            let titles: Vec<&String> = v.iter().map(|&n| ls.get(n)).collect();
+            println!("{:08}:\t{:?}\t{:?}", i, p, titles);
+        }
+        //println!("{:08}:\t{:?}", i, p);
+    }
 
     /*
     let mut guess: u32;

@@ -33,6 +33,7 @@ impl Path {
             Err(PathError::Terminated(i)) => 
                 println!("\tSearch expired after {} iterations", i),
         }
+        println!("\tlen = {:?}", self.len());
     }
 }
 
