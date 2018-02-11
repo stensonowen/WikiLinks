@@ -17,7 +17,7 @@ impl ProcData {
         last_row.insert(dst);
         all_seen.insert(dst);
 
-        println!("Destination article: `{}`", self.links.get(&dst).unwrap().title);
+        println!("Destination article: `{}`", self.links[&dst].title);
         
         loop {
             /*
@@ -37,7 +37,7 @@ impl ProcData {
             height += 1;
             for last in &last_row {
                 // put all
-                for next in self.links.get(last).unwrap().get_parents() {
+                for next in self.links[last].get_parents() {
                     if all_seen.contains(next) == false {
                         tmp.insert(*next);
                         all_seen.insert(*next);

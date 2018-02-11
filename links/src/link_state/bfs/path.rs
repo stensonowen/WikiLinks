@@ -27,7 +27,7 @@ impl Path {
         println!("\t  to {}\t(\"{}\") :", self.dst, entries.get(&self.dst).unwrap().title);
         match self.path {
             Ok(ref v) => for i in v {
-                println!("\t{}:\t\"{}\"", i, entries.get(&i).unwrap().title);
+                println!("\t{}:\t\"{}\"", i, entries[i].title);
             },
             Err(PathError::NoSuchPath) => println!("\tNo such path exists"),
             Err(PathError::Terminated(i)) => 

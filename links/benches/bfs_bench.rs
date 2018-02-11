@@ -1,4 +1,5 @@
 #![feature(test)]
+#![allow(unreadable_literal)]
 
 #[macro_use] 
 extern crate lazy_static;
@@ -8,7 +9,7 @@ extern crate test;
 use links::link_state::{LinkState, HashLinks, LinkData, new_logger};
 use std::path::PathBuf;
 
-const BENCH_MANIFEST_PATH: &'static str = "/home/owen/rust/wl/simple/dump1";
+const BENCH_MANIFEST_PATH: &str = "/home/owen/rust/wl/simple/dump1";
 
 lazy_static! {
     static ref HL: LinkState<HashLinks> = {
@@ -61,7 +62,7 @@ mod tests {
         }
     }
     #[bench] fn bfs_small(b: &mut Bencher) { bfs_small_g(b, bfs1) }
-    //#[bench] fn bfs_small_alt(b: &mut Bencher) { bfs_small_g(b, bfs2) }
+    #[bench] fn bfs_small_alt(b: &mut Bencher) { bfs_small_g(b, bfs2) }
 
 
 
@@ -79,7 +80,7 @@ mod tests {
         }
     }
     #[bench] fn bfs_medium(b: &mut Bencher) { bfs_medium_g(b, bfs1) }
-    //#[bench] fn bfs_medium_alt(b: &mut Bencher) { bfs_medium_g(b, bfs2) }
+    #[bench] fn bfs_medium_alt(b: &mut Bencher) { bfs_medium_g(b, bfs2) }
 
 
 
@@ -101,7 +102,7 @@ mod tests {
         }
     }
     #[bench] fn bfs_large(b: &mut Bencher) { bfs_large_g(b, bfs1) }
-    //#[bench] fn bfs_large_alt(b: &mut Bencher) { bfs_large_g(b, bfs2) }
+    #[bench] fn bfs_large_alt(b: &mut Bencher) { bfs_large_g(b, bfs2) }
 
 }
 

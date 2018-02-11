@@ -3,9 +3,7 @@ use fnv::{FnvHashSet, FnvHashMap};
 use slog::Logger;
 
 use std::mem;
-use std::collections::hash_map;
 
-//use link_state::path::{Path, PathError};
 use link_state::entry::Entry;
 
 const MAX_DEPTH: u32 = 10;
@@ -17,13 +15,12 @@ use self::path::{Path, PathError};
 
 // speed tests:
 // DONE use fnv sets
-// TODO replace sets w/ bloom filters
 // TODO swap out generic function with 2 concrete ones
 //          this seems to be a little faster :/ maybe later
-// TODO perf profiling :)
 
 /* Optimizations
  *  Switch all lookup tables to fnv: 20%, 17%, 14% for large, medium, small searches
+ *  Switch HashMap::entry to contains and insert
  */
 
 
@@ -168,13 +165,13 @@ impl<'a> BFS<'a> {
     }
 
     fn iter_down(&mut self, tmp: &mut Set) -> Option<u32> {
-        Self::iter(self.links, &mut self.row_down, tmp, 
+        Self::iter(self.links, &self.row_down, tmp, 
                    &mut self.src_seen, &self.dst_seen, 
                    Entry::get_children)
     }
 
     fn iter_up(&mut self, tmp: &mut Set) -> Option<u32> {
-        Self::iter(self.links, &mut self.row_up, tmp,
+        Self::iter(self.links, &self.row_up, tmp,
                    &mut self.dst_seen, &self.src_seen,
                    Entry::get_parents)
     }
@@ -190,9 +187,8 @@ impl<'a> BFS<'a> {
         for &old in old_line {
             for &new in next(&links[&old]) {
                 // only consider ids that haven't been `seen`
-                if let hash_map::Entry::Vacant(v) = seen.entry(new) {
-                    // insert `seen[new] = old`
-                    v.insert(old);
+                if seen.contains_key(&new) == false {
+                    seen.insert(new, old);
                     // TODO: check a bloom filter or something here
                     if targets.contains_key(&new) {
                         // found an element reachable from both src and dst
@@ -296,34 +292,36 @@ impl<'a> BFS2<'a> {
         self.path_from(Err(PathError::Terminated(MAX_DEPTH)))
     }
 
-    #[inline]
+    //#[inline]
     fn iter_down(&mut self, tmp: &mut Set2) -> Option<u32> {
-        Self::iter(self.links, &mut self.row_down, tmp, 
+        Self::iter(self.links, &self.row_down, tmp, 
                    &mut self.src_seen, &self.dst_seen,
                    Entry::get_children)
     }
 
-    #[inline]
+    //#[inline]
     fn iter_up(&mut self, tmp: &mut Set2) -> Option<u32> {
-        Self::iter(self.links, &mut self.row_up, tmp,
+        Self::iter(self.links, &self.row_up, tmp,
                    &mut self.dst_seen, &self.src_seen,
                    Entry::get_parents)
     }
 
-    #[inline]
+    //#[inline]
     fn iter<F>(links: &'a Links, old_line: &Set2, new_line: &mut Set2,
                seen: &mut Map2, targets: &Map2, next: F)
         -> Option<u32> 
         where F: Fn(&'a Entry) -> &'a [u32]
     {
         for &old in old_line {
-            for &new in next(&links[&old]) {
-                if let hash_map::Entry::Vacant(v) = seen.entry(new) {
-                    v.insert(old);
-                    if targets.contains_key(&new) {
-                        return Some(new);
+            for new in next(&links[&old]) {
+                if seen.contains_key(new) == false {
+                    seen.insert(*new, old);
+                //if let hash_map::Entry::Vacant(v) = seen.entry(new) {
+                    //v.insert(old);
+                    if targets.contains_key(new) {
+                        return Some(*new);
                     }
-                    new_line.insert(new);
+                    new_line.insert(*new);
                 }
             }
         }

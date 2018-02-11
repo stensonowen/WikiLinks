@@ -26,24 +26,24 @@ pub struct IndexedEntry {
 impl IndexedEntry {
     pub fn from(i: u32, t: String, parents: Vec<u32>, children: Vec<u32>) -> Self {
         use std::collections::HashSet;
-        let parent_set: HashSet<u32> = parents.iter().map(|&i| i).collect();
+        let parent_set: HashSet<u32> = parents.iter().cloned().collect();
         assert_eq!(parent_set.len(), parents.len(), "Entry `{}`", t);
         assert!(parents.len() < u32::max_value() as usize, 
                 "Entry `{}` has {} parents", t, parents.len());
-        let child_set: HashSet<u32> = children.iter().map(|&i| i).collect();
+        let child_set: HashSet<u32> = children.iter().cloned().collect();
         assert_eq!(child_set.len(), children.len(), "Entry `{}`", t);
         assert!(children.len() < u32::max_value() as usize, 
                 "Entry `{}` has {} children", t, children.len());
         let last_parent = parents.len() as u32;
         let num_children = children.len();
-        let parents_hm: HashSet<u32> = parents.iter().map(|&i| i).collect();
-        let common: HashSet<u32> = children.iter().map(|&i| i).filter(|i| {
-            parents_hm.contains(&i)
+        let parents_hm: HashSet<u32> = parents.iter().cloned().collect();
+        let common: HashSet<u32> = children.iter().cloned().filter(|i| {
+            parents_hm.contains(i)
         }).collect();
-        let unique_pars =  parents.into_iter().filter(|i| !common.contains(&i));
-        let unique_kids = children.into_iter().filter(|i| !common.contains(&i));
+        let unique_pars =  parents.into_iter().filter(|i| !common.contains(i));
+        let unique_kids = children.into_iter().filter(|i| !common.contains(i));
         let neighbors: Vec<u32> = unique_pars
-            .chain(common.iter().map(|&i| i))
+            .chain(common.iter().cloned())
             .chain(unique_kids).collect();
         let first_child = (neighbors.len() - num_children) as u32;
 
@@ -144,7 +144,7 @@ impl LinkState<LinkData> {
 
         //write addrs to csv
         let mut csv_w = csv::Writer::from_file(manifest.titles).unwrap();
-        for (ref title, id) in &self.state.titles { 
+        for (title, id) in &self.state.titles { 
             csv_w.encode((id,title)).unwrap(); 
         }
 

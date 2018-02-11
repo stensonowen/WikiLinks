@@ -1,4 +1,5 @@
 //#![feature(getpid)]
+#![allow(unknown_lints, bool_comparison)]
 
 // NOTE: when running on the simple wiki, parsing is slightly different
 // run with `cargo build --features=simple`

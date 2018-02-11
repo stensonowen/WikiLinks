@@ -119,7 +119,7 @@ impl HashLinks {
         let t = t.to_uppercase();
         let t = t.replace(' ', "_");
         let hash = HashLinks::hash_title(&t);
-        self._titles.get(&hash).map(|&i| i)
+        self._titles.get(&hash).cloned()
     }
     fn select_random(&self) -> u32 {
         let mut guess: u32;
