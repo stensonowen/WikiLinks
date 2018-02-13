@@ -1,5 +1,5 @@
 #![feature(test)]
-#![allow(unreadable_literal)]
+#![allow(unknown_lints, unreadable_literal)]
 
 #[macro_use] 
 extern crate lazy_static;

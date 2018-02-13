@@ -10,6 +10,8 @@ const MAX_DEPTH: u32 = 10;
 
 pub mod path;
 use self::path::{Path, PathError};
+pub mod ihm;
+use self::ihm::{IHSet, IHMap};
 
 // Find the shortest path between articles
 
@@ -212,22 +214,26 @@ pub struct BFS2<'a> {
     log: Logger,
     src: u32,
     dst: u32,
-    src_seen: FnvHashMap<u32, u32>,
-    dst_seen: FnvHashMap<u32, u32>,
-    row_down: FnvHashSet<u32>,
-    row_up: FnvHashSet<u32>,
+    //src_seen: FnvHashMap<u32, u32>,
+    //dst_seen: FnvHashMap<u32, u32>,
+    //row_down: FnvHashSet<u32>,
+    //row_up: FnvHashSet<u32>,
+    src_seen: IHMap,
+    dst_seen: IHMap,
+    row_down: IHSet,
+    row_up: IHSet,
 }
 
-type Set2 = FnvHashSet<u32>;
-type Map2 = FnvHashMap<u32, u32>;
+//type Set2 = FnvHashSet<u32>;
+//type Map2 = FnvHashMap<u32, u32>;
 
 impl<'a> BFS2<'a> {
 
     pub fn new(log: Logger, links: &Links, src: u32, dst: u32) -> BFS2 {
         BFS2 {
             links, log, src, dst,
-            src_seen: FnvHashMap::default(), dst_seen: FnvHashMap::default(),
-            row_down: FnvHashSet::default(), row_up:   FnvHashSet::default(),
+            src_seen: IHMap::default(), dst_seen: IHMap::default(),
+            row_down: IHSet::default(), row_up:   IHSet::default(),
         }
     }
 
@@ -239,13 +245,14 @@ impl<'a> BFS2<'a> {
         let mut path = vec![common];
         let mut current = common;
         while current != self.src {
-            current = self.src_seen[&current];
+            //current = self.src_seen[&current];
+            current = self.src_seen.get(current).unwrap();
             path.push(current);
         }
         path.reverse();
         current = common;
         while current != self.dst {
-            current = self.dst_seen[&current];
+            current = self.dst_seen.get(current).unwrap();
             path.push(current);
         }
         Path {
@@ -262,7 +269,7 @@ impl<'a> BFS2<'a> {
         }
         self.row_down.insert(self.src);
         self.row_up.insert(self.dst);
-        let mut tmp: FnvHashSet<u32> = FnvHashSet::default();
+        let mut tmp: IHSet = IHSet::default();
         for i in 0..MAX_DEPTH {
             if let Some(common) = self.iter_down(&mut tmp) {
                 info!(self.log, "Found mid {} when down row len = {}", common, tmp.len());
@@ -293,35 +300,37 @@ impl<'a> BFS2<'a> {
     }
 
     //#[inline]
-    fn iter_down(&mut self, tmp: &mut Set2) -> Option<u32> {
+    fn iter_down(&mut self, tmp: &mut IHSet) -> Option<u32> {
         Self::iter(self.links, &self.row_down, tmp, 
                    &mut self.src_seen, &self.dst_seen,
                    Entry::get_children)
     }
 
     //#[inline]
-    fn iter_up(&mut self, tmp: &mut Set2) -> Option<u32> {
+    fn iter_up(&mut self, tmp: &mut IHSet) -> Option<u32> {
         Self::iter(self.links, &self.row_up, tmp,
                    &mut self.dst_seen, &self.src_seen,
                    Entry::get_parents)
     }
 
     //#[inline]
-    fn iter<F>(links: &'a Links, old_line: &Set2, new_line: &mut Set2,
-               seen: &mut Map2, targets: &Map2, next: F)
+    fn iter<F>(links: &'a Links, old_line: &IHSet, new_line: &mut IHSet,
+               seen: &mut IHMap, targets: &IHMap, next: F)
         -> Option<u32> 
         where F: Fn(&'a Entry) -> &'a [u32]
     {
-        for &old in old_line {
-            for new in next(&links[&old]) {
+        //for &old in old_line.iter() {
+        //for &old in old_line.data.iter().filter(|e| e.is_some()) {
+        for old in old_line.iter() {
+            for &new in next(&links[&old]) {
                 if seen.contains_key(new) == false {
-                    seen.insert(*new, old);
+                    seen.insert(new, old);
                 //if let hash_map::Entry::Vacant(v) = seen.entry(new) {
                     //v.insert(old);
                     if targets.contains_key(new) {
-                        return Some(*new);
+                        return Some(new);
                     }
-                    new_line.insert(*new);
+                    new_line.insert(new);
                 }
             }
         }
