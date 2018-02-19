@@ -319,14 +319,10 @@ impl<'a> BFS2<'a> {
         -> Option<u32> 
         where F: Fn(&'a Entry) -> &'a [u32]
     {
-        //for &old in old_line.iter() {
-        //for &old in old_line.data.iter().filter(|e| e.is_some()) {
-        for old in old_line.iter() {
+        for old in old_line.keys() {
             for &new in next(&links[&old]) {
                 if seen.contains_key(new) == false {
                     seen.insert(new, old);
-                //if let hash_map::Entry::Vacant(v) = seen.entry(new) {
-                    //v.insert(old);
                     if targets.contains_key(new) {
                         return Some(new);
                     }

@@ -1,3 +1,11 @@
+/*
+//#![feature(getpid)]
+#![feature(alloc_system, global_allocator, allocator_api)]
+
+extern crate alloc_system;
+use alloc_system::System;
+#[global_allocator] static A: System = System;
+*/
 
 // NOTE: when running on simple wiki, use `--features=simple` flag
 
@@ -148,6 +156,29 @@ fn main() {
     }
     */
 
+    let ls: LinkState<link_state::HashLinks> = LinkState::from_args(&argv);
+    let (src,dst) = match cfg!(feature="simple") {
+        true  => (152629, 454989),
+        false => (1684129, 52186157),
+    };
+
+    // 172504K
+    // 172500K
+
+    // none         293,810,837 bytes
+    // bfs          301,149,929 bytes
+    // bfs2 (.50)   300,101,737 bytes
+
+    let path = ls.bfs(src, dst);
+    println!("{:?}", path);
+
+    //println!("\n\n\nMEMORY USED:\n");
+    //::std::process::Command::new("/usr/bin/pmap")
+    //    .arg(format!("{}", ::std::process::id()))
+    //    .spawn().unwrap();
+
+
+    /*
     let ls: LinkState<link_state::ProcData> = LinkState::from_args(&argv);
     //let ls: LinkState<link_state::HashLinks> = LinkState::from_args(&argv);
     //ls.longest_path(309528); // "1961–62_AHL_season"
@@ -166,6 +197,7 @@ fn main() {
         }
         //println!("{:08}:\t{:?}", i, p);
     }
+    */
 
     /*
     let mut guess: u32;

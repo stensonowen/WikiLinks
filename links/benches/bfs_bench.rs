@@ -1,6 +1,17 @@
 #![feature(test)]
 #![allow(unknown_lints, unreadable_literal)]
 
+/*
+#![feature(alloc_system, global_allocator, allocator_api)]
+extern crate alloc_system;
+use alloc_system::System;
+#[global_allocator] static A: System = System;
+*
+* valgrind results:
+*   _cur    2,883,084,321
+*   _alt    2,419,414,143
+*/
+
 #[macro_use] 
 extern crate lazy_static;
 extern crate links;
@@ -61,7 +72,7 @@ mod tests {
             bfs_bench_g(b, bfs_fn, 31073639, 41637705, 2)
         }
     }
-    #[bench] fn bfs_small(b: &mut Bencher) { bfs_small_g(b, bfs1) }
+    #[bench] fn bfs_small_cur(b: &mut Bencher) { bfs_small_g(b, bfs1) }
     #[bench] fn bfs_small_alt(b: &mut Bencher) { bfs_small_g(b, bfs2) }
 
 
@@ -79,7 +90,7 @@ mod tests {
             bfs_bench_g(b, bfs_fn, 38394676, 54576532, 4)
         }
     }
-    #[bench] fn bfs_medium(b: &mut Bencher) { bfs_medium_g(b, bfs1) }
+    #[bench] fn bfs_medium_cur(b: &mut Bencher) { bfs_medium_g(b, bfs1) }
     #[bench] fn bfs_medium_alt(b: &mut Bencher) { bfs_medium_g(b, bfs2) }
 
 
@@ -101,7 +112,7 @@ mod tests {
             bfs_bench_g(b, bfs_fn, 1684129, 52186157, 6)
         }
     }
-    #[bench] fn bfs_large(b: &mut Bencher) { bfs_large_g(b, bfs1) }
+    #[bench] fn bfs_large_cur(b: &mut Bencher) { bfs_large_g(b, bfs1) }
     #[bench] fn bfs_large_alt(b: &mut Bencher) { bfs_large_g(b, bfs2) }
 
 }

@@ -13,12 +13,15 @@
 //! This shows a pretty reliable few point bump over `fnv` in lookups and like 10-15% in
 //!  inserts, which is pretty promising (hasn't been tested yet though).
 
+// Speed comparison: w/ RT=.5 and BC=6, speedup is almost 50%
+// Memory comparison: 
+
 use std::fmt::Debug;
 
 // TODO: tweak this?
-const RESIZE_THRESHOLD: f64 = 0.75; // resize when table is 3/4ths full
+const RESIZE_THRESHOLD: f64 = 0.5; // resize when table is 1/2 full
 // TODO: tweak this?
-const BEGIN_CAP: usize = 10; // 2^10 = 1024
+const BEGIN_CAP: usize = 6; // 2^6 = 64
 
 // TODO: verify this?
 const ENTRY_RESERVED: u32 = ::std::u32::MAX; // u32::max_value() on nightly
@@ -57,14 +60,6 @@ impl<T: Debug+Copy+Default> Entry<T> {
         }
     }
     #[inline]
-    fn get_key(&self) -> Option<u32> {
-        if self.is_none() {
-            None
-        } else {
-            Some(self.key)
-        }
-    }
-    #[inline]
     fn none() -> Self {
         Entry {
             key: ENTRY_RESERVED,
@@ -96,13 +91,19 @@ impl<T: Debug+Copy+Default> IHM<T> {
         // last `cap_exp` bytes of `n`
         (n & ((1 << self.cap_exp) - 1)) as usize
     }
+    #[inline]
+    fn hash_with(n: usize, cap: usize) -> usize {
+        // way to `hash` without requiring a self-borrow :/
+        // don't mix up the arg order :/
+        (n & ((1 << cap) -1)) as usize
+    }
     // uhhhhh note this is cap_exp NOT real capacity
     // prediction: I forget this and run out of mem :/
     pub fn with_capacity(cap_exp: usize) -> Self {
         // not sure what the proper way to create a big boxed array
         //  without just making it on the stack first
-        let mut v = Vec::with_capacity(1 << cap_exp);
-        v.resize(1 << cap_exp, Entry::none());
+        //  except using a vector
+        let v: Vec<Entry<T>> = vec![Entry::none(); 1<<cap_exp];
         IHM {
             size: 0,
             cap_exp,
@@ -129,8 +130,12 @@ impl<T: Debug+Copy+Default> IHM<T> {
             // For now let's see how well rustc optimizes this
             // but this might need to be rewritten to be faster
             // because it'll happen a lot
-            // TODO look at asm
-            // TODO eventually don't bounds check ?
+            // TODO examine asm
+            // TODO eventually don't bounds check
+            //  this leads to a few points of speedup
+            //  but it also introduces the possibility of a segfault
+            //  maybe until everything is stable and if there are no crashes then revisit
+
             /*
             let entry = unsafe { self.data.get_unchecked(addr) };
             match entry.get() {
@@ -138,8 +143,7 @@ impl<T: Debug+Copy+Default> IHM<T> {
             match self.data[addr].get() {
                 None => return false,
                 Some(e) if e.key == key => return true,
-                //Some(_) => addr = (addr+1) & ((1 << self.cap_exp) - 1),
-                Some(_) => addr = self.hash(addr as u32 + 1),
+                Some(_) => addr = Self::hash_with(addr+1, self.cap_exp),
             }
         }
     }
@@ -175,7 +179,8 @@ impl<T: Debug+Copy+Default> IHM<T> {
             } else {
                 // otherwise increment addr and try again
                 //addr = self.hash(addr as u32 + 1);
-                addr = (addr+1) & ((1 << self.cap_exp) - 1)
+                //addr = (addr+1) & ((1 << self.cap_exp) - 1)
+                addr = Self::hash_with(addr+1, self.cap_exp);
             }
         }
     }
@@ -183,18 +188,14 @@ impl<T: Debug+Copy+Default> IHM<T> {
 
 use std::iter::FilterMap;
 use std::slice::Iter;
+type IterType<'a,T> = FilterMap<Iter<'a, Entry<T>>, for<'r> fn(&'r Entry<T>) -> Option<u32>>;
+
 impl IHM<()> {
     pub fn insert(&mut self, key: u32) {
         self.insert_elem(key, ())
     }
-    // TODO PLEASE clean this up
-    //pub fn iter(&self) -> () { self.data.iter() }
-    //pub fn iter(&self) -> FilterMap<Iter<Entry<()>>, for<'r> fn(&'r Entry<()>) -> Option<&'r Entry<()>>>
-    pub(super) fn iter(&self) -> FilterMap<Iter<Entry<()>>, 
-                                           for<'r> fn(&'r Entry<()>) 
-                                               -> Option<u32>> 
-    {
-        self.data.iter().filter_map(Entry::get_key)
+    pub(super) fn keys<'a>(&'a self) -> IterType<'a, ()> {
+        self.data.iter().filter_map(|i| i.get().map(|e| e.key))
     }
 }
 
@@ -217,4 +218,5 @@ impl IHM<u32> {
         }
     }
 }
+
 
