@@ -1,6 +1,8 @@
 
 **NOTE**: For now, development on [master](/stensonowen/WikiLinks/tree/master) will focus on cool graph stuff and the website will live at [rust\_web](/stensonowen/WikiLinks/tree/rust_web). It's being bumped from master for now because it needs some maintenance (update for diesel 1.0, fix Rocket breaking changes, organization, etc.). Ideally these would live behind a non-default feature gate, which would mean the code is still included but building wouldn't take forever. Maybe in the future I'll put web stuff back into *master*, but currently it's just complicating things.
 
+See [Optimizations.md](/Optimizations.md) for a record of some of this project's more interesting optimizations.
+
 ## Current Status
 
 Currently the fastest form of the project is a pure Rust rewrite of parsing, storing, searching, computing pageranks, and serving web requests. 
