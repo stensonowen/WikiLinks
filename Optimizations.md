@@ -3,7 +3,7 @@ This is a record of the attempts I've made to speed up various parts of this pro
 
 ### Representation
 
-#### [Overlapping children/parents sets](0e3e7a73f006c9b31b45c662dc4effb6e56c4de9) (merged)
+#### [Overlapping children/parents sets](56c4de9) (merged)
 
 Each `Entry` in the table stored both its `children` (articles it links to) and its `parents` (articles that link to it) as a vector of `page_id`s. 
 
@@ -18,7 +18,7 @@ This adds a little extra time to the initial parsing step, but doesn't slow down
 Overall this reduced memory usage by about 15% without reducing the total number of edges. This is very helpful because it makes swapping much less likely.
 
 
-#### [Store titles as hashes](f571109ceefea339c9463bd033034bc1c909ed8c) (merged) (for now)
+#### [Store titles as hashes](909ed8c) (merged) (for now)
 
 One pain point of the interface was searching for articles: a misspelling or a capitalization mistake would turn up no results. We can't blindly capitalize all article titles because that causes some collisions where there shouldn't be any.
 
@@ -35,7 +35,7 @@ In the future I plan to investigate the memory consumption of the `fst` crate, w
 
 ### Breadth-first search
 
-#### [Bloom filters](da56735e8ad241120ffaf2285f147405a1a3f853) (reverted)
+#### [Bloom filters](1a3f853) (reverted)
 
 A very common operation when performing a breadth-first search is checking whether a newly found node is reachable; e.g. if we discover node *x* by traversing the children and grandchildren of the source node, we need to check that (1) we haven't already seen it in `src`'s descendents, in which case it should be ignored, or (2) it isn't reachable in the ancestors of `dst`, in which case we've found a valid path.
 
@@ -59,7 +59,7 @@ Even though speeding up the worst case is important, shorter paths are the commo
 
 This "optimization" was reverted. Creating a new construct to store in memory in addition to the hashmap is bad for caching. The inability to resize the structure doomed it to being mediocre in most instances. But some of these ideas could be used in the `IHMap`.
 
-#### [Integer Hash Map](aae33d49455b4f10297454b31b5002f925eae72a) (merged)
+#### [Integer Hash Map](5eae72a) (merged)
 
 I had seen a major (~20%) speedup when switching the bfs module to use the `fnv` crate instead of stdlib's `HashMap` (a non-randomized hashing function that's fast on small inputs is definitely better in this case). 
 But we can simplify this hash table by making assumptions about our use case.
