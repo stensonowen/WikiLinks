@@ -130,14 +130,14 @@ extern crate chrono;
 use chrono::Local;
 use links::link_state::Path;
 
-fn time_search(ls: &LinkState<link_state::ProcData>, src: u32, dst: u32) -> (i64,Path) {
+fn _time_search(ls: &LinkState<link_state::ProcData>, src: u32, dst: u32) -> (i64,Path) {
     let start = Local::now();
     let p = ls.bfs(src, dst);
     let dur = Local::now().signed_duration_since(start);
     (dur.num_nanoseconds().unwrap(), p)
 }
 
-fn random_elem(ls: &LinkState<link_state::ProcData>) -> u32 {
+fn _random_elem(ls: &LinkState<link_state::ProcData>) -> u32 {
     let mut guess: u32;
     loop {
         guess = rand::random();
@@ -157,9 +157,10 @@ fn main() {
     */
 
     let ls: LinkState<link_state::HashLinks> = LinkState::from_args(&argv);
-    let (src,dst) = match cfg!(feature="simple") {
-        true  => (152629, 454989),
-        false => (1684129, 52186157),
+    let (src,dst) = if cfg!(feature="simple") { 
+        (152_629, 454_989) 
+    } else { 
+        (1_684_129, 52_186_157) 
     };
 
     // 172504K

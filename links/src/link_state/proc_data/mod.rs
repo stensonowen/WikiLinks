@@ -33,7 +33,7 @@ impl LinkState<ProcData> {
         let pr_log = self.log.new(o!(
                 "damping" => pagerank::DAMPING_FACTOR,
                 "epsilon" => pagerank::MAX_ERROR));
-        let r = pagerank::Graph::new(&self.state.links).get_ranks(pr_log);
+        let r = pagerank::Graph::new(&self.state.links).get_ranks(&pr_log);
         // sort floats; will all be less than 
         // so should be the same as sorting by the negative reciprocal
         let mut sorted_r: Vec<_> = r.into_iter().collect();

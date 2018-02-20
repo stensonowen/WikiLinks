@@ -3,7 +3,7 @@
 //!  so it makes sense to rewrite it to take advantage of certain optimizations.
 //! These tables are always keyed `i32`s and grow fast enough that their capacity can always
 //!  be a power of two; also, inserts and lookups need to be very fast, so we can make the
-//!  hash function a simple bitmask (assuming page_ids are relatively randomly distributed).
+//!  hash function a simple bitmask (assuming `page_id`s are relatively randomly distributed).
 //! In theory this means we can also omit bounds checking, but we'll see (I don't have any
 //!  `unsafe` blocks in this project yet).
 //! Because we want lots of caching and we're assuming our inputs are pretty random, we can
@@ -30,7 +30,7 @@ pub type IHMap = IHM<u32>;
 pub type IHSet = IHM<()>;
 
 /// Entry in our hash map: Instead of using `Option` or some unsafe magic, we reserve
-///  one potential value as "none" (where page_id is INT_MAX). This saves a lot on space
+///  one potential value as "none" (where `page_id` is `INT_MAX`). This saves a lot on space
 ///  (probably about 50% of what it would be) while still being fast (it's like 20%
 ///  faster than `Option<Entry<T>>` because of caching or something).
 /// The idea is stolen from the `optional` crate, but I like my interface better.
@@ -194,7 +194,8 @@ impl IHM<()> {
     pub fn insert(&mut self, key: u32) {
         self.insert_elem(key, ())
     }
-    pub(super) fn keys<'a>(&'a self) -> IterType<'a, ()> {
+    //pub(super) fn keys<'a>(&'a self) -> IterType<'a, ()> {
+    pub(super) fn keys(&self) -> IterType<()> {
         self.data.iter().filter_map(|i| i.get().map(|e| e.key))
     }
 }

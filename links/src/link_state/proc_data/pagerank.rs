@@ -38,7 +38,7 @@ impl<'a> Graph<'a> {
             ranks:  pageranks,
         }
     }
-    pub fn get_ranks(mut self, log: slog::Logger) -> FnvHashMap<u32,f64> {
+    pub fn get_ranks(mut self, log: &slog::Logger) -> FnvHashMap<u32,f64> {
         let iter = self.compute_pageranks(false);
         info!(log, "Computed pageranks with ε={} after {} iterations", 
               MAX_ERROR, iter);

@@ -22,6 +22,13 @@ impl Path {
             None
         }
     }
+    pub fn is_empty(&self) -> bool {
+        if let Ok(ref v) = self.path {
+            v.len() <= 1
+        } else {
+            false
+        }
+    }
     pub fn print(&self, entries: &fnv::FnvHashMap<u32,Entry>) {
         println!("Path from {}\t(\"{}\")", self.src, entries.get(&self.src).unwrap().title);
         println!("\t  to {}\t(\"{}\") :", self.dst, entries.get(&self.dst).unwrap().title);
