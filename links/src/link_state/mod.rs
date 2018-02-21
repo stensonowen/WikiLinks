@@ -1,6 +1,7 @@
 // https://hoverbear.org/2016/10/12/rust-state-machine-pattern/
 
 use fnv;
+use fst;
 use clap;
 use slog_term;
 use slog::{Logger, DrainExt};
@@ -54,7 +55,9 @@ pub struct LinkData {
     /// Link data can be quickly written to or read from disk
     //dumps: Vec<Mutex<Vec<link_data::IndexedEntry>>>,
     dumps: Vec<Vec<link_data::IndexedEntry>>,
-    titles: HashMap<String,u32>,
+    //titles: HashMap<String,u32>,
+    //titles: fst::Map,
+    titles: Vec<u8>, // byte repr of fst
 }
 
 pub struct ProcData {
@@ -67,7 +70,8 @@ pub struct HashLinks {
     /// Read-only, fast-lookup container for link and proc data
     /// Interact with diesel cache and interface with website
     links: fnv::FnvHashMap<u32,Entry>,
-    _titles: HashMap<u64,u32>,
+    //_titles: HashMap<u64,u32>,
+    titles: fst::Map,
 }
 
 //  ---------- ARGS ----------
@@ -94,8 +98,11 @@ impl<T: State> LinkState<T> where LinkState<T>: From<LinkState<LinkData>> {
             ls_dt.export(PathBuf::from(p)).unwrap();
         }
         ls_dt.into()
+    }
 
-            /*
+    /*
+     * old from_args stuff, should be useful again later
+
         //ls_dt.foo();
         if args.is_present("web-server") {
             Some(ls_dt.into())
@@ -156,7 +163,7 @@ impl<T: State> LinkState<T> where LinkState<T>: From<LinkState<LinkData>> {
 
             None
         }
-                */
     }
+                */
 }
 

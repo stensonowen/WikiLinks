@@ -1,5 +1,6 @@
 extern crate rand;
 
+use fst;
 use fnv;
 use slog;
 
@@ -8,9 +9,6 @@ use super::Entry;
 use super::bfs::{BFS,BFS2};
 use super::Path;
 
-use std::collections::HashMap;
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
 use std::io;
 
 
@@ -25,6 +23,9 @@ impl LinkState<HashLinks> {
         let bfs = BFS2::new(null, &self.state.links, src, dst);
         bfs.search()
     }
+    /*
+     * TODO get this working again
+     */
     pub fn cli_bfs(&self) -> io::Result<()> { 
         let mut buf = String::new();
         println!("Starting bfs");
@@ -56,7 +57,8 @@ impl LinkState<HashLinks> {
 impl From<LinkState<LinkData>> for LinkState<HashLinks> {
     fn from(old: LinkState<LinkData>) -> LinkState<HashLinks> {
         let (threads, size) = (old.threads, old.size);
-        let (links, log, titles) = old.break_down();
+        let (links, log, titles_b) = old.break_down();
+        let titles_map = fst::Map::from_bytes(titles_b).expect("invalid fst bytes");
         LinkState {
             threads:    threads,
             size:       size,
@@ -67,7 +69,8 @@ impl From<LinkState<LinkData>> for LinkState<HashLinks> {
                 //titles: old.state.titles,
                 //titles: HashLinks::hash_titles(old.state.titles),
                 links:  links,
-                _titles: HashLinks::hash_titles(titles),
+                titles: titles_map,
+                //_titles: HashLinks::hash_titles(titles),
             }
         }
     }
@@ -103,6 +106,9 @@ impl HashLinks {
         }
     }
         */
+
+    /*
+     * Hash-based title storage is tentatively removed in favor of fst
     fn hash_title(t: &str) -> u64 {
         let mut s = DefaultHasher::new();
         t.hash(&mut s);
@@ -110,16 +116,6 @@ impl HashLinks {
     }
     fn hash_titles(old: HashMap<String,u32>) -> HashMap<u64,u32> {
         old.into_iter().map(|(q,i)| (HashLinks::hash_title(&q),i)).collect()
-    }
-    fn resolve_title(&self, t: &str) -> Option<u32> {
-        let t = t.trim();
-        if t.is_empty() {
-            return Some(self.select_random());
-        }
-        let t = t.to_uppercase();
-        let t = t.replace(' ', "_");
-        let hash = HashLinks::hash_title(&t);
-        self._titles.get(&hash).cloned()
     }
     fn select_random(&self) -> u32 {
         let mut guess: u32;
@@ -132,6 +128,16 @@ impl HashLinks {
                 return guess;
             }
         }
+    }
+    */
+    fn resolve_title(&self, t: &str) -> Option<u32> {
+        let t = t.trim();
+        //if t.is_empty() { return Some(self.select_random()); }
+        //let t = t.to_uppercase();
+        let t = t.replace(' ', "_");
+        //let hash = HashLinks::hash_title(&t);
+        //self.titles.get(&hash)
+        self.titles.get(&t).map(|n| n as u32) // todo panic if trunc
     }
 
 }

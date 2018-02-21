@@ -14,6 +14,7 @@ extern crate csv;
 // MISC
 extern crate clap;
 extern crate fnv;
+extern crate fst;
 extern crate chrono;
 
 // COMPONENTS

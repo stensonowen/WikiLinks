@@ -16,8 +16,9 @@ serde = "0.9.9"
 serde_json = "0.9.8"
 serde_derive = "0.9.9"
 
+fst = "0.3"
+rand = "0.4"
 csv = "*"
-rand = "0.4.2"
 
 lazy_static = "1.0"
 
