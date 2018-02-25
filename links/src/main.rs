@@ -126,15 +126,15 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn, links: SharedLinks,
 //use links::link_state::bfs::BFS;
 //fn loop_bfs(pd: &
 
-extern crate chrono;
-use chrono::Local;
 use links::link_state::Path;
+use std::time::SystemTime;
 
-fn _time_search(ls: &LinkState<link_state::ProcData>, src: u32, dst: u32) -> (i64,Path) {
-    let start = Local::now();
+fn _time_search(ls: &LinkState<link_state::ProcData>, src: u32, dst: u32) -> (u64,Path) {
+    let start = SystemTime::now();
     let p = ls.bfs(src, dst);
-    let dur = Local::now().signed_duration_since(start);
-    (dur.num_nanoseconds().unwrap(), p)
+    let dur = SystemTime::now().duration_since(start).unwrap();
+    let ns = dur.subsec_nanos() as u64 + dur.as_secs().checked_mul(1_000_000_000).unwrap();
+    (ns, p)
 }
 
 fn _random_elem(ls: &LinkState<link_state::ProcData>) -> u32 {

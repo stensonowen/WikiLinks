@@ -15,7 +15,6 @@ extern crate csv;
 extern crate clap;
 extern crate fnv;
 extern crate fst;
-extern crate chrono;
 
 // COMPONENTS
 pub mod link_state;
