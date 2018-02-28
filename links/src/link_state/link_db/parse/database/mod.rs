@@ -9,7 +9,6 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
 use std::iter;
 
-
 // The actual data storing the internal link structure
 pub struct Database {
     // when populating the entries/addresses fields, we may come across redirect pages
@@ -100,7 +99,7 @@ impl Database {
             match e.1 {
                 EntryType::Redirect{..} => panic!("Found redirect during explosion"),
                 EntryType::Page{ title: ti, parents: p, children: c } => 
-                    Entry::from(e.0, ti, p, c)
+                    Entry::from_integers(e.0, ti, p, c)
             }});
         Box::new(entry_iter)
     }

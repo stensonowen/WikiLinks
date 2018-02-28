@@ -2,7 +2,7 @@ use std::path::Path;
 use std::iter::Iterator;
 use std::collections::HashMap;
 
-use super::link_data::Entry;
+use article::Entry;
 use super::{LinkState, LinkDb, new_logger};
 
 pub mod parse;

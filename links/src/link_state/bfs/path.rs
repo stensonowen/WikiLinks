@@ -1,17 +1,18 @@
 use fnv;
-use super::Entry;
+
+use article::{PageId, Entry};
 
 #[derive(Debug, Clone)]
 pub struct Path {
-    pub src: u32,
-    pub dst: u32,
-    pub path: Result<Vec<u32>,PathError>,
+    pub src: PageId,
+    pub dst: PageId,
+    pub path: Result<Vec<PageId>, PathError>,
 }
 
 #[derive(Debug, Clone)]
 pub enum PathError {
     NoSuchPath,
-    Terminated(u32)
+    Terminated(usize)
 }
 
 impl Path {
@@ -29,12 +30,12 @@ impl Path {
             false
         }
     }
-    pub fn print(&self, entries: &fnv::FnvHashMap<u32,Entry>) {
-        println!("Path from {}\t(\"{}\")", self.src, entries.get(&self.src).unwrap().title);
-        println!("\t  to {}\t(\"{}\") :", self.dst, entries.get(&self.dst).unwrap().title);
+    pub fn print(&self, entries: &fnv::FnvHashMap<PageId, Entry>) {
+        println!("Path from {:?}\t(\"{}\")", self.src, entries.get(&self.src).unwrap().title);
+        println!("\t  to {:?}\t(\"{}\") :", self.dst, entries.get(&self.dst).unwrap().title);
         match self.path {
             Ok(ref v) => for i in v {
-                println!("\t{}:\t\"{}\"", i, entries[i].title);
+                println!("\t{:?}:\t\"{}\"", i, entries[i].title);
             },
             Err(PathError::NoSuchPath) => println!("\tNo such path exists"),
             Err(PathError::Terminated(i)) => 

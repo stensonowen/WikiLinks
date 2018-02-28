@@ -6,12 +6,14 @@ use std::collections::HashSet;
 use std::mem::swap;
 use link_state::ProcData;
 
+use article::PageId;
+
 impl ProcData {
-    pub fn longest_path(&self, dst: u32) -> u8 {
+    pub fn longest_path(&self, dst: PageId) -> u8 {
         let cap = self.links.len();
-        let mut all_seen: HashSet<u32> = HashSet::with_capacity(cap);
-        let mut last_row: HashSet<u32> = HashSet::with_capacity(cap);
-        let mut tmp:      HashSet<u32> = HashSet::with_capacity(cap);
+        let mut all_seen: HashSet<PageId> = HashSet::with_capacity(cap);
+        let mut last_row: HashSet<PageId> = HashSet::with_capacity(cap);
+        let mut tmp:      HashSet<PageId> = HashSet::with_capacity(cap);
         let mut height: u8 = 0;     // beware off-by-ones
 
         last_row.insert(dst);

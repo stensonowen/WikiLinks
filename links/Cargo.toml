@@ -11,13 +11,13 @@ regex = "0.1.80"
 slog = "1.5.2"
 slog-term = "1.5.0"
 
-serde = "0.9.9"
-serde_json = "0.9.8"
-serde_derive = "0.9.9"
+serde = "1"
+serde_json = "1"
+serde_derive = "1"
 
 fst = "0.3"
 rand = "0.4"
-csv = "*"
+csv = "1.0.0-beta.5"
 
 lazy_static = "1.0"
 

@@ -5,7 +5,7 @@ use fnv;
 use slog;
 
 use super::{LinkState, LinkData, HashLinks};
-use super::Entry;
+use article::{PageId, Entry};
 use super::bfs::{BFS,BFS2};
 use super::Path;
 
@@ -13,12 +13,12 @@ use std::io;
 
 
 impl LinkState<HashLinks> {
-    pub fn bfs(&self, src: u32, dst: u32) -> Path {
+    pub fn bfs(&self, src: PageId, dst: PageId) -> Path {
         let null = slog::Logger::root(slog::Discard, o!());
         let bfs = BFS::new(null, &self.state.links, src, dst);
         bfs.search()
     }
-    pub fn bfs2(&self, src: u32, dst: u32) -> Path {
+    pub fn bfs2(&self, src: PageId, dst: PageId) -> Path {
         let null = slog::Logger::root(slog::Discard, o!());
         let bfs = BFS2::new(null, &self.state.links, src, dst);
         bfs.search()
@@ -80,7 +80,7 @@ impl HashLinks {
     pub fn size(&self) -> usize {
         self.links.len()
     }
-    pub fn get_links(&self) -> &fnv::FnvHashMap<u32,Entry> {
+    pub fn get_links(&self) -> &fnv::FnvHashMap<PageId,Entry> {
         &self.links
     }
     /*
@@ -130,14 +130,17 @@ impl HashLinks {
         }
     }
     */
-    fn resolve_title(&self, t: &str) -> Option<u32> {
+    fn resolve_title(&self, t: &str) -> Option<PageId> {
         let t = t.trim();
         //if t.is_empty() { return Some(self.select_random()); }
         //let t = t.to_uppercase();
         let t = t.replace(' ', "_");
         //let hash = HashLinks::hash_title(&t);
         //self.titles.get(&hash)
-        self.titles.get(&t).map(|n| n as u32) // todo panic if trunc
+        self.titles.get(&t).map(|n| {
+            assert!(n <= u64::from(u32::max_value()));
+            PageId::from(n as u32)
+        })
     }
 
 }

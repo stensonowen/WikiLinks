@@ -19,7 +19,8 @@ pub mod bfs;
 //pub mod links;
 
 //pub use self::entry::Entry;
-pub use self::link_data::Entry;
+//pub use self::link_data::Entry;
+pub use article::{PageId, Entry};
 pub use self::bfs::path::Path;
 
 
@@ -56,7 +57,7 @@ pub struct LinkDb {
 pub struct LinkData {
     /// Store parsed and converted links and addresses
     /// Link data can be quickly written to or read from disk
-    dumps: Vec<Vec<link_data::Entry>>,
+    dumps: Vec<Vec<Entry>>,
     titles: Vec<u8>, // byte repr of fst
     // TODO use a wrapper type to avoid confusion
 }
@@ -64,13 +65,13 @@ pub struct LinkData {
 pub struct ProcData {
     /// Store easily searchable link and pagerank data
     /// Pagerank data can be read from, dumped to, or exported to disk 
-    links: fnv::FnvHashMap<u32,Entry>,
+    links: fnv::FnvHashMap<PageId,Entry>,
 }
 
 pub struct HashLinks {
     /// Read-only, fast-lookup container for link and proc data
     /// Interact with diesel cache and interface with website
-    links: fnv::FnvHashMap<u32,Entry>,
+    links: fnv::FnvHashMap<PageId,Entry>,
     //_titles: HashMap<u64,u32>,
     titles: fst::Map,
 }

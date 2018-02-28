@@ -4,9 +4,9 @@ use slog::Logger;
 
 use std::mem;
 
-use link_state::Entry;
+use article::{PageId, Entry};
 
-const MAX_DEPTH: u32 = 10;
+const MAX_DEPTH: usize = 10;
 
 pub mod path;
 use self::path::{Path, PathError};
@@ -51,9 +51,9 @@ use self::ihm::{IHSet, IHMap};
  *
  */
 
-type Links = FnvHashMap<u32, Entry>;
-type Set = FnvHashSet<u32>;
-type Map = FnvHashMap<u32, u32>;
+type Links = FnvHashMap<PageId, Entry>;
+type Set = FnvHashSet<PageId>;
+type Map = FnvHashMap<PageId, PageId>;
 
 pub struct BFS<'a> {
     // where parent/children data is found
@@ -62,26 +62,26 @@ pub struct BFS<'a> {
     log: Logger,
 
     // indices of src and dst
-    src: u32,
-    dst: u32,
+    src: PageId,
+    dst: PageId,
 
     // comprehensive list of page_ids reachable from each node
     // for (k,v), there is a path from src → ⋯ → v → k (through children links)
-    src_seen: FnvHashMap<u32, u32>,
+    src_seen: FnvHashMap<PageId, PageId>,
     // for (k,v), there is a path from dst → ⋯ → v → k (through parent links)
-    dst_seen: FnvHashMap<u32, u32>,
+    dst_seen: FnvHashMap<PageId, PageId>,
 
     // the farthest reachable rows are both subsets of their respective `seen` sets
     // the lowest row reachable via the `src`'s descendents
-    row_down: FnvHashSet<u32>,
+    row_down: FnvHashSet<PageId>,
     // the highest row reachable via the `dst`'s ancestors
-    row_up: FnvHashSet<u32>,
+    row_up: FnvHashSet<PageId>,
 }
 
 
 impl<'a> BFS<'a> {
 
-    pub fn new(log: Logger, links: &Links, src: u32, dst: u32) -> BFS {
+    pub fn new(log: Logger, links: &Links, src: PageId, dst: PageId) -> BFS {
         BFS {
             links, log,
             src, dst,
@@ -92,7 +92,7 @@ impl<'a> BFS<'a> {
         }
     }
 
-    fn path_from(&self, p: Result<Vec<u32>, PathError>) -> Path {
+    fn path_from(&self, p: Result<Vec<PageId>, PathError>) -> Path {
         Path {
             src: self.src,
             dst: self.dst,
@@ -100,7 +100,7 @@ impl<'a> BFS<'a> {
         }
     }
 
-    pub fn extract_path(&self, common: u32) -> Path {
+    pub fn extract_path(&self, common: PageId) -> Path {
         // `common` is the first entry reachable from src's children and dst's parents
         // path includes both src and dst
         let mut path = vec![common];
@@ -124,7 +124,7 @@ impl<'a> BFS<'a> {
     }
 
     pub fn search(mut self) -> Path {
-        info!(self.log, "Beginning search from {} to {}", self.src, self.dst);
+        info!(self.log, "Beginning search from {:?} to {:?}", self.src, self.dst);
         if self.src == self.dst {
             return Path { src: self.src, dst: self.dst, path: Ok(vec![self.src]) }
         }
@@ -135,11 +135,11 @@ impl<'a> BFS<'a> {
         // use one temp set rather than recreating new ones
         // would the allocator make recreating equally fast? kinda doubt it
         // TODO speed test
-        let mut tmp: FnvHashSet<u32> = FnvHashSet::default();
+        let mut tmp: FnvHashSet<PageId> = FnvHashSet::default();
 
         for i in 0..MAX_DEPTH {
             if let Some(common) = self.iter_down(&mut tmp) {
-                info!(self.log, "Found mid {} when down row len = {}", common, tmp.len());
+                info!(self.log, "Found mid {:?} when down row len = {}", common, tmp.len());
                 return self.extract_path(common);
             }
             mem::swap(&mut self.row_down, &mut tmp);
@@ -147,7 +147,7 @@ impl<'a> BFS<'a> {
             info!(self.log, "Iter #{}: down row size = {}", i, self.row_down.len());
 
             if let Some(common) = self.iter_up(&mut tmp) {
-                info!(self.log, "Found mid {} when up row len = {}", common, tmp.len());
+                info!(self.log, "Found mid {:?} when up row len = {}", common, tmp.len());
                 return self.extract_path(common);
             }
             mem::swap(&mut self.row_up, &mut tmp);
@@ -166,13 +166,13 @@ impl<'a> BFS<'a> {
         self.path_from(Err(PathError::Terminated(MAX_DEPTH)))
     }
 
-    fn iter_down(&mut self, tmp: &mut Set) -> Option<u32> {
+    fn iter_down(&mut self, tmp: &mut Set) -> Option<PageId> {
         Self::iter(self.links, &self.row_down, tmp, 
                    &mut self.src_seen, &self.dst_seen, 
                    Entry::get_children)
     }
 
-    fn iter_up(&mut self, tmp: &mut Set) -> Option<u32> {
+    fn iter_up(&mut self, tmp: &mut Set) -> Option<PageId> {
         Self::iter(self.links, &self.row_up, tmp,
                    &mut self.dst_seen, &self.src_seen,
                    Entry::get_parents)
@@ -180,8 +180,8 @@ impl<'a> BFS<'a> {
 
     fn iter<F>(links: &'a Links, old_line: &Set, new_line: &mut Set,
                seen: &mut Map, targets: &Map, next: F)
-        -> Option<u32> 
-        where F: Fn(&'a Entry) -> &'a [u32]
+        -> Option<PageId> 
+        where F: Fn(&'a Entry) -> &'a [PageId]
     {
         // for each element in `old_line`, add its parents/children to `next_line`
         // as we see an entry, add it to `seen`
@@ -212,24 +212,24 @@ impl<'a> BFS<'a> {
 pub struct BFS2<'a> {
     links: &'a Links,
     log: Logger,
-    src: u32,
-    dst: u32,
-    //src_seen: FnvHashMap<u32, u32>,
-    //dst_seen: FnvHashMap<u32, u32>,
-    //row_down: FnvHashSet<u32>,
-    //row_up: FnvHashSet<u32>,
+    src: PageId,
+    dst: PageId,
+    //src_seen: FnvHashMap<PageId, PageId>,
+    //dst_seen: FnvHashMap<PageId, PageId>,
+    //row_down: FnvHashSet<PageId>,
+    //row_up: FnvHashSet<PageId>,
     src_seen: IHMap,
     dst_seen: IHMap,
     row_down: IHSet,
     row_up: IHSet,
 }
 
-//type Set2 = FnvHashSet<u32>;
-//type Map2 = FnvHashMap<u32, u32>;
+//type Set2 = FnvHashSet<PageId>;
+//type Map2 = FnvHashMap<PageId, PageId>;
 
 impl<'a> BFS2<'a> {
 
-    pub fn new(log: Logger, links: &Links, src: u32, dst: u32) -> BFS2 {
+    pub fn new(log: Logger, links: &Links, src: PageId, dst: PageId) -> BFS2 {
         BFS2 {
             links, log, src, dst,
             src_seen: IHMap::default(), dst_seen: IHMap::default(),
@@ -237,11 +237,11 @@ impl<'a> BFS2<'a> {
         }
     }
 
-    fn path_from(&self, p: Result<Vec<u32>, PathError>) -> Path {
+    fn path_from(&self, p: Result<Vec<PageId>, PathError>) -> Path {
         Path { src: self.src, dst: self.dst, path: p, }
     }
 
-    pub fn extract_path(&self, common: u32) -> Path {
+    pub fn extract_path(&self, common: PageId) -> Path {
         let mut path = vec![common];
         let mut current = common;
         while current != self.src {
@@ -263,7 +263,7 @@ impl<'a> BFS2<'a> {
     }
 
     pub fn search(mut self) -> Path {
-        info!(self.log, "Beginning search from {} to {}", self.src, self.dst);
+        info!(self.log, "Beginning search from {:?} to {:?}", self.src, self.dst);
         if self.src == self.dst {
             return Path { src: self.src, dst: self.dst, path: Ok(vec![self.src]) }
         }
@@ -272,7 +272,7 @@ impl<'a> BFS2<'a> {
         let mut tmp: IHSet = IHSet::default();
         for i in 0..MAX_DEPTH {
             if let Some(common) = self.iter_down(&mut tmp) {
-                info!(self.log, "Found mid {} when down row len = {}", common, tmp.len());
+                info!(self.log, "Found mid {:?} when down row len = {}", common, tmp.len());
                 return self.extract_path(common);
             }
             mem::swap(&mut self.row_down, &mut tmp);
@@ -280,7 +280,7 @@ impl<'a> BFS2<'a> {
             info!(self.log, "Iter #{}: down row size = {}", i, self.row_down.len());
 
             if let Some(common) = self.iter_up(&mut tmp) {
-                info!(self.log, "Found mid {} when up row len = {}", common, tmp.len());
+                info!(self.log, "Found mid {:?} when up row len = {}", common, tmp.len());
                 return self.extract_path(common);
             }
             mem::swap(&mut self.row_up, &mut tmp);
@@ -300,14 +300,14 @@ impl<'a> BFS2<'a> {
     }
 
     //#[inline]
-    fn iter_down(&mut self, tmp: &mut IHSet) -> Option<u32> {
+    fn iter_down(&mut self, tmp: &mut IHSet) -> Option<PageId> {
         Self::iter(self.links, &self.row_down, tmp, 
                    &mut self.src_seen, &self.dst_seen,
                    Entry::get_children)
     }
 
     //#[inline]
-    fn iter_up(&mut self, tmp: &mut IHSet) -> Option<u32> {
+    fn iter_up(&mut self, tmp: &mut IHSet) -> Option<PageId> {
         Self::iter(self.links, &self.row_up, tmp,
                    &mut self.dst_seen, &self.src_seen,
                    Entry::get_parents)
@@ -316,8 +316,8 @@ impl<'a> BFS2<'a> {
     //#[inline]
     fn iter<F>(links: &'a Links, old_line: &IHSet, new_line: &mut IHSet,
                seen: &mut IHMap, targets: &IHMap, next: F)
-        -> Option<u32> 
-        where F: Fn(&'a Entry) -> &'a [u32]
+        -> Option<PageId> 
+        where F: Fn(&'a Entry) -> &'a [PageId]
     {
         for old in old_line.keys() {
             for &new in next(&links[&old]) {

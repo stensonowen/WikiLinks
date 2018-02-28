@@ -18,5 +18,6 @@ extern crate fst;
 
 // COMPONENTS
 pub mod link_state;
+pub mod article;
 
 

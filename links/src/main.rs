@@ -126,9 +126,10 @@ fn bfs_search(search: web::SearchParams, conn: db::Conn, links: SharedLinks,
 //use links::link_state::bfs::BFS;
 //fn loop_bfs(pd: &
 
-use links::link_state::Path;
-use std::time::SystemTime;
+//use links::link_state::Path;
+//use std::time::SystemTime;
 
+/*
 fn _time_search(ls: &LinkState<link_state::ProcData>, src: u32, dst: u32) -> (u64,Path) {
     let start = SystemTime::now();
     let p = ls.bfs(src, dst);
@@ -146,6 +147,7 @@ fn _random_elem(ls: &LinkState<link_state::ProcData>) -> u32 {
         }
     }
 }
+*/
 
 fn main() {
     let argv = argv();
@@ -170,7 +172,7 @@ fn main() {
     // bfs          301,149,929 bytes
     // bfs2 (.50)   300,101,737 bytes
 
-    let path = ls.bfs(src, dst);
+    let path = ls.bfs(src.into(), dst.into());
     println!("{:?}", path);
 
     //println!("\n\n\nMEMORY USED:\n");

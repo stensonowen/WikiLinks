@@ -17,6 +17,7 @@
 // Memory comparison: 
 
 use std::fmt::Debug;
+use article::PageId;
 
 // TODO: tweak this?
 const RESIZE_THRESHOLD: f64 = 0.5; // resize when table is 1/2 full
@@ -24,9 +25,12 @@ const RESIZE_THRESHOLD: f64 = 0.5; // resize when table is 1/2 full
 const BEGIN_CAP: usize = 6; // 2^6 = 64
 
 // TODO: verify this?
-const ENTRY_RESERVED: u32 = ::std::u32::MAX; // u32::max_value() on nightly
+//const ENTRY_RESERVED: u32 = ::std::u32::MAX; // u32::max_value() on nightly
+//const ENTRY_RESERVED: PageId = PageId::from(::std::u32::MAX);
+//const ENTRY_RESERVED: PageId = ::std::u32::MAX.into();
+use article::PAGEID_RESERVED;
 
-pub type IHMap = IHM<u32>;
+pub type IHMap = IHM<PageId>;
 pub type IHSet = IHM<()>;
 
 /// Entry in our hash map: Instead of using `Option` or some unsafe magic, we reserve
@@ -36,14 +40,14 @@ pub type IHSet = IHM<()>;
 /// The idea is stolen from the `optional` crate, but I like my interface better.
 #[derive(Debug, Clone, Copy)]
 pub(super) struct Entry<T: Debug+Copy+Default> {
-    key: u32,
+    key: PageId,
     val: T,
 }
 
 impl<T: Debug+Copy+Default> Entry<T> {
     #[inline]
     fn is_none(&self) -> bool {
-        self.key == ENTRY_RESERVED
+        self.key == PAGEID_RESERVED
     }
     #[inline]
     fn is_some(&self) -> bool {
@@ -62,7 +66,7 @@ impl<T: Debug+Copy+Default> Entry<T> {
     #[inline]
     fn none() -> Self {
         Entry {
-            key: ENTRY_RESERVED,
+            key: PAGEID_RESERVED,
             val: Default::default(),
         }
     }
@@ -86,10 +90,11 @@ impl<T: Debug+Copy+Default> Default for IHM<T> {
 
 impl<T: Debug+Copy+Default> IHM<T> {
     #[inline]
-    fn hash(&self, n: u32) -> usize {
+    fn hash(&self, n: PageId) -> usize {
         // n % self.capacity()
         // last `cap_exp` bytes of `n`
-        (n & ((1 << self.cap_exp) - 1)) as usize
+        //(n.into() & ((1 << self.cap_exp) - 1)) as usize
+        (u32::from(n) & ((1 << self.cap_exp) - 1)) as usize
     }
     #[inline]
     fn hash_with(n: usize, cap: usize) -> usize {
@@ -124,7 +129,7 @@ impl<T: Debug+Copy+Default> IHM<T> {
             *entry = Entry::none();
         }
     }
-    pub fn contains_key(&self, key: u32) -> bool {
+    pub fn contains_key(&self, key: PageId) -> bool {
         let mut addr = self.hash(key);
         loop {
             // For now let's see how well rustc optimizes this
@@ -159,7 +164,7 @@ impl<T: Debug+Copy+Default> IHM<T> {
         }
         *self = other;
     }
-    fn insert_elem(&mut self, key: u32, val: T) {
+    fn insert_elem(&mut self, key: PageId, val: T) {
         // TODO maybe could add some cool simd stuff or manual unrolling here
         if self.len() as f64 / self.capacity() as f64 >= RESIZE_THRESHOLD {
             self.resize();
@@ -188,10 +193,10 @@ impl<T: Debug+Copy+Default> IHM<T> {
 
 use std::iter::FilterMap;
 use std::slice::Iter;
-type IterType<'a,T> = FilterMap<Iter<'a, Entry<T>>, for<'r> fn(&'r Entry<T>) -> Option<u32>>;
+type IterType<'a,T> = FilterMap<Iter<'a, Entry<T>>, for<'r> fn(&'r Entry<T>) -> Option<PageId>>;
 
 impl IHM<()> {
-    pub fn insert(&mut self, key: u32) {
+    pub fn insert(&mut self, key: PageId) {
         self.insert_elem(key, ())
     }
     //pub(super) fn keys<'a>(&'a self) -> IterType<'a, ()> {
@@ -200,11 +205,11 @@ impl IHM<()> {
     }
 }
 
-impl IHM<u32> {
-    pub fn insert(&mut self, key: u32, val: u32) {
+impl IHM<PageId> {
+    pub fn insert(&mut self, key: PageId, val: PageId) {
         self.insert_elem(key, val)
     }
-    pub fn get(&self, key: u32) -> Option<u32> {
+    pub fn get(&self, key: PageId) -> Option<PageId> {
         let mut addr = self.hash(key);
         loop {
             /*
@@ -221,3 +226,4 @@ impl IHM<u32> {
 }
 
 
+// TODO use std::ops::Index

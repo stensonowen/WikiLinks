@@ -4,6 +4,7 @@ use std::path::{self, PathBuf};
 use std::cmp::Ordering;
 use std::{f64, u64};
 
+use article::PageId;
 use super::{LinkState, LinkData, ProcData};
 use super::{bfs, Path};
 use self::bfs::BFS;
@@ -43,19 +44,19 @@ impl LinkState<ProcData> {
             assert!(r <= 1.0);
             r.recip() as u64
         });
-        let mut csv_w = csv::Writer::from_file(path)?;
-        for (id,rank) in sorted_r {
+        let mut csv_w = csv::Writer::from_path(path)?;
+        for (id, rank) in sorted_r {
             let title = &self.state.links[&id].title;
-            csv_w.encode((rank,id,title))?;
+            csv_w.serialize((rank, id, title))?;
         }
         Ok(())
     }
 
-    pub fn longest_path(&self, dst: u32) -> u8 {
+    pub fn longest_path(&self, dst: PageId) -> u8 {
         self.state.longest_path(dst)
     }
 
-    fn _pretty_ranks(&self, ranks: &[(u32,f64)], ranks_path: &path::Path) 
+    fn _pretty_ranks(&self, ranks: &[(PageId,f64)], ranks_path: &path::Path) 
         -> Result<(),csv::Error> 
     {
         //sort greatest-to-least
@@ -63,8 +64,8 @@ impl LinkState<ProcData> {
         let mut sorted_ranks = ranks.to_vec();
         sorted_ranks.sort_by(|&(a_i,a_r),&(b_i,b_r)| {
             //sort by floats, which Ord does not provide
-            assert!(!a_r.is_nan(), "Page {} had a NaN rank", a_i);
-            assert!(!b_r.is_nan(), "Page {} had a NaN rank", b_i);
+            assert!(!a_r.is_nan(), "Page {:?} had a NaN rank", a_i);
+            assert!(!b_r.is_nan(), "Page {:?} had a NaN rank", b_i);
             match (a_r > b_r, (a_r - b_r).abs() < f64::EPSILON) {
                 (true, _) => Ordering::Less,
                 (_, true) => Ordering::Equal,
@@ -73,10 +74,10 @@ impl LinkState<ProcData> {
         });
         
         // write using interesting csv data
-        let mut csv_w = csv::Writer::from_file(ranks_path)?;
+        let mut csv_w = csv::Writer::from_path(ranks_path)?;
         for (id,rank) in sorted_ranks {
             let title = &self.state.links[&id].title;
-            csv_w.encode((rank,id,title))?;
+            csv_w.serialize((rank,id,title))?;
         }
         Ok(())
     }
@@ -84,22 +85,22 @@ impl LinkState<ProcData> {
         use std::collections::HashSet;
         // count number of nodes that are present in both `children` and `parents`
         self.state.links.values().map(|e| {
-            let children: HashSet<u32> = e.get_children().iter().cloned().collect();
+            let children: HashSet<PageId> = e.get_children().iter().cloned().collect();
             assert_eq!(e.get_children().len(), children.len());
-            let parents: HashSet<u32> = e.get_parents().iter().cloned().collect();
+            let parents: HashSet<PageId> = e.get_parents().iter().cloned().collect();
             assert_eq!(e.get_parents().len(), parents.len());
             children.intersection(&parents).count()
         }).sum()
     }
-    pub fn contains(&self, n: u32) -> bool {
+    pub fn contains(&self, n: PageId) -> bool {
         self.state.links.contains_key(&n)
     }
-    pub fn bfs(&self, src: u32, dst: u32) -> Path {
+    pub fn bfs(&self, src: PageId, dst: PageId) -> Path {
         let null = slog::Logger::root(slog::Discard, o!());
         let bfs = BFS::new(null, &self.state.links, src, dst);
         bfs.search()
     }
-    pub fn get(&self, i: u32) -> &String {
+    pub fn get(&self, i: PageId) -> &String {
         self.state.links.get(&i).map(|n| &n.title).unwrap()
     }
     //pub fn random_select(&self) -> u32 { }
