@@ -9,20 +9,39 @@ use std::ffi::OsString;
 use std::thread;
 
 use super::{LinkState, LinkDb, LinkData};
-use super::Entry;
 
-// TODO replace IndexedEntry with (u32, Entry) ?
+
+/// A wiki entry, including its title, parents, and children
+/// The parent and child sets have a fair amount of overlap, so instead of storing both they're
+/// both put in the `neighbors` field (parents first, then children), of which both parents and
+/// children are subsets
+/// Note that the indices are stored as `u16`s meaning if an entry has more than 65k parents 
+/// or children then it will cause problems.
 #[derive(Debug, Serialize, Deserialize)]
-pub struct IndexedEntry {
-    pub id: u32,
+pub struct Entry {
     pub title: String,
-    // See representation of Entry
-    pub neighbors: Vec<u32>,
-    pub last_parent: u32,
-    pub first_child: u32,
+    pub id: u32,
+    neighbors: Vec<u32>,
+    last_parent: u32,
+    first_child: u32,
 }
 
-impl IndexedEntry {
+impl Entry {
+    #[inline]
+    pub fn get_children(&self) -> &[u32] {
+        let i = self.first_child as usize;
+        &self.neighbors[i..]
+    }
+    #[inline]
+    pub fn get_parents(&self) -> &[u32] {
+        let i = self.last_parent as usize;
+        &self.neighbors[..i]
+    }
+}
+
+
+
+impl Entry {
     pub fn from(i: u32, t: String, parents: Vec<u32>, children: Vec<u32>) -> Self {
         use std::collections::HashSet;
         let parent_set: HashSet<u32> = parents.iter().cloned().collect();
@@ -46,7 +65,7 @@ impl IndexedEntry {
             .chain(unique_kids).collect();
         let first_child = (neighbors.len() - num_children) as u32;
 
-        IndexedEntry {
+        Entry {
             id: i,
             title: t,
             neighbors, last_parent, first_child
@@ -60,7 +79,7 @@ impl From<LinkState<LinkDb>> for LinkState<LinkData> {
         // addresses and ranks feed into PostgreSQL
         
         let (entries_i, titles) = old.state.parts();
-        let mut entries: Vec<Vec<IndexedEntry>> = Vec::with_capacity(old.threads);
+        let mut entries: Vec<Vec<Entry>> = Vec::with_capacity(old.threads);
 
         // convert `titles` to a fst Map
         // for now, do this in memory (can slightly better optimize or something)
@@ -191,11 +210,11 @@ impl LinkState<LinkData> {
                 let r = BufReader::new(f);
                 let err = "Deserializing data";
                 r.lines().map(|l| l.map(|s| serde_json::from_str(&s).expect(err)))
-                    .collect::<io::Result<Vec<IndexedEntry>>>()
+                    .collect::<io::Result<Vec<Entry>>>()
             })
-        }).collect::<Vec<thread::JoinHandle<io::Result<Vec<IndexedEntry>>>>>();
+        }).collect::<Vec<thread::JoinHandle<io::Result<Vec<Entry>>>>>();
         // handle these unwraps better? look into `failure`?
-        let data: Vec<Vec<IndexedEntry>> = threads.into_iter()
+        let data: Vec<Vec<Entry>> = threads.into_iter()
             .map(|t| t.join().unwrap().unwrap())
             .collect();
 
@@ -212,7 +231,7 @@ impl LinkState<LinkData> {
 }
 
 impl LinkData {
-    pub fn consolidate_links(links: Vec<Vec<IndexedEntry>>, size: usize) 
+    pub fn consolidate_links(links: Vec<Vec<Entry>>, size: usize) 
         -> FnvHashMap<u32,Entry> 
     {
         let mut hm: FnvHashMap<u32,Entry> = 

@@ -4,7 +4,7 @@ use slog::Logger;
 
 use std::mem;
 
-use link_state::entry::Entry;
+use link_state::Entry;
 
 const MAX_DEPTH: u32 = 10;
 

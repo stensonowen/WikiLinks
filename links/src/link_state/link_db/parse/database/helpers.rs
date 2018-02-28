@@ -1,6 +1,6 @@
 
 #[derive(Debug)]
-pub enum Entry {
+pub enum EntryType {
     // either a unique page and its link data
     Page {
         title: String,

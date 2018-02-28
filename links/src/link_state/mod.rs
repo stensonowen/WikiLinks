@@ -15,8 +15,11 @@ pub mod proc_data;
 pub mod hash_links;
 
 pub mod bfs;
-pub mod entry;
-pub use self::entry::Entry;
+//pub mod entry;
+//pub mod links;
+
+//pub use self::entry::Entry;
+pub use self::link_data::Entry;
 pub use self::bfs::path::Path;
 
 
@@ -53,11 +56,9 @@ pub struct LinkDb {
 pub struct LinkData {
     /// Store parsed and converted links and addresses
     /// Link data can be quickly written to or read from disk
-    //dumps: Vec<Mutex<Vec<link_data::IndexedEntry>>>,
-    dumps: Vec<Vec<link_data::IndexedEntry>>,
-    //titles: HashMap<String,u32>,
-    //titles: fst::Map,
+    dumps: Vec<Vec<link_data::Entry>>,
     titles: Vec<u8>, // byte repr of fst
+    // TODO use a wrapper type to avoid confusion
 }
 
 pub struct ProcData {

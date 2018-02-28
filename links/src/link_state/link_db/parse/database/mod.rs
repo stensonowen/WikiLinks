@@ -3,7 +3,7 @@ extern crate regex;
 use slog;
 mod helpers;
 use self::helpers::*;
-use super::super::IndexedEntry;
+use super::super::Entry;
 
 use std::collections::{HashMap, HashSet};
 use std::fmt::Display;
@@ -16,7 +16,7 @@ pub struct Database {
     // which means that multiple addresses (u32) can map to the same page
     //
     // Address  →  Page
-    entries: HashMap<u32, Entry>,
+    entries: HashMap<u32, EntryType>,
     //  Title   →  Address
     addresses: HashMap<String, u32>,
     //internal state
@@ -59,8 +59,8 @@ impl Database {
         let mut cap_cols = HashSet::new();  // capital collisions; delete
         for (&id, entry) in &self.entries {
             let title = match *entry {
-                Entry::Page{ title: ref ti, .. } => ti,
-                Entry::Redirect{ title: ref ti, target: Some(x) } if id==x => ti,
+                EntryType::Page{ title: ref ti, .. } => ti,
+                EntryType::Redirect{ title: ref ti, target: Some(x) } if id==x => ti,
                 _ => continue,
             };
             starters.insert(title.clone(), id);
@@ -93,17 +93,14 @@ impl Database {
         }
         titles
     }
-    //pub fn explode(self) -> 
-    //    (Box<iter::Iterator<Item=IndexedEntry>>,
-    //     Box<iter::Iterator<Item=(String,u32)>>)
-    pub fn explode(self) -> Box<iter::Iterator<Item=IndexedEntry>> {
+    pub fn explode(self) -> Box<iter::Iterator<Item=Entry>> {
         // destroy ourSelf and yield our contents
         // they will go in totally different data structures so yield iterators
-        let entry_iter = self.entries.into_iter().map(|e: (u32,Entry)| {
+        let entry_iter = self.entries.into_iter().map(|e: (u32,EntryType)| {
             match e.1 {
-                Entry::Redirect{..} => panic!("Found redirect during explosion"),
-                Entry::Page{ title: ti, parents: p, children: c } => 
-                    IndexedEntry::from(e.0, ti, p, c)
+                EntryType::Redirect{..} => panic!("Found redirect during explosion"),
+                EntryType::Page{ title: ti, parents: p, children: c } => 
+                    Entry::from(e.0, ti, p, c)
             }});
         Box::new(entry_iter)
     }
@@ -126,12 +123,12 @@ impl Database {
         }
 
         let entry = if is_redr {
-            Entry::Redirect {
+            EntryType::Redirect {
                 title:  String::from(title),
                 target: None,
             }
         } else {
-            Entry::Page {
+            EntryType::Page {
                 title:      String::from(title),
                 children:   vec![],
                 parents:    vec![],
@@ -161,7 +158,7 @@ impl Database {
         // the `target` should be changed to `Some(dst_id)`
 
         let entry = self.entries.get_mut(&redir_id);
-        if let Some(&mut Entry::Redirect{ target: ref mut t, ..} ) = entry {
+        if let Some(&mut EntryType::Redirect{ target: ref mut t, ..} ) = entry {
             if let Some(x) = *t {
                 error!(self.log,
                        "The page_id of a redirect already redirected to page_id `{}`", x);
@@ -218,7 +215,7 @@ impl Database {
         let dst_id_r = self.follow_redirects(dst_id).unwrap_or(dst_id);
 
         //update entries[src_id] to have dst_id among its children
-        if let Some(&mut Entry::Page{ children: ref mut c, .. }) 
+        if let Some(&mut EntryType::Page{ children: ref mut c, .. }) 
                 = self.entries.get_mut(&src_id_r) {
             c.push(dst_id_r);                
         } else {
@@ -230,7 +227,7 @@ impl Database {
         }
 
         //update entries[dst_id] to have src_id among its parents
-        if let Some(&mut Entry::Page{ parents: ref mut p, .. }) 
+        if let Some(&mut EntryType::Page{ parents: ref mut p, .. }) 
                 = self.entries.get_mut(&dst_id_r) {
             p.push(src_id_r);
         } else {
@@ -251,7 +248,7 @@ impl Database {
         let mut seen: HashSet<u32> = HashSet::new();    //avoid repetitions
         loop {
             let entry = self.entries.get(&cur_id);
-            if let Some(&Entry::Redirect{ target: t, .. }) = entry {
+            if let Some(&EntryType::Redirect{ target: t, .. }) = entry {
                 if let Some(target) = t {
                     if seen.contains(&target) {
                         //avoid loops
@@ -266,7 +263,7 @@ impl Database {
                            start_id, cur_id);
                     return Err(());
                 }
-            } else if let Some(&Entry::Page{..}) = entry {
+            } else if let Some(&EntryType::Page{..}) = entry {
                 return Ok(cur_id);
             } else {
                 //this can happen if we have a chain of redirects that never terminates
@@ -280,7 +277,7 @@ impl Database {
     }
     fn tidy_entries(&mut self) {
         //delete any redirects in page.sql that didn't show up in redirects.sql
-        // they'll be in self.entries of type Entry::Redirect { target=None }
+        // they'll be in self.entries of type EntryType::Redirect { target=None }
         
         assert_eq!(self.state, State::AddRedirects, 
                 "tidy_entries wasn't called after AddRedirects (but `{:?}` instead)",
@@ -289,7 +286,7 @@ impl Database {
 
         let mut collector: HashSet<u32> = HashSet::new();
         for (&addr,entry) in &self.entries {
-            if let Entry::Redirect { target: None, .. } = *entry {
+            if let EntryType::Redirect { target: None, .. } = *entry {
                 collector.insert(addr);
             }
         }
@@ -334,11 +331,11 @@ impl Database {
         let mut redirects = 0;
         for entry in self.entries.values() {
             match *entry {
-                Entry::Page{ children: ref c, .. } => {
+                EntryType::Page{ children: ref c, .. } => {
                     children += c.len();
                     true_pages += 1;
                 },
-                Entry::Redirect{..} => {
+                EntryType::Redirect{..} => {
                     redirects += 1;
                 },
             }
@@ -361,7 +358,7 @@ impl Database {
         self.state = State::Done;
         //clean up links
         for entry in self.entries.values_mut() {
-            if let Entry::Page { 
+            if let EntryType::Page { 
                 children: ref mut c, 
                 parents: ref mut p, 
                 title: ref mut t 
@@ -421,24 +418,24 @@ impl Database {
         let mut max_addr = 0;
         let mut max_val  = 0;
         for (&addr,entry) in &self.entries {
-            if let &Entry::Page{ children: ref c, ..} = entry {
+            if let &EntryType::Page{ children: ref c, ..} = entry {
                 if c.len() > max_val {
                     max_addr = addr;
                     max_val = c.len();
                 }
             }
         }
-        if let Some(&Entry::Page{ title: ref t, .. }) = self.entries.get(&max_addr) {
+        if let Some(&EntryType::Page{ title: ref t, .. }) = self.entries.get(&max_addr) {
             println!("The address of the entry w/ the most children is {}: `{}` with {} kids", 
                  max_addr, t, max_val);
         } else {
             panic!("bad");
         }
-        if let Some(&Entry::Page{ children: ref c, parents: ref p, .. }) 
+        if let Some(&EntryType::Page{ children: ref c, parents: ref p, .. }) 
                 = self.entries.get(&max_addr) {
             println!("CHILDREN:");
             for (i,j) in c.iter().enumerate() {
-                if let Some(&Entry::Page{ title: ref t, .. }) = self.entries.get(j) {
+                if let Some(&EntryType::Page{ title: ref t, .. }) = self.entries.get(j) {
                     println!("\t{}:\t{}:\t`{}`", i, *j, t);
                 } else {
                     println!("\t{}:\t{}:\t`{}`", i, *j, "CHILD NOT FOUND");
@@ -446,7 +443,7 @@ impl Database {
             }
             println!("PARENTS:");
             for (i,j) in p.iter().enumerate() {
-                if let Some(&Entry::Page{ title: ref t, .. }) = self.entries.get(j) {
+                if let Some(&EntryType::Page{ title: ref t, .. }) = self.entries.get(j) {
                     println!("\t{}:\t{}:\t`{}`", i, *j, t);
                 } else {
                     println!("\t{}:\t{}:\t`{}`", i, *j, "PARENT NOT FOUND");
@@ -472,7 +469,7 @@ impl Database {
         for(id,entry) in &self.entries {
             all += 1;
             match *entry {
-                Entry::Page { title: ref t, children: ref c, parents: ref p } => {
+                EntryType::Page { title: ref t, children: ref c, parents: ref p } => {
                     pages += 1;
                     for child in c {
                         children += 1;
@@ -480,12 +477,12 @@ impl Database {
                         assert!(target.is_some(), 
                                 "Page `{}`'s child {} doesn't exist", t, child);
                         match *target.unwrap() {
-                            Entry::Page { title: ref t_, parents: ref p_, .. } => {
+                            EntryType::Page { title: ref t_, parents: ref p_, .. } => {
                                 assert!(p_.contains(id), 
                                         "Page `{}` has child {}, but child {} lacks parent {}",
                                         t, child, t_, id);
                             },
-                            Entry::Redirect { title: ref t_, target: ref x_ } => {
+                            EntryType::Redirect { title: ref t_, target: ref x_ } => {
                                 panic!("Page `{}` pointed to child {}({}), a redir to {:?}",
                                        t, child, t_, x_);
                             }
@@ -497,19 +494,19 @@ impl Database {
                         assert!(target.is_some(), 
                                 "Page `{}`'s parent {} doesn't exist", t, parent);
                         match *target.unwrap() {
-                            Entry::Page { title: ref t_, children: ref c_, .. } => {
+                            EntryType::Page { title: ref t_, children: ref c_, .. } => {
                                 assert!(c_.contains(id), 
                                     "Page `{}` has parent {}, but parent {} lacks child {}",
                                         t, parent, t_, id);
                             },
-                            Entry::Redirect { title: ref t_, target: ref x_ } => {
+                            EntryType::Redirect { title: ref t_, target: ref x_ } => {
                                 panic!("Page `{}` pointed to parent {}({}), a redir to {:?}",
                                        t, parent, t_, x_);
                             }
                         }
                     }
                 },
-                Entry::Redirect { title: ref _t, target: ref _x } => {
+                EntryType::Redirect { title: ref _t, target: ref _x } => {
                     redirects += 1;
                 }
             }
@@ -530,7 +527,7 @@ impl Database {
         //create collection of redirects
         let mut redirects: Vec<u32> = vec![];
         for (&id,entry) in &self.entries {
-            if let Entry::Redirect { title: ref ti, target: ta } = *entry {
+            if let EntryType::Redirect { title: ref ti, target: ta } = *entry {
                 //change address of title to the destination
                 self.addresses.insert(ti.to_owned(), ta.unwrap());
                 redirects.push(id);
@@ -551,7 +548,7 @@ impl Database {
         info!(self.log, "Looking for redirect family...");
         let mut redirects: HashSet<u32> = HashSet::new();
         for (&id, entry) in &self.entries {
-            if let Entry::Redirect{ .. } = *entry {
+            if let EntryType::Redirect{ .. } = *entry {
                 redirects.insert(id);
             }
         }
@@ -559,7 +556,7 @@ impl Database {
         let mut fails = 0usize;
         let mut checked = 0usize;
         for (&id, entry) in &self.entries {
-            if let Entry::Page{ title: ref ti, children: ref c, parents: ref p} = *entry {
+            if let EntryType::Page{ title: ref ti, children: ref c, parents: ref p} = *entry {
                 for child in c {
                     checked += 1;
                     if redirects.contains(child) {
@@ -609,7 +606,7 @@ impl Database {
             //make sure every entry is a Page, not a redirect
             //make sure looking it up by its title gives the right id
             let title = match *entry {
-                Entry::Page{ title: ref t, .. } => t,
+                EntryType::Page{ title: ref t, .. } => t,
                 _ => panic!("Found a redirect in verify_links step"),
                 //_ => continue
             };
@@ -645,9 +642,9 @@ impl Database {
             };
             //let (other_ti, _other_c) = match self.entries.get(id).unwrap() {
             let (other_ti, _other_c) = match *corresponding_entry {
-                Entry::Redirect{..} => panic!("Addr {} → redirect {}", title, id),
-                //&Entry::Redirect{..} => continue,
-                Entry::Page{ title: ref ti, children: ref c, .. } => (ti, c),
+                EntryType::Redirect{..} => panic!("Addr {} → redirect {}", title, id),
+                //&EntryType::Redirect{..} => continue,
+                EntryType::Page{ title: ref ti, children: ref c, .. } => (ti, c),
             };
             //assert_eq!(title, other_ti, "addrs[{}] = {} but entries[{}] = {}",
             //           title, id, id, other_ti);

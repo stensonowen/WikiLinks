@@ -1,4 +1,5 @@
 
+/*
 /// A wiki entry, including its title, parents, and children
 /// The parent and child sets have a fair amount of overlap, so instead of storing both they're
 /// both put in the `neighbors` field (parents first, then children), of which both parents and
@@ -6,7 +7,7 @@
 /// Note that the indices are stored as `u16`s, meaning if an entry has more than 65k parents or
 /// children then it will cause problems.
 #[derive(Serialize, Deserialize)]
-pub struct Entry {
+pub struct TableEntry {
     pub title: String,
     neighbors: Vec<u32>,
     last_parent: u32,
@@ -37,5 +38,6 @@ impl Entry {
         &self.neighbors[..i]
     }
 }
+*/
 
 
