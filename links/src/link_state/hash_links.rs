@@ -5,6 +5,7 @@ use fnv;
 use slog;
 
 use super::{LinkState, LinkData, HashLinks};
+use super::link_table::LinkTable;
 use article::{PageId, Entry};
 use super::bfs::{BFS,BFS2};
 use super::Path;
@@ -13,11 +14,14 @@ use std::io;
 
 
 impl LinkState<HashLinks> {
+    /*
     pub fn bfs(&self, src: PageId, dst: PageId) -> Path {
         let null = slog::Logger::root(slog::Discard, o!());
         let bfs = BFS::new(null, &self.state.links, src, dst);
         bfs.search()
     }
+    */
+    /*
     pub fn bfs2(&self, src: PageId, dst: PageId) -> Path {
         let null = slog::Logger::root(slog::Discard, o!());
         let bfs = BFS2::new(null, &self.state.links, src, dst);
@@ -50,6 +54,7 @@ impl LinkState<HashLinks> {
             path.print(&self.state.links);
         }
     }
+    */
 }
 
 //impl From<LinkState<ProcData>> for LinkState<HashLinks> {
@@ -59,6 +64,7 @@ impl From<LinkState<LinkData>> for LinkState<HashLinks> {
         let (threads, size) = (old.threads, old.size);
         let (links, log, titles_b) = old.break_down();
         let titles_map = fst::Map::from_bytes(titles_b).expect("invalid fst bytes");
+        let link_table = LinkTable::from_map(links);
         LinkState {
             threads:    threads,
             size:       size,
@@ -68,7 +74,7 @@ impl From<LinkState<LinkData>> for LinkState<HashLinks> {
                 //links:  LinkData::consolidate_links(old.state.dumps, old.size),
                 //titles: old.state.titles,
                 //titles: HashLinks::hash_titles(old.state.titles),
-                links:  links,
+                links:  link_table,
                 titles: titles_map,
                 //_titles: HashLinks::hash_titles(titles),
             }
@@ -80,9 +86,11 @@ impl HashLinks {
     pub fn size(&self) -> usize {
         self.links.len()
     }
-    pub fn get_links(&self) -> &fnv::FnvHashMap<PageId,Entry> {
+    //pub fn get_links(&self) -> &fnv::FnvHashMap<PageId,Entry> {
+    pub fn get_links(&self) -> &LinkTable {
         &self.links
     }
+
     /*
     pub fn lookup_title<'a>(&'a self, query: &'a str) -> Node<'a> {
         // Empty: unused (maybe should mean 'random'?

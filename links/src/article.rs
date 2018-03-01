@@ -2,6 +2,9 @@
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct PageId(u32);
 
+/// Reserved Value to be used by IntegerHashMap
+// For now has to be in this module, or else it can't be constant
+// until constant functions are stabilized (I think)
 pub const PAGEID_RESERVED: PageId = PageId(::std::u32::MAX);
 
 impl From<PageId> for u32 { 

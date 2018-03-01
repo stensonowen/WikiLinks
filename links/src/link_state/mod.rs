@@ -15,13 +15,11 @@ pub mod proc_data;
 pub mod hash_links;
 
 pub mod bfs;
-//pub mod entry;
-//pub mod links;
+pub mod link_table;
 
-//pub use self::entry::Entry;
-//pub use self::link_data::Entry;
 pub use article::{PageId, Entry};
 pub use self::bfs::path::Path;
+use self::link_table::LinkTable;
 
 
 //  ------STATE--MACHINE------
@@ -66,13 +64,14 @@ pub struct ProcData {
     /// Store easily searchable link and pagerank data
     /// Pagerank data can be read from, dumped to, or exported to disk 
     links: fnv::FnvHashMap<PageId,Entry>,
+    //links: LinkTable,
 }
 
 pub struct HashLinks {
     /// Read-only, fast-lookup container for link and proc data
     /// Interact with diesel cache and interface with website
-    links: fnv::FnvHashMap<PageId,Entry>,
-    //_titles: HashMap<u64,u32>,
+    //links: fnv::FnvHashMap<PageId,Entry>,
+    links: LinkTable,
     titles: fst::Map,
 }
 
