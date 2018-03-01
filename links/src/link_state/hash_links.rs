@@ -57,26 +57,19 @@ impl LinkState<HashLinks> {
     */
 }
 
-//impl From<LinkState<ProcData>> for LinkState<HashLinks> {
-//    fn from(old: LinkState<ProcData>) -> LinkState<HashLinks> {
 impl From<LinkState<LinkData>> for LinkState<HashLinks> {
     fn from(old: LinkState<LinkData>) -> LinkState<HashLinks> {
         let (threads, size) = (old.threads, old.size);
         let (links, log, titles_b) = old.break_down();
         let titles_map = fst::Map::from_bytes(titles_b).expect("invalid fst bytes");
-        let link_table = LinkTable::from_map(links);
+        let link_table = LinkTable::convert_from_map(links);
         LinkState {
             threads:    threads,
             size:       size,
             log:        log,
             state:      HashLinks {
-                //links:  LinkState::<ProcData>::consolidate_links(old.state.dumps, old.size),
-                //links:  LinkData::consolidate_links(old.state.dumps, old.size),
-                //titles: old.state.titles,
-                //titles: HashLinks::hash_titles(old.state.titles),
                 links:  link_table,
                 titles: titles_map,
-                //_titles: HashLinks::hash_titles(titles),
             }
         }
     }

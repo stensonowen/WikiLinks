@@ -11,28 +11,32 @@ use std::ops::Index;
 // this to be polished than quite so fast
 use fnv::FnvHashMap;
 
-use article::{PageId, Entry};
+use article::{PageId, Entry, GenEntry};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct PageIndex(u32);
+impl From<u32> for PageIndex {
+    fn from(n: u32) -> PageIndex { PageIndex(n) }
+}
 
+type TableEntry = GenEntry<PageIndex>;
 
 pub struct LinkTable {
     page_ids: FnvHashMap<PageId, PageIndex>,
-    table: Box<[Entry]>,
+    table: Box<[TableEntry]>,
 }
 
 impl LinkTable {
-    pub fn from_map(old: FnvHashMap<PageId, Entry>) -> Self {
-        // TODO sort in some way? maybe improve caching a little?
-
-        let table_vec: Vec<Entry> = old.into_iter().map(|(_,e)| e).collect();
-        let table: Box<[Entry]> = table_vec.into_boxed_slice(); // "drops excess capacity"
-        assert!(table.len() < u32::max_value() as usize, "Table too long; use `u64`s");
-
-        let page_ids = table.iter().enumerate().map(|(i, ref te)| {
-            (te.page_id, PageIndex(i as u32))
+    pub fn convert_from_map(map: FnvHashMap<PageId, Entry>) -> Self {
+        let page_ids = map.keys().enumerate().map(|(n, &id)| {
+            (id, (n as u32).into())
         }).collect::<FnvHashMap<PageId, PageIndex>>();
+
+        let table_vec: Vec<TableEntry> = map.into_iter().map(|(_, e): (_, Entry)| {
+            e.map(|id: PageId| page_ids[&id])
+        }).collect();
+        let table: Box<[TableEntry]> = table_vec.into_boxed_slice();
+        assert!(table.len() < u32::max_value() as usize, "Table too long for `u32`s");
 
         LinkTable { page_ids, table }
     }
@@ -57,16 +61,16 @@ impl LinkTable {
 }
 
 impl Index<PageId> for LinkTable {
-    type Output = Entry;
-    fn index(&self, id: PageId) -> &Entry {
+    type Output = TableEntry;
+    fn index(&self, id: PageId) -> &TableEntry {
         let table_index = &self.page_ids[&id];
         &self.table[table_index.0 as usize]
     }
 }
 
 impl Index<PageIndex> for LinkTable {
-    type Output = Entry;
-    fn index(&self, index: PageIndex) -> &Entry {
+    type Output = TableEntry;
+    fn index(&self, index: PageIndex) -> &TableEntry {
         &self.table[index.0 as usize]
     }
 }

@@ -14,6 +14,8 @@ impl From<u32> for PageId {
     fn from(val: u32) -> PageId { PageId(val) } 
 }
 
+/// Entry that refers to its children by their `page_id`
+pub type Entry = GenEntry<PageId>;
 
 
 /// A wiki entry, including its title, parents, and children
@@ -22,25 +24,37 @@ impl From<u32> for PageId {
 /// children are subsets
 /// Note that the indices are stored as `u16`s meaning if an entry has more than 65k parents 
 /// or children then it will cause problems.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Entry {
+#[derive(Clone, Debug, Serialize, Deserialize)] // TODO remove clone
+pub struct GenEntry<T: From<u32>> {
     pub title: String,
     pub page_id: PageId,
-    neighbors: Vec<PageId>,
+    neighbors: Vec<T>,
     last_parent: u32,
     first_child: u32,
 }
 
-impl Entry {
+
+impl<T: From<u32>> GenEntry<T> {
     #[inline]
-    pub fn get_children(&self) -> &[PageId] {
+    pub fn get_children(&self) -> &[T] {
         let i = self.first_child as usize;
         &self.neighbors[i..]
     }
     #[inline]
-    pub fn get_parents(&self) -> &[PageId] {
+    pub fn get_parents(&self) -> &[T] {
         let i = self.last_parent as usize;
         &self.neighbors[..i]
+    }
+
+    /// Convert from GenEntry<T> to GenEntry<U>
+    pub fn map<F: Fn(T)->U, U: From<u32>>(self, f: F) -> GenEntry<U> {
+        GenEntry {
+            title:          self.title,
+            page_id:        self.page_id,
+            last_parent:    self.last_parent,
+            first_child:    self.first_child,
+            neighbors:      self.neighbors.into_iter().map(f).collect()
+        }
     }
 }
 
