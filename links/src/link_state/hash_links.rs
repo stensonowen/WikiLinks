@@ -1,36 +1,43 @@
 extern crate rand;
 
 use fst;
-use fnv;
 use slog;
 
 use super::{LinkState, LinkData, HashLinks};
-use super::link_table::LinkTable;
-use article::{PageId, Entry};
-use super::bfs::{BFS,BFS2};
+use super::link_table::{PageIndex, LinkTable};
+use article::PageId;
+use super::bfs::{BFS, BFS2};
 use super::Path;
 
 use std::io;
 
 
 impl LinkState<HashLinks> {
-    /*
-    pub fn bfs(&self, src: PageId, dst: PageId) -> Path {
+    pub fn print_path(&self, path: Path) {
+        path.print2(|id| self.state.links.get_title(id).unwrap().to_string())
+    }
+    pub fn bfs_id(&self, src: PageId, dst: PageId) -> Path {
+        let src = self.state.links.get_index(src).unwrap();
+        let dst = self.state.links.get_index(dst).unwrap();
+        self.bfs(src, dst)
+    }
+    pub fn bfs(&self, src: PageIndex, dst: PageIndex) -> Path {
         let null = slog::Logger::root(slog::Discard, o!());
-        let bfs = BFS::new(null, &self.state.links, src, dst);
+        let table = self.state.links.get_table();
+        let bfs = BFS::new(null, table, src, dst);
         bfs.search()
     }
-    */
-    /*
-    pub fn bfs2(&self, src: PageId, dst: PageId) -> Path {
+    pub fn bfs2(&self, src: PageIndex, dst: PageIndex) -> Path {
         let null = slog::Logger::root(slog::Discard, o!());
-        let bfs = BFS2::new(null, &self.state.links, src, dst);
+        let table = self.state.links.get_table();
+        let bfs = BFS2::new(null, table, src, dst);
         bfs.search()
     }
-    /*
-     * TODO get this working again
-     */
+    pub fn get_index(&self, id: PageId) -> Option<PageIndex> {
+        self.state.links.get_index(id)
+    }
     pub fn cli_bfs(&self) -> io::Result<()> { 
+        let table = self.state.links.get_table();
         let mut buf = String::new();
         println!("Starting bfs");
         loop {
@@ -49,12 +56,11 @@ impl LinkState<HashLinks> {
                 Some(id) => id,
                 None => { println!("No such title"); continue },
             };
-            let bfs = BFS::new(self.log.clone(), &self.state.links, src, dst);
+            let bfs = BFS::new(self.log.clone(), table, src, dst);
             let path = bfs.search();
-            path.print(&self.state.links);
+            self.print_path(path);
         }
     }
-    */
 }
 
 impl From<LinkState<LinkData>> for LinkState<HashLinks> {
@@ -131,7 +137,7 @@ impl HashLinks {
         }
     }
     */
-    fn resolve_title(&self, t: &str) -> Option<PageId> {
+    fn resolve_title(&self, t: &str) -> Option<PageIndex> {
         let t = t.trim();
         //if t.is_empty() { return Some(self.select_random()); }
         //let t = t.to_uppercase();
@@ -141,6 +147,8 @@ impl HashLinks {
         self.titles.get(&t).map(|n| {
             assert!(n <= u64::from(u32::max_value()));
             PageId::from(n as u32)
+        }).and_then(|id| {
+            self.links.get_index(id)
         })
     }
 

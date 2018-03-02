@@ -172,10 +172,11 @@ fn main() {
     // bfs          301,149,929 bytes
     // bfs2 (.50)   300,101,737 bytes
 
-    /*
-    let path = ls.bfs(src.into(), dst.into());
-    println!("{:?}", path);
-    */
+    let src_index = ls.get_index(src.into()).unwrap();
+    let dst_index = ls.get_index(dst.into()).unwrap();
+
+    let path = ls.bfs(src_index, dst_index);
+    ls.print_path(path);
 
     //println!("\n\n\nMEMORY USED:\n");
     //::std::process::Command::new("/usr/bin/pmap")

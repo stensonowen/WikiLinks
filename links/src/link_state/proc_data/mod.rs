@@ -95,11 +95,14 @@ impl LinkState<ProcData> {
     pub fn contains(&self, n: PageId) -> bool {
         self.state.links.contains_key(&n)
     }
+    /*
+     * TODO uncomment bfs
     pub fn bfs(&self, src: PageId, dst: PageId) -> Path {
         let null = slog::Logger::root(slog::Discard, o!());
-        let bfs = BFS::new(null, &self.state.links, src, dst);
+        let bfs = BFS::new(null, self.state.links.get_table(), src, dst);
         bfs.search()
     }
+    */
     pub fn get(&self, i: PageId) -> &String {
         self.state.links.get(&i).map(|n| &n.title).unwrap()
     }

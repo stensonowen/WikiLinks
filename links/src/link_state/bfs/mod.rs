@@ -4,7 +4,7 @@ use slog::Logger;
 
 use std::mem;
 
-use article::{PageId, Entry};
+use article::{PageId};
 
 const MAX_DEPTH: usize = 10;
 
@@ -12,6 +12,9 @@ pub mod path;
 use self::path::{Path, PathError};
 pub mod ihm;
 use self::ihm::{IHSet, IHMap};
+
+//use super::link_table::LinkTable;
+use super::link_table::{TableEntry, PageIndex};
 
 // Find the shortest path between articles
 
@@ -36,7 +39,7 @@ use self::ihm::{IHSet, IHMap};
  *                   ...                      |                     
  *   * * * * * * * * * * * * * * * * * *  ____|  } -- `row_down`
  *
- *                   ...
+ *                   ...            sets grow until they intersect
  *                                       ______
  *   * * * * * * * * * * * * * * * * * *       | } -- `row_up`
  *                   ...                       |
@@ -51,37 +54,36 @@ use self::ihm::{IHSet, IHMap};
  *
  */
 
-type Links = FnvHashMap<PageId, Entry>;
-type Set = FnvHashSet<PageId>;
-type Map = FnvHashMap<PageId, PageId>;
+type Set = FnvHashSet<PageIndex>;
+type Map = FnvHashMap<PageIndex, PageIndex>;
 
 pub struct BFS<'a> {
     // where parent/children data is found
     // use member instead of whole HashLinks?
-    links: &'a Links,
+    links: &'a [TableEntry],
     log: Logger,
 
     // indices of src and dst
-    src: PageId,
-    dst: PageId,
+    src: PageIndex,
+    dst: PageIndex,
 
     // comprehensive list of page_ids reachable from each node
     // for (k,v), there is a path from src → ⋯ → v → k (through children links)
-    src_seen: FnvHashMap<PageId, PageId>,
+    src_seen: FnvHashMap<PageIndex, PageIndex>,
     // for (k,v), there is a path from dst → ⋯ → v → k (through parent links)
-    dst_seen: FnvHashMap<PageId, PageId>,
+    dst_seen: FnvHashMap<PageIndex, PageIndex>,
 
     // the farthest reachable rows are both subsets of their respective `seen` sets
     // the lowest row reachable via the `src`'s descendents
-    row_down: FnvHashSet<PageId>,
+    row_down: FnvHashSet<PageIndex>,
     // the highest row reachable via the `dst`'s ancestors
-    row_up: FnvHashSet<PageId>,
+    row_up: FnvHashSet<PageIndex>,
 }
 
 
 impl<'a> BFS<'a> {
 
-    pub fn new(log: Logger, links: &Links, src: PageId, dst: PageId) -> BFS {
+    pub fn new(log: Logger, links: &[TableEntry], src: PageIndex, dst: PageIndex) -> BFS {
         BFS {
             links, log,
             src, dst,
@@ -94,39 +96,42 @@ impl<'a> BFS<'a> {
 
     fn path_from(&self, p: Result<Vec<PageId>, PathError>) -> Path {
         Path {
-            src: self.src,
-            dst: self.dst,
+            src: self.index_id(self.src),
+            dst: self.index_id(self.dst),
             path: p,
         }
     }
 
-    pub fn extract_path(&self, common: PageId) -> Path {
+    fn index_id(&self, index: PageIndex) -> PageId {
+        self.links[usize::from(index)].page_id
+    }
+
+    pub fn extract_path(&self, common: PageIndex) -> Path {
         // `common` is the first entry reachable from src's children and dst's parents
         // path includes both src and dst
-        let mut path = vec![common];
+        let mut path: Vec<PageId> = vec![self.index_id(common)];
         let mut current = common;
         //first find path from midpoint to the src (will be backwards)
         while current != self.src {
             current = self.src_seen[&current];
-            path.push(current);
+            path.push(self.index_id(current));
         }
         path.reverse();
         current = common;
         while current != self.dst {
             current = self.dst_seen[&current];
-            path.push(current);
+            path.push(self.index_id(current));
         }
-        Path {
-            src: self.src,
-            dst: self.dst,
-            path: Ok(path),
-        }
+
+        self.path_from(Ok(path))
     }
 
     pub fn search(mut self) -> Path {
         info!(self.log, "Beginning search from {:?} to {:?}", self.src, self.dst);
         if self.src == self.dst {
-            return Path { src: self.src, dst: self.dst, path: Ok(vec![self.src]) }
+            let src = self.index_id(self.src);
+            let path = Ok(vec![src]);
+            return self.path_from(path)
         }
         // do we need to add src/dst to src_seen/dst_seen ? seems inconsistent
         self.row_down.insert(self.src);
@@ -135,7 +140,7 @@ impl<'a> BFS<'a> {
         // use one temp set rather than recreating new ones
         // would the allocator make recreating equally fast? kinda doubt it
         // TODO speed test
-        let mut tmp: FnvHashSet<PageId> = FnvHashSet::default();
+        let mut tmp: FnvHashSet<PageIndex> = FnvHashSet::default();
 
         for i in 0..MAX_DEPTH {
             if let Some(common) = self.iter_down(&mut tmp) {
@@ -166,32 +171,31 @@ impl<'a> BFS<'a> {
         self.path_from(Err(PathError::Terminated(MAX_DEPTH)))
     }
 
-    fn iter_down(&mut self, tmp: &mut Set) -> Option<PageId> {
+    fn iter_down(&mut self, tmp: &mut Set) -> Option<PageIndex> {
         Self::iter(self.links, &self.row_down, tmp, 
                    &mut self.src_seen, &self.dst_seen, 
-                   Entry::get_children)
+                   TableEntry::get_children)
     }
 
-    fn iter_up(&mut self, tmp: &mut Set) -> Option<PageId> {
+    fn iter_up(&mut self, tmp: &mut Set) -> Option<PageIndex> {
         Self::iter(self.links, &self.row_up, tmp,
                    &mut self.dst_seen, &self.src_seen,
-                   Entry::get_parents)
+                   TableEntry::get_parents)
     }
 
-    fn iter<F>(links: &'a Links, old_line: &Set, new_line: &mut Set,
+    fn iter<F>(links: &'a [TableEntry], old_line: &Set, new_line: &mut Set,
                seen: &mut Map, targets: &Map, next: F)
-        -> Option<PageId> 
-        where F: Fn(&'a Entry) -> &'a [PageId]
+        -> Option<PageIndex> 
+        where F: Fn(&'a TableEntry) -> &'a [PageIndex]
     {
         // for each element in `old_line`, add its parents/children to `next_line`
         // as we see an entry, add it to `seen`
         // if an element is both `seen` and a `target`, a path has been found
         for &old in old_line {
-            for &new in next(&links[&old]) {
+            for &new in next(&links[usize::from(old)]) {
                 // only consider ids that haven't been `seen`
                 if seen.contains_key(&new) == false {
                     seen.insert(new, old);
-                    // TODO: check a bloom filter or something here
                     if targets.contains_key(&new) {
                         // found an element reachable from both src and dst
                         return Some(new);
@@ -207,29 +211,30 @@ impl<'a> BFS<'a> {
 }
 
 
+
 // identical BFS for testing (to bench against BFS1)
 
 pub struct BFS2<'a> {
-    links: &'a Links,
+    links: &'a [TableEntry],
     log: Logger,
-    src: PageId,
-    dst: PageId,
-    //src_seen: FnvHashMap<PageId, PageId>,
-    //dst_seen: FnvHashMap<PageId, PageId>,
-    //row_down: FnvHashSet<PageId>,
-    //row_up: FnvHashSet<PageId>,
+    src: PageIndex,
+    dst: PageIndex,
+    //src_seen: FnvHashMap<PageIndex, PageIndex>,
+    //dst_seen: FnvHashMap<PageIndex, PageIndex>,
+    //row_down: FnvHashSet<PageIndex>,
+    //row_up: FnvHashSet<PageIndex>,
     src_seen: IHMap,
     dst_seen: IHMap,
     row_down: IHSet,
     row_up: IHSet,
 }
 
-//type Set2 = FnvHashSet<PageId>;
-//type Map2 = FnvHashMap<PageId, PageId>;
+//type Set2 = FnvHashSet<PageIndex>;
+//type Map2 = FnvHashMap<PageIndex, PageIndex>;
 
 impl<'a> BFS2<'a> {
 
-    pub fn new(log: Logger, links: &Links, src: PageId, dst: PageId) -> BFS2 {
+    pub fn new(log: Logger, links: &[TableEntry], src: PageIndex, dst: PageIndex) -> BFS2 {
         BFS2 {
             links, log, src, dst,
             src_seen: IHMap::default(), dst_seen: IHMap::default(),
@@ -238,34 +243,43 @@ impl<'a> BFS2<'a> {
     }
 
     fn path_from(&self, p: Result<Vec<PageId>, PathError>) -> Path {
-        Path { src: self.src, dst: self.dst, path: p, }
+        Path {
+            src: self.index_id(self.src),
+            dst: self.index_id(self.dst),
+            path: p,
+        }
     }
 
-    pub fn extract_path(&self, common: PageId) -> Path {
-        let mut path = vec![common];
+    fn index_id(&self, index: PageIndex) -> PageId {
+        self.links[usize::from(index)].page_id
+    }
+
+    pub fn extract_path(&self, common: PageIndex) -> Path {
+        // `common` is the first entry reachable from src's children and dst's parents
+        // path includes both src and dst
+        let mut path: Vec<PageId> = vec![self.index_id(common)];
         let mut current = common;
+        //first find path from midpoint to the src (will be backwards)
         while current != self.src {
-            //current = self.src_seen[&current];
             current = self.src_seen.get(current).unwrap();
-            path.push(current);
+            path.push(self.index_id(current));
         }
         path.reverse();
         current = common;
         while current != self.dst {
             current = self.dst_seen.get(current).unwrap();
-            path.push(current);
+            path.push(self.index_id(current));
         }
-        Path {
-            src: self.src,
-            dst: self.dst,
-            path: Ok(path),
-        }
+
+        self.path_from(Ok(path))
     }
 
     pub fn search(mut self) -> Path {
         info!(self.log, "Beginning search from {:?} to {:?}", self.src, self.dst);
         if self.src == self.dst {
-            return Path { src: self.src, dst: self.dst, path: Ok(vec![self.src]) }
+            let src = self.index_id(self.src);
+            let path = Ok(vec![src]);
+            return self.path_from(path)
         }
         self.row_down.insert(self.src);
         self.row_up.insert(self.dst);
@@ -300,27 +314,27 @@ impl<'a> BFS2<'a> {
     }
 
     //#[inline]
-    fn iter_down(&mut self, tmp: &mut IHSet) -> Option<PageId> {
+    fn iter_down(&mut self, tmp: &mut IHSet) -> Option<PageIndex> {
         Self::iter(self.links, &self.row_down, tmp, 
                    &mut self.src_seen, &self.dst_seen,
-                   Entry::get_children)
+                   TableEntry::get_children)
     }
 
     //#[inline]
-    fn iter_up(&mut self, tmp: &mut IHSet) -> Option<PageId> {
+    fn iter_up(&mut self, tmp: &mut IHSet) -> Option<PageIndex> {
         Self::iter(self.links, &self.row_up, tmp,
                    &mut self.dst_seen, &self.src_seen,
-                   Entry::get_parents)
+                   TableEntry::get_parents)
     }
 
     //#[inline]
-    fn iter<F>(links: &'a Links, old_line: &IHSet, new_line: &mut IHSet,
+    fn iter<F>(links: &'a [TableEntry], old_line: &IHSet, new_line: &mut IHSet,
                seen: &mut IHMap, targets: &IHMap, next: F)
-        -> Option<PageId> 
-        where F: Fn(&'a Entry) -> &'a [PageId]
+        -> Option<PageIndex> 
+        where F: Fn(&'a TableEntry) -> &'a [PageIndex]
     {
         for old in old_line.keys() {
-            for &new in next(&links[&old]) {
+            for &new in next(&links[usize::from(old)]) {
                 if seen.contains_key(new) == false {
                     seen.insert(new, old);
                     if targets.contains_key(new) {

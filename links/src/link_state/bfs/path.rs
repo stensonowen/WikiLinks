@@ -1,6 +1,5 @@
-use fnv;
 
-use article::{PageId, Entry};
+use article::PageId;
 
 #[derive(Debug, Clone)]
 pub struct Path {
@@ -30,12 +29,14 @@ impl Path {
             false
         }
     }
-    pub fn print(&self, entries: &fnv::FnvHashMap<PageId, Entry>) {
-        println!("Path from {:?}\t(\"{}\")", self.src, entries.get(&self.src).unwrap().title);
-        println!("\t  to {:?}\t(\"{}\") :", self.dst, entries.get(&self.dst).unwrap().title);
+    pub fn print2<F: Fn(&PageId)->String>(&self, get_title: F) {
+        let src_title = get_title(&self.src);
+        let dst_title = get_title(&self.dst);
+        println!("Path from {:?}\t(\"{}\")", self.src, src_title);
+        println!("\t  to {:?}\t(\"{}\") :", self.dst, dst_title);
         match self.path {
             Ok(ref v) => for i in v {
-                println!("\t{:?}:\t\"{}\"", i, entries[i].title);
+                println!("\t{:?}:\t\"{}\"", i, get_title(i));
             },
             Err(PathError::NoSuchPath) => println!("\tNo such path exists"),
             Err(PathError::Terminated(i)) => 

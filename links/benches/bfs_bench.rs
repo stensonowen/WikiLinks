@@ -20,9 +20,9 @@ extern crate test;
 use links::link_state::{LinkState, HashLinks, LinkData, new_logger};
 use std::path::PathBuf;
 
-use links::article::PageId;
+use links::link_state::link_table::PageIndex;
 
-const BENCH_MANIFEST_PATH: &str = "/home/owen/rust/wl/simple/dump1";
+const BENCH_MANIFEST_PATH: &str = "/home/owen/rust/wl/simple/dump3";
 
 lazy_static! {
     static ref HL: LinkState<HashLinks> = {
@@ -46,24 +46,25 @@ mod tests {
 
     /// Generic benching for breadth-first searching (either bfs or bfs2)
     fn bfs_bench_g<F>(b: &mut Bencher, bfs_fn: F, src: u32, dst: u32, len: usize)
-        where F: Fn(PageId, PageId) -> BfsPath
+        where F: Fn(PageIndex, PageIndex) -> BfsPath
     {
         // be sure to init the data structure before beginning the benchmark
         lazy_static::initialize(&HL);
-        let (src, dst): (PageId, PageId) = (src.into(), dst.into());
+        let src_index = HL.get_index(src.into()).unwrap();
+        let dst_index = HL.get_index(dst.into()).unwrap();
         b.iter(|| {
-            let p = bfs_fn(src, dst);
+            let p = bfs_fn(src_index, dst_index);
             assert_eq!(Some(len), p.len());
         });
     }
     // stubs to make testing a little clearer
-    fn bfs1(src: PageId, dst: PageId) -> BfsPath { HL.bfs(src, dst) }
-    fn bfs2(src: PageId, dst: PageId) -> BfsPath { HL.bfs2(src, dst) }
+    fn bfs1(src: PageIndex, dst: PageIndex) -> BfsPath { HL.bfs(src, dst) }
+    fn bfs2(src: PageIndex, dst: PageIndex) -> BfsPath { HL.bfs2(src, dst) }
 
 
 
     /// Bench small searches
-    fn bfs_small_g<F: Fn(PageId,PageId)->BfsPath>(b: &mut Bencher, bfs_fn: F) {
+    fn bfs_small_g<F: Fn(PageIndex,PageIndex)->BfsPath>(b: &mut Bencher, bfs_fn: F) {
         if cfg!(feature="simple") {
             // takes ~1 μs *
             // Elkton,_Kentucky → United_States → New_York_City → 
@@ -81,7 +82,7 @@ mod tests {
 
 
     /// Bench medium searches
-    fn bfs_medium_g<F: Fn(PageId,PageId)->BfsPath>(b: &mut Bencher, bfs_fn: F) {
+    fn bfs_medium_g<F: Fn(PageIndex,PageIndex)->BfsPath>(b: &mut Bencher, bfs_fn: F) {
         if cfg!(feature="simple") {
             // takes ~300 μs *
             // Jim Jones → November 18 → April 28 → Jessica Alba → The Office
@@ -99,7 +100,7 @@ mod tests {
 
 
     /// Bench large searches
-    fn bfs_large_g<F: Fn(PageId,PageId)->BfsPath>(b: &mut Bencher, bfs_fn: F) {
+    fn bfs_large_g<F: Fn(PageIndex,PageIndex)->BfsPath>(b: &mut Bencher, bfs_fn: F) {
         if cfg!(feature="simple") {
             // takes ~150 ms *
             // Macclenny,_Florida → United_States → November_11 → 2004 → 

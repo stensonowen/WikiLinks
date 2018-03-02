@@ -13,13 +13,25 @@ use fnv::FnvHashMap;
 
 use article::{PageId, Entry, GenEntry};
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+/// Reserved Value to be used by IntegerHashMap
+// For now has to be in this module, or else it can't be constant
+// until constant functions are stabilized (I think)
+pub const PAGEINDEX_RESERVED: PageIndex = PageIndex(::std::u32::MAX);
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Default)]
 pub struct PageIndex(u32);
 impl From<u32> for PageIndex {
     fn from(n: u32) -> PageIndex { PageIndex(n) }
 }
+impl From<PageIndex> for usize {
+    fn from(i: PageIndex) -> usize { i.0 as usize }
+}
 
-type TableEntry = GenEntry<PageIndex>;
+impl PageIndex {
+    fn to_usize(self) -> usize { self.0 as usize }
+}
+
+pub type TableEntry = GenEntry<PageIndex>;
 
 pub struct LinkTable {
     page_ids: FnvHashMap<PageId, PageIndex>,
@@ -27,6 +39,10 @@ pub struct LinkTable {
 }
 
 impl LinkTable {
+    pub fn get_table(&self) -> &[TableEntry] {
+        &self.table
+    }
+
     pub fn convert_from_map(map: FnvHashMap<PageId, Entry>) -> Self {
         let page_ids = map.keys().enumerate().map(|(n, &id)| {
             (id, (n as u32).into())
@@ -40,7 +56,12 @@ impl LinkTable {
 
         LinkTable { page_ids, table }
     }
-    fn get_index(&self, id: PageId) -> Option<PageIndex> {
+    pub fn get_title<'a>(&'a self, id: &PageId) -> Option<&'a str> {
+        let index = self.page_ids.get(id)?;
+        let entry = self.table.get(index.to_usize())?;
+        Some(&entry.title[..])
+    }
+    pub fn get_index(&self, id: PageId) -> Option<PageIndex> {
         self.page_ids.get(&id).map(|&pi| pi)
     }
     pub fn len(&self) -> usize {
